@@ -29,7 +29,15 @@ phases:
       - echo "Initializing and updating Git submodules..."
       - git submodule update --init --recursive
 
-      - if [ ! -d "themes/hugo-theme-learn" ]; then git clone https://github.com/aws-samples/aws-modernization-workshop-base.git themes/hugo-theme-learn; fi
+      - echo "Checking if theme exists in the correct path..."
+      - if [ ! -d "themes/hugo-theme-learn" ]; then 
+          rm -rf themes/hugo-theme-learn && 
+          git clone https://github.com/aws-samples/aws-modernization-workshop-base.git themes/hugo-theme-learn;
+        fi
+
+      - echo "Initializing Hugo Modules..."
+      - hugo mod init || true
+      - hugo mod get -u || true
 
       - echo "Installing dependencies..."
       - gem install asciidoctor
@@ -42,9 +50,10 @@ phases:
 
   build:
     commands:
-      - echo "Building Website..."
       - echo "Checking theme directory:"
-      - ls -lar themes/
+      - ls -lar themes/hugo-theme-learn/
+
+      - echo "Building Website..."
       - hugo -D -d public
 
       - echo "Deploying Website to S3..."
