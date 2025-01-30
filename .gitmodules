@@ -1,0 +1,3 @@
+[submodule "themes"]
+	path = themes
+	url = git@github.com:aws-samples/aws-modernization-workshop-base.git
