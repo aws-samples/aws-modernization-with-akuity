@@ -19,10 +19,10 @@ phases:
       - git fetch
       - git checkout -f "$CODEBUILD_RESOLVED_SOURCE_VERSION"
 
-      # 🚀 Fix: Ensure GitHub SSH key is up-to-date
+      # 🚀 Fix: Correctly update GitHub SSH host key
       - echo "Updating GitHub SSH host key..."
       - ssh-keygen -R github.com || true
-      - curl -sSfL https://github.com/.ssh/known_hosts > /root/.ssh/known_hosts
+      - ssh-keyscan github.com >> /root/.ssh/known_hosts
       
       - echo "Initializing and updating Git submodules..."
       - git submodule update --init --recursive
