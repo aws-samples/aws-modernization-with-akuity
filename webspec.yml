@@ -12,21 +12,23 @@ phases:
     commands:
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
-      
+
       - echo "Initializing Git Repo"
       - git init
       - git remote add origin $FULL_REPO_URL
       - git fetch
       - git checkout -f "$CODEBUILD_RESOLVED_SOURCE_VERSION"
 
-      # 🚀 Fix: Correctly update GitHub SSH host key
       - echo "Updating GitHub SSH host key..."
       - ssh-keygen -R github.com || true
       - ssh-keyscan github.com >> /root/.ssh/known_hosts
-      
+
+      - echo "Updating submodule URL to use HTTPS..."
+      - git config --global url."https://github.com/".insteadOf "git@github.com:"
+
       - echo "Initializing and updating Git submodules..."
       - git submodule update --init --recursive
-      
+
       - echo "Installing dependencies..."
       - gem install asciidoctor
 
