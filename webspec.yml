@@ -19,26 +19,9 @@ phases:
       - git fetch
       - git checkout -f "$CODEBUILD_RESOLVED_SOURCE_VERSION"
 
-      - echo "Updating GitHub SSH host key..."
-      - mkdir -p ~/.ssh
-      - ssh-keygen -R github.com || true
-      - ssh-keyscan github.com >> ~/.ssh/known_hosts
-
-      - echo "Updating submodule URL to use HTTPS..."
-      - git config --global url."https://github.com/".insteadOf "git@github.com:"
-
       - echo "Initializing and updating Git submodules..."
       - git submodule sync
       - git submodule update --init --recursive
-
-      - echo "Checking if theme exists in the correct path..."
-      - if [ ! -d "themes/hugo-theme-learn" ]; then 
-          git submodule deinit -f themes/hugo-theme-learn;
-          rm -rf .git/modules/themes/hugo-theme-learn;
-          rm -rf themes/hugo-theme-learn;
-          git submodule add https://github.com/Pjv93/hugo-theme-learn.git themes/hugo-theme-learn;
-          git submodule update --init --recursive;
-        fi
 
       - echo "Installing dependencies..."
       - gem install asciidoctor
