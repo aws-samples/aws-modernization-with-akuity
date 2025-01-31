@@ -17,7 +17,7 @@ This paragraph block can give the high level overview of the learning goals and 
 
 This paragraph block can be used to introduce the company and how the solution being taught addresses specific issues.
 
-**REMOVE:** Every introduction page should include the following warning label.
+**REMOVE:** Every introduction page should include the following warning label
 
 {{% notice warning %}}
 The examples and sample code provided in this workshop are intended to be consumed as instructional content. These will help you understand how various AWS services can be architected to build a solution while demonstrating best practices along the way. These examples are not intended for use in production environments.
