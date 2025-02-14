@@ -4,35 +4,20 @@ chapter: true
 weight: 1
 ---
 
-# Introduction
+# Introduction 
+The Akuity Platform boasts amazing features from managed <b>Argo CD</b>, <b>Kargo</b>,  a multi-stage GitOps promotion tool and application lifecycle orchestration platform for Kubernetes, and allows users Kubernetes-native observability with **Akuity's Visibility Tool**.
+## Learning Objectives :pencil:
+By the end of this workshop, users will:
+<li> Learn How to Deploy an <b>Argo CD</b> Instance Using Akuity's AWS Add-On. </li>
+<li> Learn how to promote using your EKS cluster with <b>Kargo</b>.</li>
+<li> Learn How to Enable the <b>Akuity Visibility Tool</b> for a better experience monitoring clusters. </li>
 
-## Learning Objectives <!-- MODIFY THIS SUBHEADING -->
+## Workshop Structure :hammer:
+Experience all three of the Akuity Platform's features using the Akuity AWS Add-On. Make sure you have an EKS cluster ready to use! <be>
+- Prerequisites *(20 minutes)*
+- Module 1: Setting Up Your Environment *(30 minutes)*
+- Module 2: Setting Up Your Argo CD Instance with the Akuity Platform Agent *(30 minutes)*
+- Module 3: Promoting with Kargo *(20 minutes)*
+- Module 4: Enabling Akuity Visibility Tool for better cluster monitoring *(20 minutes)*
+- Review 
 
-This paragraph block should highlight the learning objectives of the workshop. A bulleted list works well for this purpose.
-
-## Workshop Structure <!-- MODIFY THIS SUBHEADING -->
-This paragraph block should be utilized to briefly explain the submodules that are going to be presented as well as the approximate total time for the workshop and individual submodules. <br>
-
-For example:
-<ul>
-    <li> Prerequisites *(15 minutes)* </li>
-    <li> Setting up an account for the solution *(15 minutes)* </li>
-    <li> Module 1: Module 1 Title *(30 minutes)* </li>
-    <li> Module 2: Module 2 Title *(30 minutes)* </li>
-    <li> Module 3: Module 3 Title *(30 minutes)* </li>
-</ul>
-
-{{% notice info %}}
-<p style='text-align: left;'>
-**REMOVE:** With the exception of _index.md, the module folders and filenames should be changed to better reflect their content, i.e. 1_Planning as the folder and 11_HowToBegin as the first submodule. Changing the "weight" value of the header is ultimately what reflects the order the modules are presented.
-</p>
-{{% /notice %}}
-
-**REMOVE:** Every introduction page should include the following warning label.
-
-{{% notice warning %}}
-The examples and sample code provided in this workshop are intended to be consumed as instructional content. These will help you understand how various AWS services can be architected to build a solution while demonstrating best practices along the way. These examples are not intended for use in production environments.
-{{% /notice %}}
-
-### Next Section Heading <!-- MODIFY THIS HEADING -->
-This paragraph block can optionally be utilized to lead into the next section of the workshop.
