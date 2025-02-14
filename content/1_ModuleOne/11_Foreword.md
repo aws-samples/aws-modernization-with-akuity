@@ -1,26 +1,10 @@
 ---
-title: "Foreword" # MODIFY THIS TITLE IF APPLICABLE
+title: "Technical Issue: Why Use the Akuity Agent?" # MODIFY THIS TITLE
 chapter: true
-weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
 
-# Foreword <!-- MODIFY THIS HEADING IF APPLICABLE -->
-
-## Submodule One Heading <!-- MODIFY THIS SUBHEADING -->
-
-This paragraph block should be an explanation of an existing problem and how the partner has worked to achieve a solution for it. Example content guidance can be found at the bottom of this page.
-
-{{% notice info %}}
-<p style='text-align: left;'>
-**REMOVE:** With the exception of _index.md, the module folders and filenames should be changed to better reflect their content, i.e. 1_Planning as the folder and 11_HowToBegin as the first submodule. Changing the "weight" value of the header is ultimately what reflects the order the modules are presented.
-</p>
-{{% /notice %}}
-
-### Next Section Heading <!-- MODIFY THIS HEADING -->
-This paragraph block can optionally be utilized to lead into the next section of the workshop.
-
-#### Example Content Guidance
-
-# The nature of software development has fundamentally changed
-
-Teams and organizations are releasing code at a record breaking pace and only getting faster. This is primarily attributed to these teams adopting and implementing modern concepts and practices, such as Continuous Delivery, Continuous Integration/Deployments (CI/CD) and DevOps into their software development processes. These modern concepts enable teams to better align development and delivery efforts resulting in teams collaborating around code and an increased awareness among collaborators no matter their role.
+#  Why Use the Akuity Agent Add-On?
+Argo CD is typically used for managing both cluster add-ons and developer applications, but there's no surefire way to hook Argo CD up to everything. In a world without Akuity, this experience can be very custom and cumbersome. <br>
+With the [Akuity Platform's unique agent architecture](https://akuity.io/blog/argo-cd-architectures-explained), we get to treat Argo CD as an add-on. Thus, other tooling like IaC or EKS add-on you can solve by bootstrapping ArgoCD into a cluster.<br>
+ For those who have a strong preference for AWS, the Akuity AWS add-on decomplexifies the process with tighter integration and security, and also saves users the time of applying yaml, using API/CLI, or using IaC.

@@ -1,5 +1,5 @@
 ---
-title: "Hugo Framework and Markdown"
+title: "Better Visibility and Review"
 chapter: true
 weight: 4
 ---

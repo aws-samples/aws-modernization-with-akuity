@@ -1,5 +1,5 @@
 ---
-title: "Partner Setup" # MODIFY THIS TITLE IF APPLICABLE
+title: "Promote with Kargo" # MODIFY THIS TITLE IF APPLICABLE
 chapter: true
 weight: 3
 ---
