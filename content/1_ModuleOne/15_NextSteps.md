@@ -1,32 +1,22 @@
 ---
-title: "Workshop Next Steps" # MODIFY THIS TITLE TO REFLECT NEXT STEPS IF APPLICABLE
+title: "Next Steps" # MODIFY THIS TITLE TO REFLECT NEXT STEPS IF APPLICABLE
 chapter: true
 weight: 5 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
 
-# Workshop Next Steps <!-- MODIFY THIS HEADING IF APPLICABLE -->
+# Setting Up Your Environment
+Luckily, we have prepared a GitHub repository that allows users to experience every major feature of the Akuity Platform: **Argo CD**, **Kargo**, and **Akuity Visibility Tool**.
+To use the <b>template</b>:
+<ol>
+<li>Click this <a href="https://github.com/akuity/intro-argo-cd-eks-tutorial-template/generate">link</a> to clone the repository to your GitHub.</li>
+<li>Ensure the desired "Owner" is selected (e.g., your account and not an organization).
+<li>Enter <code>intro-argo-cd-tutorial</code> for the repository name. </li>
+<li>Click "Create repository from template".</li>
+<li>(Optional) You can start a <b>Codespace</b> by clicking the green code button on the repo page, selecting the Codespaces tab, and then selecting "Create codespace on main." <br>
+The codespace will open in another browser tab with information about setting up your Codespace. Once it's done setting up, you should see a terminal in the browser with the repo open.</li>
+</ol>
 
-## Submodule Five Heading <!-- MODIFY THIS SUBHEADING -->
-
-This paragraph block should be an brief explanation of the next steps to take after the prerequisites have been set up. Diagrams or code samples can be shown to give a visual explanation of what will be taking place during the building of the solution. An example of content guidance can be found at the bottom of this page.
 
 {{% notice info %}}
-<p style='text-align: left;'>
-**REMOVE:** With the exception of _index.md, the module folders and filenames should be changed to better reflect their content, i.e. 1_Planning as the folder and 11_HowToBegin as the first submodule. Changing the "weight" value of the header is ultimately what reflects the order the modules are presented.
-</p>
-{{% /notice %}}
-
-### Next Section Heading <!-- MODIFY THIS HEADING -->
-This paragraph block can optionally be utilized to lead into the next section of the workshop.
-
-#### Example of content guidance
-
-# Configuring Your Solution
-
-While working through the workshop modules, you will progressively build a 3-tier web application by utilizing core AWS services. We will provide you with any code examples and any directions specific to the set up approach we will be utilizing. <br>
-
-![Architecture Diagram](/images/3-tier-web-app.png)
-
-{{% notice %}}
-Some of these may be skipped if you already have the required accounts and tools.
+Unfamiliar with Codespaces? Check out the official documentation [here.](https://docs.github.com/en/codespaces/overview)
 {{% /notice %}}

@@ -1,19 +1,13 @@
 ---
-title: "Who We Are" # MODIFY THIS TITLE
+title: "Get to Know Akuity" # MODIFY THIS TITLE
 chapter: true
-weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
 
-# Who Are We? <!-- MODIFY THIS HEADING TO REFLECT THE PROBLEM THE WORKSHOP IS ADDRESSING -->
+# Introduction: Akuity
+The Akuity Platform was developed with the goal to improve teams' overall experience with working with Kubernetes. With the Akuity Platform, you can: 
+- **Deploy** with Managed Argo CD on the Akuity Platform. Utilize Akuity's unique architecture to deliver managed Argo CD via enterprise and self-managed options. This unique architecture lowers cost, increases security, and removes complexity.
+- **Promote** with Kargo, a multi-stage GitOps promotion tool and application lifecycle orchestration platform for Kubernetes created by the minds behind Argo CD. Kargo ensures effective stage-to-stage promotion using GitOps principles. 
+- **Gain Visibility** of your resources of all Kubernetes clusters. Stay on top of critical events and reduce recovery time with time-based view of events. Harness the power of AI in managing your clusters.
 
-## Submodule Three Heading <!-- MODIFY THIS SUBHEADING -->
-This paragraph block should be a brief introduction to the partner, their history, goals, partnerships, and accolades. <br>
-
-{{% notice info %}}
-<p style='text-align: left;'>
-**REMOVE:** With the exception of _index.md, the module folders and filenames should be changed to better reflect their content, i.e. 1_Planning as the folder and 11_HowToBegin as the first submodule. Changing the "weight" value of the header is ultimately what reflects the order the modules are presented.
-</p>
-{{% /notice %}}
-
-### Next Section Heading <!-- MODIFY THIS HEADING -->
-This paragraph block can optionally be utilized to lead into the next section of the workshop.
+![DeployPromoteMonitor](/aws-modernization-workshop-base-main/static/images/company.png)
