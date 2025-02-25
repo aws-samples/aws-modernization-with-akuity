@@ -10,9 +10,10 @@ weight: 2
 Copy this code snippet and paste to your terminal: ```kubectl create namespace akuity```
 
 ## Adding Your Cluster in the AWS Console
+![AkuityontheAWSMarketplace](../../static/images/AWSMarketplaceAkuity.png)
 1. Go to the EKS cluster in the AWS Console.
 
-2. Go to the add-on tab and select *Get More Add-Ons*.
+2. Go to the add-on tab and select *Get More Add-Ons*. Scroll down until you get to **AWS Marketplace add-ons**.
 
 3. Find and select [*Akuity Platform Agent*](https://aws.amazon.com/marketplace/pp/prodview-zihrsklxqjuu6?sr=0-1&ref_=beagle&applicationId=AWSMPContessa). Then follow the prompts to complete installation.
 
