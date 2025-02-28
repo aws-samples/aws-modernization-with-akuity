@@ -37,7 +37,9 @@ Now that you have your instance set up, you'll need to set up your admin account
 
 4. Go ahead and set your admin password by clicking **Set Password**. Once a password is set, Argo CD will need to reinitialize, so wait until the cogwheel is done turning.
 <br>
+
 ![SetPassword](../../static/images/ArgoCDSetPassword.png)
+
 <br>
 
 {{% notice info %}}
