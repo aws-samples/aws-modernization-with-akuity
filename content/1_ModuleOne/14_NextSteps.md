@@ -13,11 +13,11 @@ To use the <b>template</b>:
 1. Click this [link](https://github.com/akuity/eks-workshop-template) to clone the repository to your GitHub.
 Ensure the desired "Owner" is selected (e.g., your account and not an organization).
 <br>
-1. Enter ``akuity-eks-workshop`` for the repository name.
+2. Enter ``akuity-eks-workshop`` for the repository name.
 <br>
-1. Click ``Create repository from template``.
+3. Click ``Create repository from template``.
 <br>
-1. *(Optional)* You can start a Codespace by clicking the green code button on the repo page, selecting the Codespaces tab, and then selecting ``Create codespace on main.`` <br>
+4. *(Optional)* You can start a Codespace by clicking the green code button on the repo page, selecting the Codespaces tab, and then selecting ``Create codespace on main.`` <br>
 The codespace will open in another browser tab with information about setting up your Codespace. Once it's done setting up, you should see a terminal in the browser with the repo open.
 
 
