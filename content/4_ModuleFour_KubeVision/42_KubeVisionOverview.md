@@ -106,3 +106,7 @@ There is an extension available that allows an AI-powered assistant analyze your
 
 
 ![AiAssistant](../../static/images/AkuityAIAssist2.png)
+
+<br>
+
+:tada: Congratulations! You have completed the workshop. Let's review what we learned today. :arrow_right:
