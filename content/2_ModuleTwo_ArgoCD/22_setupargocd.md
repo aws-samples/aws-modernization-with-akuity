@@ -1,7 +1,7 @@
 ---
 title: "Set Up Your Argo CD Instance" # MODIFY THIS TITLE
 chapter: true
-weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
+weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 ---
 
 Now that our Akuity Add-On is configured, we can move over to the Akuity Platform to set up your instance and connect our EKS add-on.
@@ -88,6 +88,10 @@ Put a pin in this!: keep your password handy, we'll need it to access the Argo U
 9. You'll be prompted to either use the AWS Console or AWS CLI to install the agent to your cluster. Follow the directions on whichever one you prefer.
 <br>
 
+![AWSAddOn](../../static/images/EKSAddOnPrompts.png)
+
+<br>
+
 10.  Check that your target is the correct cluster by running this command:<br>
 ```kubectl config current-context ```
 <br>
@@ -115,4 +119,5 @@ argocd-repo-server-<replicaset-id>-<pod-id>                 1/1     Running   0 
 ```
 
 Once you see a :green_heart: green heart before the cluster name on your Argo CD instance, it signifies that your cluster health is **Healthy**.<br>
-Now your cluster is set up on the Akuity Platform. Your cluster data is uploaded to the platform so we have don't have to do this for Kargo and KubeVision.
+Now your cluster is set up on the Akuity Platform. Your cluster data is uploaded to the platform so we have don't have to do this for Kargo and KubeVision.<br>
+Now let's deploy the sample helm chart from the template. :arrow_right:
