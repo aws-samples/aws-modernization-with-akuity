@@ -90,12 +90,19 @@ If we scroll down to the log, we can see details about an error (in this case, a
 There is an extension available that allows an AI-powered assistant analyze your Kubernetes resources behavior and can provide insights and suggestions. Here's how to enable the AI assistant:
 1. Go to Your **Argo CD Instance**.
 <br>
+
 2. Click the cogwheel on the top right for **Settings**.
+
 <br>
+
 3. Under **General** is **Extensions**:
 ![Extensions](../../static/images/AkuityExtensions.png)
+
 4. Find **Akuity Assistant**, and click **Install**.
 <br>
+
 5. Your Akuity Assistant is ready! Go ahead and go to the **Explorer** dashboard and click on any instance. A new tab, **Assistant** will show up. You can ask the assistant to analyze deployment logs, review deployment issues, etc.
+
+
 
 ![AiAssistant](../../static/images/AkuityAIAssist2.png)
