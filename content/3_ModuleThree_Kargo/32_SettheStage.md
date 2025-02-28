@@ -1,5 +1,5 @@
 ---
-title: "Promoting with Kargo" # OPTIONAL IN-DEPTH STEPS ABOUT KARGO
+title: "Setting the Stage" # OPTIONAL IN-DEPTH STEPS ABOUT KARGO
 chapter: true
 weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 ---
