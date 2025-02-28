@@ -5,15 +5,10 @@ weight: 4
 ---
 
 # Review :notebook:
-By the end of the Workshop, we have demonstrated an understanding of:
-<li>How to connect an EKS cluster to the Akuity Platform Agent
-</li>
+:tada: Congratulations! You've completed the workshop and:
+- Made a secure fast cluster deployment
+- Created a replicaSet with Argo CD.
+- Created a Kargo Project, Warehouse, and three Stages.
+- Made a Promotion of Freight in Kargo
+- Gained access to user-case dashboards for quicker cluster resource management and error-tracking.
 
-<li> How to Deploy an Agent to the EKS cluster with Argo CD on the AKP.
-</li>
-
-<li>How to Promote with Kargo
-</li>
-
-<li>How to Enable Akuity's Visibility Tool for your Cluster
-</li>
