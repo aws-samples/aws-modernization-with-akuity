@@ -4,7 +4,7 @@ chapter: true
 weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
 
-# How You Can Mend the Common Pain Points with Kubernetes with a Single AWS Add-On
+## How You Can Mend the Common Pain Points with Kubernetes with a Single AWS Add-On?
 
 Nowadays there are plenty of tools available to address the common pain points for Kubernetes. <br> 
 Why use multiple, separate tools or add-ons when you can get an all-in-one package with the **Akuity Platform Agent**? 
