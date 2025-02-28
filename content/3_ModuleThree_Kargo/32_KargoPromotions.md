@@ -125,6 +125,16 @@ In this example, we run **5 Steps** to promote:
 ```shell
 kargo apply -f ./kargo/stages.yaml
 ```
+<br>
 
+Now if we go back to the Kargo UI, you should see something like this:
+
+![Stages](../../static/images/KargoIndex.png)
+
+<br>
+
+
+:tada: Great! You now have a working Kargo Pipeline.
+Now time for the main course: **Making Promotions** :arrow_right:
 
 
