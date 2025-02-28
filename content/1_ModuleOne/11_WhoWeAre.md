@@ -3,7 +3,7 @@ title: "Get to Know Akuity" # MODIFY THIS TITLE
 chapter: true
 weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
-![Akuitylogo](../../static/images/akuity-logo.png)
+![Akuitylogo](/images/akuity-logo.png)
 # Who We Are: Akuity
 
 ![DeployPromoteMonitor](../../static/images/DeployPromoteMonitor.png)
