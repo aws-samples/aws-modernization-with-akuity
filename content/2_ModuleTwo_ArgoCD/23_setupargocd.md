@@ -4,7 +4,7 @@ chapter: true
 weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 ---
 
-Now that our Akuity Add-On is configured, let's move over to the Akuity Platform to set up your instance and connect our EKS add-on.
+Now that our Akuity Add-On is configured, we can move over to the Akuity Platform to set up your instance and connect our EKS add-on.
 
 ## Create an Argo CD Instance
 1. Navigate to **Argo CD**
@@ -61,28 +61,32 @@ Put a pin in this!: keep your password handy, we'll need it to access the Argo U
 2. Click **Connect a Cluster**.
 <br>
 
-1. For the sake of this workshop, set your cluster's name to ```eks-cluster```.
+3. For the sake of this workshop, set your cluster's name to ```eks-cluster```.
 <br>
 
-1. *(Optional)* Add a description. You can put your EKS cluster's name in this field.
+4. *(Optional)* Add a description. You can put your EKS cluster's name in this field.
 <br>
 
-1. Click **Advanced Settings**
+5. Click **Advanced Settings**
 <br>
 
-1. On the Add-Ons tab, you'll see two options: **Datadog**, and **AWS EKS**.
+6. On the Add-Ons tab, you'll see two options: **Datadog**, and **AWS EKS**.
 <br>
 
-1. Make sure you click **+Add** on AWS EKS.
+7. Make sure you click **+Add** on AWS EKS.
 <br>
 
-1. Go ahead and click **Connect Cluster** once you're done.
+![ConnectaCluster](../../static/images/ArgoCDConnectaCluster.png)
+
 <br>
 
-1. You'll be prompted to either use the AWS Console or AWS CLI to install the agent to your cluster. Follow the directions on whichever one you prefer.
+8. Go ahead and click **Connect Cluster** once you're done.
 <br>
 
-1.  Check that your target is the correct cluster by running this command:<br>
+9. You'll be prompted to either use the AWS Console or AWS CLI to install the agent to your cluster. Follow the directions on whichever one you prefer.
+<br>
+
+10.  Check that your target is the correct cluster by running this command:<br>
 ```kubectl config current-context ```
 <br>
 
@@ -90,9 +94,11 @@ The output should look something like this:
 ```shell
 arn:aws:eks:us-east-1:338615488317:cluster/cluster-name
 ```
-
-11. You can check the pods in the <code>akuity</code> namespace by using the command: <code>kubectl get pods -n akuity</code>
 <br>
+11. You can check the pods in the <code>akuity</code> namespace by using the command: <code>kubectl get pods -n akuity</code>
+
+<br>
+
 The output should look something like this:
 ```shell
 NAME                                                       
