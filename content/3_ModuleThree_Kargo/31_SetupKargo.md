@@ -13,7 +13,9 @@ weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 
 3. Go ahead and name your Kargo Instance ```kargo-demo``` and add a description if you'd like. Click **CREATE** when you're satisfied.
 <br>
+
 ![Createinstance](../../static/images/KargoCreateInstance.png)
+
 <br>
 
 
@@ -46,22 +48,16 @@ weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 Put a pin in this!: keep your password handy, we'll need it to access the Kargo UI.
 {{% /notice %}}
 
-1. Log in to Kargo CLI in your terminal with this command:
+1. Log in to Kargo CLI in your terminal with this command. Use the instance URL next to your Kargo instance's name (with https:// in front), and add your password you set in the last step: <br>
    
    
    ```shell
-   
-   kargo login https://localhost:31444 \
-  --admin \
-  --password admin \
-  --insecure-skip-tls-verify
 
-  ```
+   kargo login https://<your instance URL> \
+   --admin \
+   --password <password> \
+   --insecure-skip-tls-verify
 
-<br>
-
-![kargologinpage](../../static/images/kargologin.png)
-<br>
 
 :tada: You are now able to access the Kargo UI.
 
