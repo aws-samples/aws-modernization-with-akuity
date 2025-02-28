@@ -59,5 +59,5 @@ Put a pin in this!: keep your password handy, we'll need it to access the Kargo 
    --insecure-skip-tls-verify
 
 
-:tada: You are now able to access the Kargo UI.
+:tada: You are now logged in to Kargo. Now let's set the stage...literally. :arrow_right:
 
