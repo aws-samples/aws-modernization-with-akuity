@@ -19,8 +19,7 @@ Sometimes, deprecated APIs can cause trouble in an application. The Deprecated A
 
 ![DeprecatedAPIS](../../static/images/KubeVisionDeprecatedAPIs2.png)
 
-## Stuck in Deletion Resources
-![Stuck in Deletion](/aws-modernization-workshop-base-main/static/images/StuckinDeletionResources.png)
+## Stuck in Deletion Dashboard
 As the name suggests, this dashboard is for resources that are stuck in deletion. Resources displayed here have been stuck in the deletion state for more than 1 hour, as indicated by their deletion timestamps set over 1 hour ago.
 
 ## Container Dashboard
