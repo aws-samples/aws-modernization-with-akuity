@@ -138,5 +138,6 @@ With auto-sync enabled on the ```guestbook-dev``` Application, changes made to t
 ![ReplicaSetCreated](../../static/images/ArgoCDReplicaSet.png)
 
 You can view the details of the sync operation by, in the top menu, clicking SYNC STATUS. Here it will display, what **REVISION** it was for, what triggered it (i.e., "INITIATED BY: automated sync policy"), and the result of the sync (i.e., what resources changed).
+<br>
 
 Let's try doing the same thing, adding a ```replicaSet``` with **Kargo**! :arrow_right:
