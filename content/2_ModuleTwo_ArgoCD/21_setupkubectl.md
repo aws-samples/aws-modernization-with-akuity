@@ -7,13 +7,14 @@ weight: 1
 {{% notice warning %}}
 You can skip this step if you're already authenticated.
 {{% /notice %}}
-1. In your terminal, enter this command: ```aws configure```
+1. In your terminal, enter this command: <br>
+```aws configure```
 <br>
 2. You will be prompted to add your **AWS Access Key ID** and **AWS Secret Access Key**.
 <br>
 3. Set your default region. (e.g., us-west-1)
 <br>
-4. You can verify if you're authenticated by using this command in the terminal:
+4. You can verify if you're authenticated by using this command in the terminal:<br>
 ```aws sts get-caller-identity```
 <br>
 
