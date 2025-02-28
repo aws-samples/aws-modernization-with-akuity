@@ -25,12 +25,14 @@ If you move over to your Kargo UI, a new project will show up, but it will be bl
 Next, you'll have to set up a secret for your Kargo Project. This is so Kargo has access to your GitHub repository and can make commits. 
 1. Go back to your terminal and enter this command, make sure you fill the blanks with the appropiate information.
 <br>
+
 ```shell
 kargo create credentials github-credentials \
 --project kargo-guestbook --git \
 --username <your username> --password <your GITHUB PAT> \
 --repo-url https://github.com/<your repo>
 ```
+
 <br>
 2. You should receive an output like this: <br>
 
