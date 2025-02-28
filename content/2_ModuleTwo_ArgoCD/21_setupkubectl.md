@@ -19,8 +19,10 @@ You can skip this step if you're already authenticated.
 
 ## Set Up kubectl Access to EKS
 Make sure you have ```aws``` and ```kubectl``` CLIs installed. If you're using a **Codespace** this should already be done for you. You'll need to configure the ```kubectl``` context to access your EKS cluster.
+
 1. You can view your clusters in the terminal. <br>
-Use the command: ```aws eks list-cluster```
+Use the command: ```aws eks list-clusters```<br>
+
     The output should be similar to the following:
     
     ```shell {
@@ -39,6 +41,11 @@ The output should be similar to the following:<br>
  Added new context arn:aws:eks:us-east-1:338615488317:cluster/<cluster-name> to /home/vscode/.kube/config
  ```
 <br>
+
+![CheckClusters](../../static/images/ArgoCDCheckingClusters.png)
+
+<br>
+
 {{% notice info %}}
 Let's break down that command, shall we? <br>
 This part of the command: ```aws eks list-clusters``` lists all EKS clusters in the current AWS account and region. <br>
@@ -46,10 +53,12 @@ This part of the command: ```$(aws eks list-clusters | jq -r .clusters[0])``` is
 The ```|``` pipe symbol takes the output of the previous command (the list of clusters) and passes it as input to the next command.<br>
 Lastly, ```jq -r .clusters[0]```jq is a command line tool for processing JSON. The ```-r``` option tells ```jq``` to output raw text instead of JSON-formatted text. <br>
 ```.clusters[0]``` extracts the first element of the clusters array from the JSON output provided by the aforementioned ```aws eks list-clusters```.
-{{% /notice %}}
+{{% /notice %}}<br>
 
-1. Let's test to see if ```kubectl``` can access the cluster.
+1. Let's test to see if ```kubectl``` can access the cluster.<br>
 ```k get nodes```
+<br>
+
 The output should be similar to the following:
 
 ```shell
@@ -59,4 +68,4 @@ ip-192-168-158-117.ec2.internal   Ready    <none>   2d    v1.28.8-eks-ae9a62a
 ip-192-168-182-251.ec2.internal   Ready    <none>   2d    v1.28.8-eks-ae9a62a
 ```
 
-Now, let's set up our Argo CD Instance.
+Now you're ready to set up your Argo CD Instance.
