@@ -18,4 +18,4 @@ weight: 4
 3. Once enabled, it'll list all the clusters configured in your Argo CD Instance. Enable the KubeVision feature for your desired cluster.
 <br>
 
-![kubevisionenabled](../../static/images/KuebeVisionEnabled.png)
+![kubevisionenabled](/images/KuebeVisionEnabled.png)

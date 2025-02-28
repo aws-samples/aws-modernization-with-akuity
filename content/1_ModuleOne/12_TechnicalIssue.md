@@ -8,7 +8,7 @@ weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICAB
 
 Nowadays there are plenty of tools available to address the common pain points for Kubernetes. <br> 
 Why use multiple, separate tools or add-ons when you can get an all-in-one package with the **Akuity Platform Agent**? 
-![AWSAddOn](../../static/images/AWSMarketplaceAkuity.png)
+![AWSAddOn](/images/AWSMarketplaceAkuity.png)
 The **Akuity Platform Agent** allows users to install the Akuity Platform directly into their EKS cluster. This provides solutions to aforementioned pain points such as: <br>
 
 - **Better Visibility**: Allows users deeper insights into their clusters' status, resources, and provides a visual for deployments and code promotion.

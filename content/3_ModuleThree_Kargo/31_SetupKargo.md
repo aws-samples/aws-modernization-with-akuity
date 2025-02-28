@@ -14,7 +14,7 @@ weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 3. Go ahead and name your Kargo Instance ```kargo-demo``` and add a description if you'd like. Click **CREATE** when you're satisfied.
 <br>
 
-![Createinstance](../../static/images/KargoCreateInstance.png)
+![Createinstance](/images/KargoCreateInstance.png)
 
 <br>
 
@@ -26,7 +26,7 @@ weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 5. Set the agent name, add a description, and then click the dropdown menu for **Akuity Managed Argo CD** and connect your Argo CD instance you created earlier.
 <br>
 
-![ConnectKargoAgent](../../static/images/KargoRegisteranAgent.png)
+![ConnectKargoAgent](/images/KargoRegisteranAgent.png)
 
 <br>
 
@@ -39,7 +39,7 @@ weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
 8. Enable admin accounts by hitting the switch, then set a password. Hit **Save** on the top right. The cogwheel next to your Kargo Instance's name will start spinning.
 <br>
 
-![AdminAcc](../../static/images/KargoCreateAdminAcc.png)
+![AdminAcc](/images/KargoCreateAdminAcc.png)
 
 
 <br>

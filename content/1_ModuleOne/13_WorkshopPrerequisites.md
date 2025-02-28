@@ -15,7 +15,7 @@ To best understand this tutorial, make sure you have at least minimal working kn
 <li><a href="https://akuity.io/blog/cluster-monitoring-made-easy-with-kubevision-kubevision-for-beginners">KubeVision</a></li>
 </ul>
 
-![GitOps](../../static/images/GitOps.png)
+![GitOps](/images/GitOps.png)
 
 ## To Start This Workshop, You'll Need: 
 <ol>
@@ -28,7 +28,7 @@ To best understand this tutorial, make sure you have at least minimal working kn
     <li><a href="https://kubernetes.io/docs/reference/kubectl/">kubectl CLI</a></li>
 </ol>
 
-![AkuityLogIn](../../static/images/AkuityLogIn.png)
+![AkuityLogIn](/images/AkuityLogIn.png)
 
 {{% notice info %}}
 You can skip this step if you already have these tools installed/configured.

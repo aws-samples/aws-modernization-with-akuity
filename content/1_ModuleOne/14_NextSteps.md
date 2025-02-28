@@ -10,7 +10,7 @@ weight: 5 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICAB
 A template is provided for this workshop. You have the option of using this template in **Codespaces**.
 
 To use the <b>template</b>:
-![CreateTemplate](../../static/images/CreateTemplate.png)
+![CreateTemplate](/images/CreateTemplate.png)
 
 1. Click this [link](https://github.com/akuity/eks-workshop-template) to clone the repository to your GitHub.
 Ensure the desired "Owner" is selected (e.g., your account and not an organization).
@@ -27,24 +27,24 @@ Unfamiliar with Codespaces? Check out the official documentation [here.](https:/
 {{% /notice %}}
 
 # Akuity
-![AkuitySignOn](../../static/images/AkuityCreateAccount.png)
+![AkuitySignOn](/images/AkuityCreateAccount.png)
 
 1. You can create an Akuity Account [here](akuity.cloud).
    <br>
 2. You have 3 options to choose from, sign in with your **email**, **GitHub** or **Google Account**.
 <br>
 
-![AkuityFirstSignUp](../../static/images/AkuityFirstPage.png)
+![AkuityFirstSignUp](/images/AkuityFirstPage.png)
 
 3. Once you've created an account, you'll receive a prompt to create an [organization](https://akuity.io/blog/introducing-akuity-workspaces). Click on the **Organization** tab to get started.
 <br>
 
-![OrganizationPage](../../static/images/AkuityOrganizationsPage.png)
+![OrganizationPage](/images/AkuityOrganizationsPage.png)
 
 4. On the organizations page, go ahead and click **New Organization** in the top right corner.
 <br>
 
-![CreateanOrganization](../../static/images/AkuityCreateOrganization.png)
+![CreateanOrganization](/images/AkuityCreateOrganization.png)
 
 5. Enter a name for your organization, and click **Create**. 
 <br>

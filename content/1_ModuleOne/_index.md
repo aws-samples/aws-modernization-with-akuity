@@ -4,7 +4,7 @@ chapter: true
 weight: 1
 ---
 
-![Akuitylogo](../../static/images/akuity-logo.png)
+![Akuitylogo](/images/akuity-logo.png)
 # Introduction 
 **Are you**:
 - Tired of going through the tedious process of manually deploying clusters?

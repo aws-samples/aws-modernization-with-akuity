@@ -43,7 +43,7 @@ The output should be similar to the following:<br>
  ```
 <br>
 
-![CheckClusters](../../static/images/ArgoCDCheckingClusters.png)
+![CheckClusters](/images/ArgoCDCheckingClusters.png)
 
 <br>
 

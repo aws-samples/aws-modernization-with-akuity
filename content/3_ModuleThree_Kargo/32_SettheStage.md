@@ -19,7 +19,7 @@ kargo create project kargo-guestbook
 <br>
 If you move over to your Kargo UI, a new project will show up, but it will be blank.
 
-![CreatedProject](../../static/images/kargosavedproject.png)
+![CreatedProject](/images/kargosavedproject.png)
 
 ## Set Your GitHub Credentials
 Next, you'll have to set up a secret for your Kargo Project. This is so Kargo has access to your GitHub repository and can make commits. 
@@ -43,7 +43,7 @@ secret/github-credentials created
 :tada: Your GitHub credentials have been saved! You can view your secrets on the top right corner in your Kargo Project's UI. It is marked with an asterisk (*).
 <br>
 
-![kargosecretslocation](../../static/images/KargoSecrets.png)
+![kargosecretslocation](/images/KargoSecrets.png)
 
 <br>
 
@@ -103,7 +103,7 @@ kargo apply -f ./kargo/warehouse.yaml
 
 Now, if you look at the Kargo UI, you should have a warehouse called "base" ready.
 
-![FinishedWarehouse](../../static/images/finishedwarehouse.png)
+![FinishedWarehouse](/images/finishedwarehouse.png)
 <br>
 
 ## Kargo Stages Explained
@@ -131,7 +131,7 @@ kargo apply -f ./kargo/stages.yaml
 
 Now if we go back to the Kargo UI, you should see something like this:
 
-![Stages](../../static/images/KargoIndex.png)
+![Stages](/images/KargoIndex.png)
 
 <br>
 

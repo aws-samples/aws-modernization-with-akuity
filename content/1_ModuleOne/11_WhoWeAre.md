@@ -6,7 +6,7 @@ weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICAB
 ![Akuitylogo](/images/akuity-logo.png)
 # Who We Are: Akuity
 
-![DeployPromoteMonitor](../../static/images/DeployPromoteMonitor.png)
+![DeployPromoteMonitor](/images/DeployPromoteMonitor.png)
 
 We at Akuity understand the complexities of working with Kubernetes and have created a simpler, faster, inexpensive solution for all the common pain points of working with Kubernetes:<br>
 

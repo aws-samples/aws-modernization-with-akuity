@@ -55,7 +55,7 @@ spec:
 7. Finally, click **CREATE**.The new app pane will close and show the card for the Application you created. 
 <br>
 
-![CompleteAppCard](../../static/images/ArgoCDCompleteApplication.png)
+![CompleteAppCard](/images/ArgoCDCompleteApplication.png)
 
 <br>
 
@@ -72,7 +72,7 @@ The status on the card will show **Missing** and **OutOfSync**, but don't worry,
 2. Click **SYNC** then **SYNCHRONIZE** to instruct Argo CD to create the resources defined by the Application.
 <br>
 
-![Sync](../../static/images/ArgoCDSync.png)
+![Sync](/images/ArgoCDSync.png)
 
 <br>
 
@@ -107,7 +107,7 @@ image:
 Due to the change in the repo, Argo CD will detect that the Application is out-of-sync. It will template the Helm chart (i.e., ```helm template```) and patch the ```guestbook-dev``` deployment with the new image tag, triggering a rolling update.
 <br>
 
-![UpdatedHelmChart](../../static/images/ImageTagUpdated.png)
+![UpdatedHelmChart](/images/ImageTagUpdated.png)
 
 ## Enable Auto-Sync and Self-Healing for the Guestbook
 Now that you are using an Application to describe how to deploy the Helm chart into the cluster, you can configure the sync policy to automatically apply changes — removing the need for developers to manually trigger a deployment for changes that already made it through the approval processes.
@@ -135,7 +135,7 @@ With auto-sync enabled on the ```guestbook-dev``` Application, changes made to t
 5. In the top right, click the **REFRESH** button to trigger Argo CD to check for any changes to the Application source and resources.
 <br>
 
-![ReplicaSetCreated](../../static/images/ArgoCDReplicaSet.png)
+![ReplicaSetCreated](/images/ArgoCDReplicaSet.png)
 
 You can view the details of the sync operation by, in the top menu, clicking SYNC STATUS. Here it will display, what **REVISION** it was for, what triggered it (i.e., "INITIATED BY: automated sync policy"), and the result of the sync (i.e., what resources changed).
 <br>

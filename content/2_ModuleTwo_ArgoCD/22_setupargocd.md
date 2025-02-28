@@ -15,7 +15,7 @@ Now that our Akuity Add-On is configured, we can move over to the Akuity Platfor
 <br>
 4. *(Optional)* Add a description.
 
-![ArgoCDCreateanInstance](../../static/images/ArgoCDCreateanInstance2.png)
+![ArgoCDCreateanInstance](/images/ArgoCDCreateanInstance2.png)
 
 <br>
 
@@ -38,7 +38,7 @@ Now that you have your instance set up, you'll need to set up your admin account
 4. Go ahead and set your admin password by clicking **Set Password**. Once a password is set, Argo CD will need to reinitialize, so wait until the cogwheel is done turning.
 <br>
 
-![SetPassword](../../static/images/ArgoCDSetPassword.png)
+![SetPassword](/images/ArgoCDSetPassword.png)
 
 <br>
 
@@ -53,7 +53,7 @@ Put a pin in this!: keep your password handy, we'll need it to access the Argo U
 6. You'll be brought to the Argo CD login. **admin** is your user, and use the password you set in step 4.
 <br>
 
-![ArgoCDLogin](../../static/images/ArgoCDLogin.png)
+![ArgoCDLogin](/images/ArgoCDLogin.png)
 <br>
 
 ## Configure Your Cluster
@@ -78,7 +78,7 @@ Put a pin in this!: keep your password handy, we'll need it to access the Argo U
 7. Make sure you click **+Add** on AWS EKS.
 <br>
 
-![ConnectaCluster](../../static/images/ArgoCDConnectaCluster.png)
+![ConnectaCluster](/images/ArgoCDConnectaCluster.png)
 
 <br>
 
@@ -88,7 +88,7 @@ Put a pin in this!: keep your password handy, we'll need it to access the Argo U
 9. You'll be prompted to either use the AWS Console or AWS CLI to install the agent to your cluster. Follow the directions on whichever one you prefer.
 <br>
 
-![AWSAddOn](../../static/images/EKSAddOnPrompts.png)
+![AWSAddOn](/images/EKSAddOnPrompts.png)
 
 <br>
 
