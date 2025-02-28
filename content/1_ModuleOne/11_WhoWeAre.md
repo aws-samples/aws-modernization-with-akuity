@@ -3,11 +3,21 @@ title: "Get to Know Akuity" # MODIFY THIS TITLE
 chapter: true
 weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
 ---
+![Akuitylogo](../../static/images/akuity-logo.png)
+# Who We Are: Akuity
 
-# Introduction: Akuity
-The Akuity Platform was developed with the goal to improve teams' overall experience with working with Kubernetes. With the Akuity Platform, you can: 
-- **Deploy** with Managed Argo CD on the Akuity Platform. Utilize Akuity's unique architecture to deliver managed Argo CD via enterprise and self-managed options. This unique architecture lowers cost, increases security, and removes complexity.
-- **Promote** with Kargo, a multi-stage GitOps promotion tool and application lifecycle orchestration platform for Kubernetes created by the minds behind Argo CD. Kargo ensures effective stage-to-stage promotion using GitOps principles. 
-- **Gain Visibility** of your resources of all Kubernetes clusters. Stay on top of critical events and reduce recovery time with time-based view of events. Harness the power of AI in managing your clusters.
+![DeployPromoteMonitor](../../static/images/DeployPromoteMonitor.png)
 
-![DeployPromoteMonitor](/aws-modernization-workshop-base-main/static/images/company.png)
+We at Akuity understand the complexities of working with Kubernetes and have created a simpler, faster, inexpensive solution for all the common pain points of working with Kubernetes:<br>
+
+- Lack of Visibility
+- Lack of Scalability
+- Lack of Security
+- Lack of Organization of Resources
+- Lack of Efficent Monitoring for Clusters
+
+The **Akuity Platform** offers a unique agent-based architecture that allows the cluster to connect to the Argo control plane, which in turn keeps secrets safe inside the cluster.
+
+
+
+
