@@ -24,6 +24,8 @@ To best understand this tutorial, make sure you have at least minimal working kn
     <li>An <a href="https://akuity.cloud">Akuity account</a> (A 30 Day Free Trial is Available)</li>
     <li>An <a href="https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&all-free-tier.sort-order=asc&awsf.Free%20Tier%20Types=*all&awsf.Free%20Tier%20Categories=*all">AWS account</a></li>
     <li>An <a href="https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html">EKS Cluster</a> ready
+    <li><a href="https://aws.amazon.com/cli/">AWS CLI</a></li>
+    <li><a href="https://kubernetes.io/docs/reference/kubectl/">kubectl CLI</a></li>
 </ol>
 
 ![AkuityLogIn](../../static/images/AkuityLogIn.png)

@@ -8,13 +8,14 @@ weight: 1
 You can skip this step if you're already authenticated.
 {{% /notice %}}
 1. In your terminal, enter this command: ```aws configure```
-
+<br>
 2. You will be prompted to add your **AWS Access Key ID** and **AWS Secret Access Key**.
-
-3. Set your default region.
-
+<br>
+3. Set your default region. (e.g., us-west-1)
+<br>
 4. You can verify if you're authenticated by using this command in the terminal:
 ```aws sts get-caller-identity```
+<br>
 
 ## Set Up kubectl Access to EKS
 Make sure you have ```aws``` and ```kubectl``` CLIs installed. If you're using a **Codespace** this should already be done for you. You'll need to configure the ```kubectl``` context to access your EKS cluster.
@@ -29,10 +30,15 @@ Use the command: ```aws eks list-cluster```
     }
     ```
 2. Create a [kubeconfig file for your cluster](https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html) using the following command:<br>
-```aws eks update-kubeconfig --name $(aws eks list-clusters | jq -r .clusters[0])```
-The output should be similar to the following:
-    ```shell Added new context arn:aws:eks:us-east-1:338615488317:cluster/<cluster-name> to /home/vscode/.kube/config```
 
+```aws eks update-kubeconfig --name $(aws eks list-clusters | jq -r .clusters[0])```
+<br>
+
+The output should be similar to the following:<br>
+```shell
+ Added new context arn:aws:eks:us-east-1:338615488317:cluster/<cluster-name> to /home/vscode/.kube/config
+ ```
+<br>
 {{% notice info %}}
 Let's break down that command, shall we? <br>
 This part of the command: ```aws eks list-clusters``` lists all EKS clusters in the current AWS account and region. <br>
@@ -42,7 +48,7 @@ Lastly, ```jq -r .clusters[0]```jq is a command line tool for processing JSON. T
 ```.clusters[0]``` extracts the first element of the clusters array from the JSON output provided by the aforementioned ```aws eks list-clusters```.
 {{% /notice %}}
 
-3. Let's test to see if ```kubectl``` can access the cluster.
+1. Let's test to see if ```kubectl``` can access the cluster.
 ```k get nodes```
 The output should be similar to the following:
 
