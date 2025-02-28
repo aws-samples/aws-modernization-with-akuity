@@ -7,7 +7,8 @@ weight: 2
 # Setting Up the Akuity Platform Agent
 
 ## Create the Akuity Namespace
-Copy this code snippet and paste to your terminal: ```kubectl create namespace akuity```
+Copy this code snippet and paste to your terminal: <br> ```kubectl create namespace akuity```
+This command creates the Akuity namespace.
 
 ## Adding Your Cluster in the AWS Console
 ![AkuityontheAWSMarketplace](../../static/images/AWSMarketplaceAkuity.png)
@@ -15,7 +16,11 @@ Copy this code snippet and paste to your terminal: ```kubectl create namespace a
 
 2. Go to the add-on tab and select *Get More Add-Ons*. Scroll down until you get to **AWS Marketplace add-ons**.
 
-3. Find and select [*Akuity Platform Agent*](https://aws.amazon.com/marketplace/pp/prodview-zihrsklxqjuu6?sr=0-1&ref_=beagle&applicationId=AWSMPContessa). Then follow the prompts to complete installation.
+3. Find and select [*Akuity Platform Agent*](https://aws.amazon.com/marketplace/pp/prodview-zihrsklxqjuu6?sr=0-1&ref_=beagle&applicationId=AWSMPContessa).
+![AkuityAgentinstallation](../../static/images/InstallAkuityAgentStep2.png)
+4. After clicking **Continue to Configuration**, you'll see a page like this:
+![AkuityAgentInstallation](../../static/images/InstallAkuityAgentStep2_2.png)
+Make sure you configure the fulfillment option as an **Amazon EKS add-on**. Set the software version to the latest version.
 
 4. On Akuity Platform's cluster page, add the "Configuration Values" box under "Optional Configuration Settings."
 
