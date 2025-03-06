@@ -4,12 +4,18 @@ chapter: true
 weight: 4
 ---
 
-## Turn it On!
+## Turn on KubeVision
 
 1. Go to your Argo CD instance and click on Settings in the top right corner.
+<br>
 
-2. Search for KubeVision on the Feature tab on the left.
+1. Search for KubeVision on the Feature tab on the left.
+<br>
 
-3. Enable the KubeVision feature for your Argo CD instance.
+2. Enable the KubeVision feature for your Argo CD instance.
+<br>
 
-4. Once enabled, it'll list all the clusters configured in your Argo CD Instance. Enable the KubeVision feature for your desired cluster.
+3. Once enabled, it'll list all the clusters configured in your Argo CD Instance. Enable the KubeVision feature for your desired cluster.
+<br>
+
+![kubevisionenabled](/images/KuebeVisionEnabled.png)
