@@ -21,6 +21,12 @@ Parameters:
     Description: Name of the VSCode server instance
     Type: String
     Default: VSCodeServer
+    
+  ArgocdAdminPassword:
+    Description: Admin password for ArgoCD
+    Type: String
+    Default: "Akuity@AWS123"
+    NoEcho: true
 
 Resources:
 ################## PERMISSIONS AND ROLES #################
@@ -48,6 +54,31 @@ Resources:
       - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       Path: "/"
       RoleName: "akuity-and-aws-workshop-admin"
+      Policies:
+        - PolicyName: EKSPermissions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - eks:DescribeCluster
+                  - eks:ListClusters
+                  - eks:UpdateClusterConfig
+                  - eks:TagResource
+                  - eks:CreateCluster
+                  - eks:DeleteCluster
+                Resource: !Sub arn:aws:eks:*:*:cluster/*
+              - Effect: Allow
+                Action:
+                  - elasticloadbalancing:DescribeLoadBalancers
+                  - elasticloadbalancing:CreateLoadBalancer
+                  - elasticloadbalancing:DeleteLoadBalancer
+                  - elasticloadbalancing:DescribeTargetGroups
+                  - elasticloadbalancing:CreateTargetGroup
+                  - elasticloadbalancing:DeleteTargetGroup
+                  - elasticloadbalancing:RegisterTargets
+                  - elasticloadbalancing:DeregisterTargets
+                Resource: "*"
 
   KMSSecretsKey:
     Type: AWS::KMS::Key
@@ -100,6 +131,8 @@ Resources:
             Value: !Ref VSCodeInstanceName
           - Name: KMS_ARN
             Value: !GetAtt KMSSecretsKey.Arn
+          - Name: ARGOCD_PASSWORD
+            Value: !Ref ArgocdAdminPassword
 
       Source:
         Type: NO_SOURCE
@@ -112,6 +145,7 @@ Resources:
                   python: 3.12
                 commands:
                   - echo ">>> installed python 3.12"
+                  - yum install -y httpd-tools jq
               pre_build:
                 commands:
                   - echo ">>> build cluster config"
@@ -181,6 +215,156 @@ Resources:
                 - eksctl create cluster -f cluster-config.yaml
                 - aws eks update-kubeconfig --name ${EKSClusterName} --region ${AWS::Region}
                 
+                # Install ArgoCD
+                - echo ">>> Installing ArgoCD"
+                - kubectl create namespace argocd
+                - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+                
+                # Wait for ArgoCD to be ready
+                - echo ">>> Waiting for ArgoCD to be ready"
+                - kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s
+                
+                # Create admin password
+                - echo ">>> Setting up ArgoCD admin password"
+                - kubectl -n argocd patch secret argocd-secret \
+                  -p '{"stringData": {"admin.password": "'$(htpasswd -bnBC 10 "" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/$2y/$2a/')'", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
+                
+                # Configure ArgoCD server to be accessible
+                - echo ">>> Configuring ArgoCD access"
+                - kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+                
+                # Store ArgoCD URL and credentials in SSM Parameters
+                - echo ">>> Storing ArgoCD access information"
+                - |
+                  # Wait for Load Balancer to be assigned
+                  counter=0
+                  while [ $counter -lt 30 ]; do
+                    ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+                    if [ ! -z "$ARGOCD_SERVER" ]; then
+                      echo "LoadBalancer hostname: $ARGOCD_SERVER"
+                      break
+                    fi
+                    sleep 10
+                    counter=$((counter + 1))
+                    echo "Waiting for ArgoCD Load Balancer... Attempt $counter"
+                  done
+                
+                - |
+                  if [ ! -z "$ARGOCD_SERVER" ]; then
+                    # Store ArgoCD access info in SSM Parameter Store
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-server" --value "$ARGOCD_SERVER" --type "String" --overwrite
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-username" --value "admin" --type "String" --overwrite
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
+                    echo "ArgoCD access info stored in SSM Parameter Store"
+                  else
+                    echo "WARNING: Could not get ArgoCD Server URL - Load Balancer may still be provisioning"
+                    # Proceed anyway, we'll store the fact that it's being provisioned
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-username" --value "admin" --type "String" --overwrite
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
+                    aws ssm put-parameter --name "/eks/${EKSClusterName}/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
+                  fi
+                
+                # Add setup script to VSCode server
+                - echo ">>> Setting up VSCode server with kubeconfig and ArgoCD access"
+                - |
+                  VSCODE_INSTANCE_ID=$(aws ec2 describe-instances \
+                    --filters "Name=tag:Name,Values=${VSCODE_INSTANCE_NAME}" \
+                    --query "Reservations[0].Instances[0].InstanceId" \
+                    --output text)
+                
+                  if [ -z "$VSCODE_INSTANCE_ID" ]; then
+                    echo "WARNING: Could not find VSCode instance with name ${VSCODE_INSTANCE_NAME}"
+                  else
+                    echo "Found VSCode instance: $VSCODE_INSTANCE_ID"
+                    
+                    # Create the kubeconfig setup script
+                    cat > /tmp/setup-k8s-tools.sh << 'EOF'
+                    #!/bin/bash
+                    # Configure kubectl to access the EKS cluster
+                    EKS_CLUSTER_NAME="${EKSClusterName}"
+                    REGION="${AWS::Region}"
+
+                    # Install ArgoCD CLI
+                    curl -sSL -o /tmp/argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+                    chmod +x /tmp/argocd-linux-amd64
+                    mv /tmp/argocd-linux-amd64 /usr/local/bin/argocd
+
+                    # Create workshop directory
+                    mkdir -p /home/participant/workshops
+                    chown -R participant:participant /home/participant/workshops
+
+                    # Create ArgoCD info script
+                    cat > /home/participant/workshops/argocd-info.sh << 'EOL'
+                    #!/bin/bash
+                    CLUSTER_NAME="${EKSClusterName}"
+                    REGION="${AWS::Region}"
+
+                    # Get ArgoCD server URL
+                    ARGOCD_SERVER=$(aws ssm get-parameter --name "/eks/$CLUSTER_NAME/argocd-server" --query "Parameter.Value" --output text)
+                    ARGOCD_USERNAME=$(aws ssm get-parameter --name "/eks/$CLUSTER_NAME/argocd-username" --query "Parameter.Value" --output text)
+                    ARGOCD_PASSWORD=$(aws ssm get-parameter --name "/eks/$CLUSTER_NAME/argocd-password" --with-decryption --query "Parameter.Value" --output text)
+
+                    if [ "$ARGOCD_SERVER" == "pending-loadbalancer-creation" ]; then
+                      echo "ArgoCD LoadBalancer is still being provisioned..."
+                      echo "Please wait a few minutes and try again."
+                      exit 0
+                    fi
+
+                    echo
+                    echo "=================================================="
+                    echo "  ArgoCD is installed on your EKS cluster!"
+                    echo "=================================================="
+                    echo "URL: https://$ARGOCD_SERVER"
+                    echo "Username: $ARGOCD_USERNAME"
+                    echo "Password: $ARGOCD_PASSWORD"
+                    echo "=================================================="
+                    echo
+                    echo "To access ArgoCD CLI, run:"
+                    echo "  argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure"
+                    echo
+                    EOL
+
+                    chmod +x /home/participant/workshops/argocd-info.sh
+                    chown participant:participant /home/participant/workshops/argocd-info.sh
+
+                    # Set up kubeconfig
+                    mkdir -p /home/participant/.kube
+                    aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $REGION --kubeconfig /home/participant/.kube/config
+                    chown -R participant:participant /home/participant/.kube
+                    chmod 600 /home/participant/.kube/config
+
+                    # Add useful aliases to bashrc
+                    cat >> /home/participant/.bashrc << 'EOL'
+
+                    # Kubernetes aliases
+                    alias k=kubectl
+                    alias kgp="kubectl get pods"
+                    alias kgs="kubectl get svc"
+                    alias kgd="kubectl get deployments"
+                    alias kga="kubectl get all"
+                    alias kgn="kubectl get nodes"
+
+                    # ArgoCD quick access
+                    alias argocd-info="/home/participant/workshops/argocd-info.sh"
+
+                    echo "Kubernetes and ArgoCD tools are ready!"
+                    echo "Run 'argocd-info' to get ArgoCD access information"
+                    EOL
+
+                    chown participant:participant /home/participant/.bashrc
+                    EOF
+
+                    # Make the script executable
+                    chmod +x /tmp/setup-k8s-tools.sh
+                    
+                    # Run the script on the VSCode server using SSM
+                    aws ssm send-command \
+                      --document-name "AWS-RunShellScript" \
+                      --targets "Key=instanceids,Values=$VSCODE_INSTANCE_ID" \
+                      --parameters "commands=['/bin/bash -xe /tmp/setup-k8s-tools.sh']" \
+                      --output text
+                  fi
+
               post_build:
                 commands:
                   # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
@@ -288,8 +472,6 @@ Resources:
               http.request('PUT', cfn_response_url, body=json.dumps(response).encode('utf-8'), headers={'Content-Type': 'application/json'})
               return 'Done'
 
-
-
 Outputs:
   ClusterRoleArn:
     Description: Cluster Role ARN
@@ -297,3 +479,6 @@ Outputs:
   EKSClusterName:
     Description: EKS Cluster Name
     Value: !Ref EKSClusterName
+  ArgocdAccessInfo:
+    Description: How to access ArgoCD
+    Value: Run 'argocd-info' on the VSCode server to get ArgoCD access details
