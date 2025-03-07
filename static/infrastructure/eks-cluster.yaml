@@ -10,17 +10,17 @@ Parameters:
   EKSClusterName:
     Description: Name of EKS Cluster
     Type: String
-    Default: akuity-aws-cluster
+    Default: "akuity-aws-cluster"
 
   WorkerNodeInstanceType:
     Description: Worker Node cluster instances
     Type: String
-    Default: t2.medium
+    Default: "t2.medium"
     
   VSCodeInstanceName:
     Description: Name of the VSCode server instance
     Type: String
-    Default: VSCodeServer
+    Default: "VSCodeServer"
     
   ArgocdAdminPassword:
     Description: Admin password for ArgoCD
