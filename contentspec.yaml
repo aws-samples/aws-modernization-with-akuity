@@ -27,6 +27,7 @@ infrastructure:
         - VSCODEURL
         - Password
     - templateLocation: static/infrastructure/eks-cluster.yaml
+      label: EKS CLuster for Akuity + EKS Workshop
     
 
       #parameters:
