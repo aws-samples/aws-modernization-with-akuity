@@ -9,30 +9,24 @@ localeCodes:
 # A dictionary of arbitrary parameters that can be referenced in the workshop guide
 # using the params directive.
 params:
-  author: Patrick Vassell & Kruthi Jayasimha Rao
-  description: Neon & AWS - Modernization Workshop
+  author: Patrick Vassell
+  description: Akuity & AWS - Modernization Workshop
 
 # List of links to display in the workshop guide. Will be rendered on the left hand side navigation menu.
 additionalLinks:
-  - title: "Branching Out: Improving RDS-Based Development with Neon + AWS"
-    link: "https://neon.awsworkshop.io/"
+  - title: "Akuity and EKS: Recipe for Application Deployment Success"
+    link: "https://akuity.awsworkshop.io/"
   
 
 # START Infrastructure
 infrastructure:
   cloudformationTemplates:
-    - templateLocation: static/infrastructure/neon-rds-template.yaml
-      label: Neon Workshop Environment
-      participantVisibleStackOutputs:
-        - DBUsername
-        - DBPassword
-        - DBEndpoint
-        - ConnectionString
     - templateLocation: static/infrastructure/vscode-server.yaml
       label: Neon Workshop Vscode Server
       participantVisibleStackOutputs:
         - VSCODEURL
         - Password
+    - templateLocation: static/infrastructure/eks-cluster.yaml
     
 
       #parameters:
