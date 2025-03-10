@@ -25,6 +25,7 @@ Parameters:
   ArgocdAdminPassword:
     Description: Admin password for ArgoCD
     Type: String
+    Default: "Akuity@AWS123"
     MinLength: 8
     NoEcho: true
 
