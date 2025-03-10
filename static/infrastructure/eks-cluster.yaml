@@ -53,6 +53,8 @@ Resources:
       - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
       - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
+      - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+      
       Path: "/"
       RoleName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Policies:
@@ -71,6 +73,7 @@ Resources:
                 Resource: !Sub arn:aws:eks:*:*:cluster/*
               - Effect: Allow
                 Action:
+                  - eks:DescribeClusterVersions
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - elasticloadbalancing:DescribeLoadBalancers
