@@ -73,7 +73,27 @@ Resources:
                 Resource: !Sub arn:aws:eks:*:*:cluster/*
               - Effect: Allow
                 Action:
+                  - ec2:DescribeVpcs
+                  - ec2:DescribeSubnets
+                  - ec2:DescribeSecurityGroups
+                  - ec2:DescribeInternetGateways
+                  - ec2:DescribeRouteTables
+                  - ec2:DescribeAddresses
                   - eks:DescribeClusterVersions
+                  - eks:DescribeCluster
+                  - eks:ListClusters
+                  - eks:CreateCluster
+                  - eks:DeleteCluster
+                  - eks:UpdateClusterConfig
+                  - eks:UpdateClusterVersion
+                  - eks:TagResource
+                  - eks:UntagResource
+                  - eks:CreateNodegroup
+                  - eks:DeleteNodegroup
+                  - eks:DescribeNodegroup
+                  - eks:ListNodegroups
+                  - eks:UpdateNodegroupConfig
+                  - eks:UpdateNodegroupVersion
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - elasticloadbalancing:DescribeLoadBalancers
