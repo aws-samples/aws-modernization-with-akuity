@@ -15,7 +15,7 @@ Parameters:
   WorkerNodeInstanceType:
     Description: Worker Node cluster instances
     Type: String
-    Default: "t2.medium"
+    Default: "t3.large"
     
   VSCodeInstanceName:
     Description: Name of the VSCode server instance
@@ -25,7 +25,7 @@ Parameters:
   ArgocdAdminPassword:
     Description: Admin password for ArgoCD
     Type: String
-    Default: "Akuity@AWS123"
+    MinLength: 8
     NoEcho: true
 
 Resources:
@@ -49,11 +49,10 @@ Resources:
           Action:
           - sts:AssumeRole
       ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/AdministratorAccess
       - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
       - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       Path: "/"
-      RoleName: "akuity-and-aws-workshop-admin"
+      RoleName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Policies:
         - PolicyName: EKSPermissions
           PolicyDocument:
@@ -78,6 +77,13 @@ Resources:
                   - elasticloadbalancing:DeleteTargetGroup
                   - elasticloadbalancing:RegisterTargets
                   - elasticloadbalancing:DeregisterTargets
+                  - iam:GetRole
+                  - iam:PassRole
+                  - ssm:PutParameter
+                  - ssm:GetParameter
+                  - ssm:DeleteParameter
+                  - ec2:DescribeInstances
+                  - ssm:SendCommand
                 Resource: "*"
 
   KMSSecretsKey:
@@ -93,7 +99,22 @@ Resources:
           Effect: Allow
           Principal:
             AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
-          Action: kms:*
+          Action:
+            - kms:Create*
+            - kms:Describe*
+            - kms:Enable*
+            - kms:List*
+            - kms:Put*
+            - kms:Update*
+            - kms:Revoke*
+            - kms:Disable*
+            - kms:Get*
+            - kms:Delete*
+            - kms:ScheduleKeyDeletion
+            - kms:CancelKeyDeletion
+            - kms:GenerateDataKey
+            - kms:Encrypt
+            - kms:Decrypt
           Resource: '*'
 
 ################## INSTANCE PROFILE #####################
@@ -102,7 +123,7 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
-      InstanceProfileName: "akuity-and-aws-workshop-admin"
+      InstanceProfileName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Roles:
       - Ref: ClusterRole
 
@@ -112,7 +133,7 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub CodeBuild-${AWS::StackName}
-      ServiceRole: !Sub arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin
+      ServiceRole: !GetAtt ClusterRole.Arn
       Artifacts:
         Type: NO_ARTIFACTS
       LogsConfig:
@@ -125,8 +146,8 @@ Resources:
         EnvironmentVariables:
           - Name: CFN_RESPONSE_URL
             Value: !Ref WaitForStackCreationHandle
-          - Name: WORKSHOP_INSTANCE_PROFILE_NAME
-            Value: !Ref WorkshopInstanceProfile
+          - Name: WORKSHOP_INSTANCE_PROFILE_ARN
+            Value: !GetAtt WorkshopInstanceProfile.Arn
           - Name: VSCodeInstanceName
             Value: !Ref VSCodeInstanceName
           - Name: KMS_ARN
@@ -137,6 +158,8 @@ Resources:
             Value: !Ref EKSClusterName
           - Name: AWSRegion
             Value: !Ref AWS::Region
+          - Name: STACK_NAME
+            Value: !Ref AWS::StackName
       Source:
         Type: NO_SOURCE
         BuildSpec:
@@ -168,7 +191,7 @@ Resources:
                           clusterLogging:
                               enableTypes: ["*"]
                       secretsEncryption:
-                        keyARN: $${KMS_ARN}
+                        keyARN: $KMS_ARN
                       managedNodeGroups:
                         - name: nodegroup
                           instanceType: ${WorkerNodeInstanceType}
@@ -181,6 +204,7 @@ Resources:
                           volumeEncrypted: true
                           tags:
                             'eks:cluster-name': ${EKSClusterName}
+                            'stack-name': ${AWS::StackName}
                           iam:
                             withAddonPolicies:
                               imageBuilder: true
@@ -203,26 +227,32 @@ Resources:
                     - curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
                     - mv -v /tmp/eksctl /usr/local/bin
                     - eksctl version
-                    - export PATH=$$PWD/:$$PATH
+                    - export PATH=$PWD/:$PATH
                 build:
                   commands:
                     - echo ">>> creating EKS cluster"
-                    - eksctl create cluster -f cluster-config.yaml
-                    - aws eks update-kubeconfig --name $$EKSClusterName --region $$AWSRegion
+                    - eksctl create cluster -f cluster-config.yaml || (echo "Failed to create EKS cluster" && exit 1)
+                    - aws eks update-kubeconfig --name $EKSClusterName --region $AWSRegion
                     
                     # Install ArgoCD
                     - echo ">>> Installing ArgoCD"
-                    - kubectl create namespace argocd
+                    - kubectl create namespace argocd || echo "Namespace argocd already exists"
                     - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
                     
                     # Wait for ArgoCD to be ready
                     - echo ">>> Waiting for ArgoCD to be ready"
-                    - kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s
+                    - kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s || (echo "ArgoCD server deployment timed out" && exit 1)
                     
                     # Create admin password
                     - echo ">>> Setting up ArgoCD admin password"
+                    - |
+                      if [ -z "$ARGOCD_PASSWORD" ]; then
+                        echo "No password provided, generating secure password"
+                        ARGOCD_PASSWORD=$(openssl rand -base64 12)
+                        echo "Generated password: $ARGOCD_PASSWORD"
+                      fi
                     - kubectl -n argocd patch secret argocd-secret \
-                      -p '{"stringData": {"admin.password": "'$$(htpasswd -bnBC 10 "" $$ARGOCD_PASSWORD | tr -d ':\n' | sed 's/$2y/$2a/')'", "admin.passwordMtime": "'$$(date +%FT%T%Z)'"}}'
+                      -p '{"stringData": {"admin.password": "'$(htpasswd -bnBC 10 "" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/$2y/$2a/')'", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
                     
                     # Configure ArgoCD server to be accessible
                     - echo ">>> Configuring ArgoCD access"
@@ -233,49 +263,53 @@ Resources:
                     - |
                       # Wait for Load Balancer to be assigned
                       counter=0
-                      while [ $$counter -lt 30 ]; do
-                        ARGOCD_SERVER=$$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
-                        if [ ! -z "$$ARGOCD_SERVER" ]; then
-                          echo "LoadBalancer hostname: $$ARGOCD_SERVER"
+                      max_attempts=60
+                      while [ $counter -lt $max_attempts ]; do
+                        ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+                        if [ ! -z "$ARGOCD_SERVER" ]; then
+                          echo "LoadBalancer hostname: $ARGOCD_SERVER"
                           break
                         fi
                         sleep 10
-                        counter=$$((counter + 1))
-                        echo "Waiting for ArgoCD Load Balancer... Attempt $$counter"
+                        counter=$((counter + 1))
+                        echo "Waiting for ArgoCD Load Balancer... Attempt $counter of $max_attempts"
                       done
                     
                     - |
-                      if [ ! -z "$$ARGOCD_SERVER" ]; then
+                      # Store ArgoCD access info in SSM Parameter Store with proper prefix
+                      SSM_PREFIX="/eks/${EKSClusterName}-${STACK_NAME}"
+                      
+                      if [ ! -z "$ARGOCD_SERVER" ]; then
                         # Store ArgoCD access info in SSM Parameter Store
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-server" --value "$$ARGOCD_SERVER" --type "String" --overwrite
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-username" --value "admin" --type "String" --overwrite
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-password" --value "$$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                        echo "ArgoCD access info stored in SSM Parameter Store"
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "$ARGOCD_SERVER" --type "String" --overwrite
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
+                        echo "ArgoCD access info stored in SSM Parameter Store under prefix $SSM_PREFIX"
                       else
                         echo "WARNING: Could not get ArgoCD Server URL - Load Balancer may still be provisioning"
                         # Proceed anyway, we'll store the fact that it's being provisioned
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-username" --value "admin" --type "String" --overwrite
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-password" --value "$$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                        aws ssm put-parameter --name "/eks/$$EKSClusterName/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
+                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
                       fi
                     
                     # Add setup script to VSCode server
                     - echo ">>> Setting up VSCode server with kubeconfig and ArgoCD access"
                     - |
-                      VSCODE_INSTANCE_ID=$$(aws ec2 describe-instances \
-                        --filters "Name=tag:Name,Values=$$VSCodeInstanceName" \
+                      VSCODE_INSTANCE_ID=$(aws ec2 describe-instances \
+                        --filters "Name=tag:Name,Values=$VSCodeInstanceName" \
                         --query "Reservations[0].Instances[0].InstanceId" \
                         --output text)
                     
-                      if [ -z "$$VSCODE_INSTANCE_ID" ]; then
-                        echo "WARNING: Could not find VSCode instance with name $$VSCodeInstanceName"
+                      if [ -z "$VSCODE_INSTANCE_ID" ] || [ "$VSCODE_INSTANCE_ID" == "None" ]; then
+                        echo "WARNING: Could not find VSCode instance with name $VSCodeInstanceName"
                       else
-                        echo "Found VSCode instance: $$VSCODE_INSTANCE_ID"
+                        echo "Found VSCode instance: $VSCODE_INSTANCE_ID"
                         
                         # Create individual commands for VSCode setup
                         aws ssm send-command \
                           --document-name "AWS-RunShellScript" \
-                          --targets "Key=instanceids,Values=$$VSCODE_INSTANCE_ID" \
+                          --targets "Key=instanceids,Values=$VSCODE_INSTANCE_ID" \
                           --parameters 'commands=[
                             "#!/bin/bash",
                             "# Install ArgoCD CLI",
@@ -285,37 +319,42 @@ Resources:
                             "# Create workshop directory",
                             "mkdir -p /home/participant/workshops",
                             "# Create ArgoCD info script",
-                            "cat > /home/participant/workshops/argocd-info.sh << \"EOL\"",
+                            "cat > /home/participant/workshops/argocd-info.sh << \"EOF\"",
                             "#!/bin/bash",
-                            "CLUSTER_NAME=\"${EKSClusterName}\"",
+                            "CLUSTER_NAME=\"'"${EKSClusterName}"'\"",
+                            "STACK_NAME=\"'"${AWS::StackName}"'\"",
+                            "SSM_PREFIX=\"/eks/$CLUSTER_NAME-$STACK_NAME\"",
+                            "",
                             "# Get ArgoCD server URL",
-                            "ARGOCD_SERVER=$(aws ssm get-parameter --name \"/eks/$CLUSTER_NAME/argocd-server\" --query \"Parameter.Value\" --output text)",
-                            "ARGOCD_USERNAME=$(aws ssm get-parameter --name \"/eks/$CLUSTER_NAME/argocd-username\" --query \"Parameter.Value\" --output text)",
-                            "ARGOCD_PASSWORD=$(aws ssm get-parameter --name \"/eks/$CLUSTER_NAME/argocd-password\" --with-decryption --query \"Parameter.Value\" --output text)",
-                            "if [ \"$ARGOCD_SERVER\" == \"pending-loadbalancer-creation\" ]; then",
+                            "ARGOCD_SERVER=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-server\" --query \"Parameter.Value\" --output text 2>/dev/null || echo \"Not available yet\")",
+                            "ARGOCD_USERNAME=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-username\" --query \"Parameter.Value\" --output text 2>/dev/null || echo \"admin\")",
+                            "ARGOCD_PASSWORD=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-password\" --with-decryption --query \"Parameter.Value\" --output text 2>/dev/null || echo \"Not available yet\")",
+                            "",
+                            "if [ \"$ARGOCD_SERVER\" == \"pending-loadbalancer-creation\" ] || [ \"$ARGOCD_SERVER\" == \"Not available yet\" ]; then",
                             "  echo \"ArgoCD LoadBalancer is still being provisioned...\"",
                             "  echo \"Please wait a few minutes and try again.\"",
                             "  exit 0",
                             "fi",
+                            "",
                             "echo",
-                            "echo \"==================================================\"",
+                            "echo \"===================================================\"",
                             "echo \"  ArgoCD is installed on your EKS cluster!\"",
-                            "echo \"==================================================\"",
+                            "echo \"===================================================\"",
                             "echo \"URL: https://$ARGOCD_SERVER\"",
                             "echo \"Username: $ARGOCD_USERNAME\"",
                             "echo \"Password: $ARGOCD_PASSWORD\"",
-                            "echo \"==================================================\"",
+                            "echo \"===================================================\"",
                             "echo",
                             "echo \"To access ArgoCD CLI, run:\"",
-                            "echo \"  argocd login $ARGOCD_SERVER --username admin --password $ARGOCD_PASSWORD --insecure\"",
+                            "echo \"  argocd login $ARGOCD_SERVER --username admin --password \\\"$ARGOCD_PASSWORD\\\" --insecure\"",
                             "echo",
-                            "EOL",
+                            "EOF",
                             "chmod +x /home/participant/workshops/argocd-info.sh",
                             "# Set up kubeconfig",
                             "mkdir -p /home/participant/.kube",
-                            "aws eks update-kubeconfig --name \"${EKSClusterName}\" --region \"${AWS::Region}\" --kubeconfig /home/participant/.kube/config",
+                            "aws eks update-kubeconfig --name \"'"${EKSClusterName}"'\" --region \"'"${AWS::Region}"'\" --kubeconfig /home/participant/.kube/config",
                             "# Add useful aliases to bashrc",
-                            "cat >> /home/participant/.bashrc << \"EOL\"",
+                            "cat >> /home/participant/.bashrc << \"EOF\"",
                             "# Kubernetes aliases",
                             "alias k=kubectl",
                             "alias kgp=\"kubectl get pods\"",
@@ -325,7 +364,7 @@ Resources:
                             "alias kgn=\"kubectl get nodes\"",
                             "# ArgoCD quick access",
                             "alias argocd-info=\"/home/participant/workshops/argocd-info.sh\"",
-                            "EOL",
+                            "EOF",
                             "echo \"echo \\\"Kubernetes and ArgoCD tools are ready!\\\"\" >> /home/participant/.bashrc",
                             "echo \"echo \\\"Run \'argocd-info\' to get ArgoCD access information\\\"\" >> /home/participant/.bashrc",
                             "# Set proper ownership",
@@ -333,18 +372,17 @@ Resources:
                             "chown -R participant:participant /home/participant/.kube",
                             "chmod 600 /home/participant/.kube/config",
                             "chown participant:participant /home/participant/.bashrc"
-                          ]' \
-                          --output text
+                          ]'
                       fi
                 post_build:
                   commands:
                     # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
-                    - echo ">>> build status $$CODEBUILD_BUILD_SUCCEEDING "
+                    - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING "
                     - |
-                      if [ "$$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "$$CODEBUILD_BUILD_ID","Data" : "Creation complete"}' $$CFN_RESPONSE_URL
+                      if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
+                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "Creation complete"}' $CFN_RESPONSE_URL
                       else
-                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "$$CODEBUILD_BUILD_ID","Data" : "See Codebuild logs for details. $$CODEBUILD_LOG_PATH"}' $$CFN_RESPONSE_URL
+                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "See Codebuild logs for details. '"$CODEBUILD_LOG_PATH"'"}' $CFN_RESPONSE_URL
                       fi
       TimeoutInMinutes: 60
 
@@ -357,8 +395,8 @@ Resources:
     DependsOn: [CustomTriggerBuild]
     Properties:
       Handle: !Ref WaitForStackCreationHandle
-      # wait for 55 minutes before giving up
-      Timeout: "3300"
+      # wait for 59 minutes before giving up - ensuring it's less than the CodeBuild timeout
+      Timeout: "3540"
       # success or failure signal count
       Count: 1
 
@@ -402,11 +440,12 @@ Resources:
       Handler: index.handler
       Role: !GetAtt TriggerBuildLambdaIamRole.Arn
       Runtime: python3.12
+      Timeout: 60
       Code:
         ZipFile: |
           import boto3
           import logging
-          import sys
+          import traceback
           import json
           import urllib3
 
@@ -416,31 +455,58 @@ Resources:
 
           codebuild_client = boto3.client('codebuild')
 
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-lambda-function-code-cfnresponsemodule.html
+          def send_cfn_response(event, context, response_status, reason=None, response_data=None):
+              response_body = {
+                  'Status': response_status,
+                  'Reason': reason or 'See CloudWatch logs for details',
+                  'PhysicalResourceId': event.get('PhysicalResourceId', context.log_stream_name),
+                  'StackId': event['StackId'],
+                  'RequestId': event['RequestId'],
+                  'LogicalResourceId': event['LogicalResourceId'],
+                  'Data': response_data or {}
+              }
+              
+              try:
+                  http.request('PUT', event['ResponseURL'], 
+                          body=json.dumps(response_body).encode('utf-8'),
+                          headers={'Content-Type': 'application/json'})
+                  logger.info("CFN response sent successfully")
+              except Exception as e:
+                  logger.error(f"Failed to send CFN response: {str(e)}")
+                  logger.error(traceback.format_exc())
+
           def handler(event, context):
-              logger.info('Incoming Event: {0}'.format(event))
-              response = {}
-              response['PhysicalResourceId'] = 'hardcodedphyscialid'
-              response['StackId'] = event['StackId']
-              response['RequestId'] = event['RequestId']
-              response['LogicalResourceId'] = event['LogicalResourceId']
-              cfn_response_url = event['ResponseURL']
+              logger.info(f'Incoming Event: {event}')
+              
+              try:
+                  if event['RequestType'] == 'Delete':
+                      logger.info(f'Nothing to do. Request Type: {event["RequestType"]}')
+                      send_cfn_response(event, context, 'SUCCESS')
+                      return 'Delete operation completed'
 
-              if event['RequestType'] == 'Delete':
-                  # return
-                  logger.info('Nothing to do. Request Type : {0}'.format(event['RequestType']))
-                  response['Status'] = 'SUCCESS'
-
-              elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
-                try:
-                  codebuild_client.start_build(projectName=event['ResourceProperties']['CodebuildProjectName'])
-                  response['Status'] = 'SUCCESS'
-                except:
-                  logging.error('Error: {0}'.format(sys.exc_info() ))
-                  response['Status'] = 'FAILED'
-
-              http.request('PUT', cfn_response_url, body=json.dumps(response).encode('utf-8'), headers={'Content-Type': 'application/json'})
-              return 'Done'
+                  elif event['RequestType'] in ['Create', 'Update']:
+                      try:
+                          codebuild_project_name = event['ResourceProperties']['CodebuildProjectName']
+                          logger.info(f'Starting build for project: {codebuild_project_name}')
+                          response = codebuild_client.start_build(projectName=codebuild_project_name)
+                          logger.info(f'Build started successfully: {response}')
+                          send_cfn_response(event, context, 'SUCCESS')
+                          return 'Build triggered successfully'
+                      except Exception as e:
+                          logger.error(f'Error starting build: {str(e)}')
+                          logger.error(traceback.format_exc())
+                          send_cfn_response(event, context, 'FAILED', f'Error starting build: {str(e)}')
+                          return 'Failed to trigger build'
+                  else:
+                      logger.warning(f'Unsupported request type: {event["RequestType"]}')
+                      send_cfn_response(event, context, 'SUCCESS')
+                      return f'Unsupported request type: {event["RequestType"]}'
+              
+              except Exception as e:
+                  logger.error(f'Unexpected error: {str(e)}')
+                  logger.error(traceback.format_exc())
+                  send_cfn_response(event, context, 'FAILED', f'Unexpected error: {str(e)}')
+                  return 'Error handling request'
 
 Outputs:
   ClusterRoleArn:
@@ -452,3 +518,6 @@ Outputs:
   ArgocdAccessInfo:
     Description: How to access ArgoCD
     Value: Run 'argocd-info' on the VSCode server to get ArgoCD access details
+  CloudFormationStack:
+    Description: Stack name for reference in scripts
+    Value: !Ref AWS::StackName
