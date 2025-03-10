@@ -52,6 +52,7 @@ Resources:
       ManagedPolicyArns:
       - arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
       - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Path: "/"
       RoleName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Policies:
@@ -70,6 +71,8 @@ Resources:
                 Resource: !Sub arn:aws:eks:*:*:cluster/*
               - Effect: Allow
                 Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
                   - elasticloadbalancing:DescribeLoadBalancers
                   - elasticloadbalancing:CreateLoadBalancer
                   - elasticloadbalancing:DeleteLoadBalancer
@@ -253,11 +256,11 @@ Resources:
                         echo "Generated password: $ARGOCD_PASSWORD"
                       fi
                     - kubectl -n argocd patch secret argocd-secret \
-                      -p '{"stringData": {"admin.password": "'$(htpasswd -bnBC 10 "" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/$2y/$2a/')'", "admin.passwordMtime": "'$(date +%FT%T%Z)'"}}'
+                      -p "{\"stringData\": {\"admin.password\": \"$(htpasswd -bnBC 10 \"\" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/\$2y/\$2a/')\", \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"}}"
                     
                     # Configure ArgoCD server to be accessible
                     - echo ">>> Configuring ArgoCD access"
-                    - kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+                    - kubectl patch svc argocd-server -n argocd -p "{\"spec\": {\"type\": \"LoadBalancer\"}}"
                     
                     # Store ArgoCD URL and credentials in SSM Parameters
                     - echo ">>> Storing ArgoCD access information"
@@ -275,6 +278,11 @@ Resources:
                         counter=$((counter + 1))
                         echo "Waiting for ArgoCD Load Balancer... Attempt $counter of $max_attempts"
                       done
+
+                      if [[ -z "$ARGOCD_SERVER" ]]; then
+                        echo "❌ ERROR: LoadBalancer hostname not assigned after $max_attempts attempts"
+                        exit 1
+                      fi
                     
                     - |
                       # Store ArgoCD access info in SSM Parameter Store with proper prefix
