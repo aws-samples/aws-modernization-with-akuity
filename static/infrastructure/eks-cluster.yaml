@@ -159,7 +159,7 @@ Resources:
           - Name: AWSRegion
             Value: !Ref AWS::Region
           - Name: STACK_NAME
-            Value: !Ref AWS::StackName
+            Value: ${AWS::StackName}
       Source:
         Type: NO_SOURCE
         BuildSpec:
@@ -277,7 +277,7 @@ Resources:
                     
                     - |
                       # Store ArgoCD access info in SSM Parameter Store with proper prefix
-                      SSM_PREFIX="/eks/${EKSClusterName}-${STACK_NAME}"
+                      SSM_PREFIX="/eks/${EKSClusterName}-${AWS::StackName}"
                       
                       if [ ! -z "$ARGOCD_SERVER" ]; then
                         # Store ArgoCD access info in SSM Parameter Store
