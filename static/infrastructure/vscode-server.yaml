@@ -911,19 +911,6 @@ Resources:
                 - echo "Terraform installed. Checking configuration"
                 - terraform --version
 
-          - action: aws:runShellScript
-            name: InstallTerraformDnf
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - dnf config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-                - dnf -y install terraform 2>&1
-                - echo "Terraform installed. Checking configuration"
-                - terraform --version
 
           - action: aws:runShellScript
             name: InstallSnyk
