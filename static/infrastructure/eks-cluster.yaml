@@ -255,12 +255,17 @@ Resources:
                         ARGOCD_PASSWORD=$(openssl rand -base64 12)
                         echo "Generated password: $ARGOCD_PASSWORD"
                       fi
-                    - kubectl -n argocd patch secret argocd-secret \
-                      -p "{\"stringData\": {\"admin.password\": \"$(htpasswd -bnBC 10 \"\" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/\$2y/\$2a/')\", \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"}}"
+                      - kubectl -n argocd patch secret argocd-secret \
+                        -p "{\"stringData\": {\"admin.password\": \"$(htpasswd -bnBC 10 \"\" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/\$2y/\$2a/')\", \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"}}"
                     
                     # Configure ArgoCD server to be accessible
                     - echo ">>> Configuring ArgoCD access"
-                    - kubectl patch svc argocd-server -n argocd -p "{\"spec\": {\"type\": \"LoadBalancer\"}}"
+                    - |
+                      kubectl patch svc argocd-server -n argocd -p '{
+                        "spec": {
+                          "type": "LoadBalancer"
+                        }
+                      }'
                     
                     # Store ArgoCD URL and credentials in SSM Parameters
                     - echo ">>> Storing ArgoCD access information"
