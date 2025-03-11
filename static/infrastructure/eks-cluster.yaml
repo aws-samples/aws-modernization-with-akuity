@@ -529,99 +529,30 @@ Resources:
                         aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
                         aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
                       fi
-                    
-                    # Add setup script to VSCode server
-                    - echo ">>> Setting up VSCode server with kubeconfig and ArgoCD access"
-                    - |
-                      VSCODE_INSTANCE_ID=$(aws ec2 describe-instances \
-                        --filters "Name=tag:Name,Values=$VSCodeInstanceName" \
-                        --query "Reservations[0].Instances[0].InstanceId" \
-                        --output text)
-                    
-                      if [ -z "$VSCODE_INSTANCE_ID" ] || [ "$VSCODE_INSTANCE_ID" == "None" ]; then
-                        echo "WARNING: Could not find VSCode instance with name $VSCodeInstanceName"
-                      else
-                        echo "Found VSCode instance: $VSCODE_INSTANCE_ID"
+
+                  post_build:
+                    commands:
+                      - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING"
+                      - |
+                        if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "Creation complete"}' $CFN_RESPONSE_URL
+                          echo ">>> Triggering SSM document execution for VSCode instance"
+                          aws lambda invoke --function-name RunSSMDocLambda --payload '{"InstanceId": "'"$VSCodeInstanceName"'", "DocumentName": "VSCodeK8sSetup"}' response.json
+                        else
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "See Codebuild logs for details. '"$CODEBUILD_LOG_PATH"'"}' $CFN_RESPONSE_URL
+                        fi
                         
-                        # Create individual commands for VSCode setup
-                        aws ssm send-command \
-                          --document-name "AWS-RunShellScript" \
-                          --targets "Key=instanceids,Values=$VSCODE_INSTANCE_ID" \
-                          --parameters 'commands=[
-                            "#!/bin/bash",
-                            "# Install ArgoCD CLI",
-                            "curl -sSL -o /tmp/argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64",
-                            "chmod +x /tmp/argocd-linux-amd64",
-                            "mv /tmp/argocd-linux-amd64 /usr/local/bin/argocd",
-                            "# Create workshop directory",
-                            "mkdir -p /home/participant/workshops",
-                            "# Create ArgoCD info script",
-                            "cat > /home/participant/workshops/argocd-info.sh << \"EOF\"",
-                            "#!/bin/bash",
-                            "CLUSTER_NAME=\"'"${EKSClusterName}"'\"",
-                            "STACK_NAME=\"'"${AWS::StackName}"'\"",
-                            "SSM_PREFIX=\"/eks/$CLUSTER_NAME-$STACK_NAME\"",
-                            "",
-                            "# Get ArgoCD server URL",
-                            "ARGOCD_SERVER=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-server\" --query \"Parameter.Value\" --output text 2>/dev/null || echo \"Not available yet\")",
-                            "ARGOCD_USERNAME=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-username\" --query \"Parameter.Value\" --output text 2>/dev/null || echo \"admin\")",
-                            "ARGOCD_PASSWORD=$(aws ssm get-parameter --name \"$SSM_PREFIX/argocd-password\" --with-decryption --query \"Parameter.Value\" --output text 2>/dev/null || echo \"Not available yet\")",
-                            "",
-                            "if [ \"$ARGOCD_SERVER\" == \"pending-loadbalancer-creation\" ] || [ \"$ARGOCD_SERVER\" == \"Not available yet\" ]; then",
-                            "  echo \"ArgoCD LoadBalancer is still being provisioned...\"",
-                            "  echo \"Please wait a few minutes and try again.\"",
-                            "  exit 0",
-                            "fi",
-                            "",
-                            "echo",
-                            "echo \"===================================================\"",
-                            "echo \"  ArgoCD is installed on your EKS cluster!\"",
-                            "echo \"===================================================\"",
-                            "echo \"URL: https://$ARGOCD_SERVER\"",
-                            "echo \"Username: $ARGOCD_USERNAME\"",
-                            "echo \"Password: $ARGOCD_PASSWORD\"",
-                            "echo \"===================================================\"",
-                            "echo",
-                            "echo \"To access ArgoCD CLI, run:\"",
-                            "echo \"  argocd login $ARGOCD_SERVER --username admin --password \\\"$ARGOCD_PASSWORD\\\" --insecure\"",
-                            "echo",
-                            "EOF",
-                            "chmod +x /home/participant/workshops/argocd-info.sh",
-                            "# Set up kubeconfig",
-                            "mkdir -p /home/participant/.kube",
-                            "aws eks update-kubeconfig --name \"'"${EKSClusterName}"'\" --region \"'"${AWS::Region}"'\" --kubeconfig /home/participant/.kube/config",
-                            "# Add useful aliases to bashrc",
-                            "cat >> /home/participant/.bashrc << \"EOF\"",
-                            "# Kubernetes aliases",
-                            "alias k=kubectl",
-                            "alias kgp=\"kubectl get pods\"",
-                            "alias kgs=\"kubectl get svc\"",
-                            "alias kgd=\"kubectl get deployments\"",
-                            "alias kga=\"kubectl get all\"",
-                            "alias kgn=\"kubectl get nodes\"",
-                            "# ArgoCD quick access",
-                            "alias argocd-info=\"/home/participant/workshops/argocd-info.sh\"",
-                            "EOF",
-                            "echo \"echo \\\"Kubernetes and ArgoCD tools are ready!\\\"\" >> /home/participant/.bashrc",
-                            "echo \"echo \\\"Run \'argocd-info\' to get ArgoCD access information\\\"\" >> /home/participant/.bashrc",
-                            "# Set proper ownership",
-                            "chown -R participant:participant /home/participant/workshops",
-                            "chown -R participant:participant /home/participant/.kube",
-                            "chmod 600 /home/participant/.kube/config",
-                            "chown participant:participant /home/participant/.bashrc"
-                          ]'
-                      fi
-                post_build:
-                  commands:
-                    # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
-                    - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING "
-                    - |
-                      if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "Creation complete"}' $CFN_RESPONSE_URL
-                      else
-                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "See Codebuild logs for details. '"$CODEBUILD_LOG_PATH"'"}' $CFN_RESPONSE_URL
-                      fi
       TimeoutInMinutes: 60
+
+  RunVSCodeSSMDoc:
+    Type: Custom::RunSSMDocLambda
+    DependsOn:
+      - BuildProject
+    Properties:
+      ServiceToken: !ImportValue RunSSMDocLambdaArn
+      InstanceId: !Ref VSCodeInstanceName
+      DocumentName: "VSCodeK8sSetup"
+      CloudWatchLogGroupName: !Sub "/aws/ssm/${AWS::StackName}-VSCodeSetup"
 
   WaitForStackCreationHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
