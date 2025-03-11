@@ -1134,7 +1134,7 @@ Resources:
                   fi
 
 
-    VSCodeK8sSSMDoc:
+  VSCodeK8sSSMDoc:
     Type: AWS::SSM::Document
     Properties:
       Name: "VSCodeK8sSetup"
@@ -1152,6 +1152,10 @@ Resources:
         mainSteps:
           - action: aws:runShellScript
             name: InstallKubectl
+            precondition:
+              StringEquals:
+                - '{{ platformType }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1165,9 +1169,13 @@ Resources:
                 - echo "alias k=kubectl" >> /home/vscode/.bashrc
                 - echo "complete -o default -F __start_kubectl k" >> /home/vscode/.bashrc
                 - source /home/vscode/.bashrc
-
+  
           - action: aws:runShellScript
             name: ConfigureEKSAccess
+            precondition:
+              StringEquals:
+                - '{{ platformType }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1180,9 +1188,13 @@ Resources:
                 - chown -R vscode:vscode /home/vscode/.kube
                 - chmod 600 /home/vscode/.kube/config
                 - echo "EKS kubeconfig setup completed."
-
+  
           - action: aws:runShellScript
             name: InstallArgoCD
+            precondition:
+              StringEquals:
+                - '{{ platformType }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1191,9 +1203,13 @@ Resources:
                 - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                 - chmod +x /usr/local/bin/argocd
                 - echo "ArgoCD CLI installed."
-
+  
           - action: aws:runShellScript
             name: SetupArgoCDAccess
+            precondition:
+              StringEquals:
+                - '{{ platformType }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1201,12 +1217,12 @@ Resources:
                 - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
                 - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
                 - SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
-
+  
                 - echo "Retrieving ArgoCD details from SSM..."
                 - ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
                 - ARGOCD_USERNAME="admin"
                 - ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
-
+  
                 - echo "Creating ArgoCD info script..."
                 - cat <<EOF > /home/vscode/argocd-info.sh
                   #!/bin/bash
@@ -1223,12 +1239,6 @@ Resources:
                 - chmod +x /home/vscode/argocd-info.sh
                 - chown vscode:vscode /home/vscode/argocd-info.sh
                 - echo "ArgoCD setup completed."
-
-        precondition:
-          StringEquals:
-            - '{{ platformType }}'
-            - Linux
-                
   
 
   VSCodeInstanceRole:
