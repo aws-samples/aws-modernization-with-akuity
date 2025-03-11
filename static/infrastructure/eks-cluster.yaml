@@ -65,24 +65,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - eks:DescribeClusterVersions
-                  - eks:CreateCluster
-                  - eks:DeleteCluster
-                  - eks:ListClusters
-                  - eks:UpdateClusterConfig
-                  - eks:UpdateClusterVersion
-                  - eks:CreateNodegroup
-                  - eks:DeleteNodegroup
-                  - eks:DescribeNodegroup
-                  - eks:ListNodegroups
-                  - eks:UpdateNodegroupConfig
-                  - eks:UpdateNodegroupVersion
-                  - eks:TagResource
-                  - eks:UntagResource
-                  - eks:DescribeCluster
-                Resource: !Sub arn:aws:eks:*:*:cluster/*
-              - Effect: Allow
-                Action:
                   - cloudformation:CreateStack
                   - cloudformation:UpdateStack
                   - cloudformation:DeleteStack
@@ -110,6 +92,21 @@ Resources:
                   - ec2:AuthorizeSecurityGroupIngress
                   - ec2:RevokeSecurityGroupIngress
                   - ec2:DeleteSecurityGroup
+                  - eks:DescribeClusterVersions
+                  - eks:CreateCluster
+                  - eks:DeleteCluster
+                  - eks:ListClusters
+                  - eks:UpdateClusterConfig
+                  - eks:UpdateClusterVersion
+                  - eks:CreateNodegroup
+                  - eks:DeleteNodegroup
+                  - eks:DescribeNodegroup
+                  - eks:ListNodegroups
+                  - eks:UpdateNodegroupConfig
+                  - eks:UpdateNodegroupVersion
+                  - eks:TagResource
+                  - eks:UntagResource
+                  - eks:DescribeCluster
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - elasticloadbalancing:DescribeLoadBalancers
