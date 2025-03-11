@@ -498,15 +498,19 @@ Resources:
                         ARGOCD_PASSWORD=$(openssl rand -base64 12)
                         echo "Generated password: $ARGOCD_PASSWORD"
                       fi
+
                     - |
                       kubectl -n argocd patch secret argocd-secret \
                         --type='merge' \
-                        -p "{
-                          \"stringData\": {
-                            \"admin.password\": \"$(htpasswd -bnBC 10 \"\" \"$ARGOCD_PASSWORD\" | tr -d ':\n' | sed 's/\$2y/\$2a/')\",
-                            \"admin.passwordMtime\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"
-                          }
-                        }"
+                        -p "$(cat <<EOF
+                      {
+                        "stringData": {
+                          "admin.password": "$(htpasswd -bnBC 10 "" "$ARGOCD_PASSWORD" | tr -d ':\n' | sed 's/\$2y/\$2a/')",
+                          "admin.passwordMtime": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+                        }
+                      }
+                      EOF
+                      )"
                     # Configure ArgoCD server to be accessible
                     - echo ">>> Configuring ArgoCD access"
                     - |
