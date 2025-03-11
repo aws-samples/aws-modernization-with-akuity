@@ -1544,3 +1544,8 @@ Outputs:
   Password:
     Description: VSCode-Server Password
     Value: !GetAtt SecretPlaintext.password
+  RunSSMDocLambdaArn:
+    Description: ARN of the RunSSMDoc Lambda function
+    Value: !GetAtt RunSSMDocLambda.Arn
+    Export:
+      Name: RunSSMDocLambdaArn
