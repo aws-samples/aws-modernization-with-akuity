@@ -545,8 +545,6 @@ Resources:
 
   RunVSCodeSSMDoc:
     Type: Custom::RunSSMDocLambda
-    DependsOn:
-      - BuildProject
     Properties:
       ServiceToken: !ImportValue RunSSMDocLambdaArn
       InstanceId: !Ref VSCodeInstanceName
