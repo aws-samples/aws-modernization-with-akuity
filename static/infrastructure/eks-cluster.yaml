@@ -78,6 +78,7 @@ Resources:
                   - ec2:DeleteInternetGateway
                   - ec2:CreateVpc
                   - ec2:DeleteVpc
+                  - ec2:DescribeInstanceTypeOfferings
                   - ec2:DescribeVpcs
                   - ec2:DescribeSubnets
                   - ec2:DescribeSecurityGroups
