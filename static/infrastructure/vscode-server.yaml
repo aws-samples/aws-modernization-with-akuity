@@ -910,14 +910,12 @@ Resources:
                 - dnf -y install terraform 2>&1
                 - echo "Terraform installed. Checking configuration"
                 - terraform --version
-
-
           - action: aws:runShellScript
             name: InstallSnyk
             precondition:
               StringEquals:
                 - '{{ LinuxFlavor }}'
-                - ubuntu
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -931,7 +929,7 @@ Resources:
             precondition:
               StringEquals:
                 - '{{ LinuxFlavor }}'
-                - ubuntu
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -944,14 +942,12 @@ Resources:
                 - echo "complete -o default -F __start_kubectl k" >> /home/${VSCodeUser}/.bashrc
                 - source /home/${VSCodeUser}/.bashrc
                 - echo "Kubectl installed."
-
-
           - action: aws:runShellScript
             name: ConfigureEKS
             precondition:
               StringEquals:
                 - '{{ LinuxFlavor }}'
-                - ubuntu
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -971,14 +967,12 @@ Resources:
                   source /home/${VSCodeUser}/.bashrc
                   echo 'Bootstrap completed with return code $?'
                   aws eks update-kubeconfig --name $(aws eks list-clusters --query 'clusters[0]' --output text)
-
-
           - action: aws:runShellScript
             name: ConfigureEKSAccess
             precondition:
               StringEquals:
                 - '{{ LinuxFlavor }}'
-                - ubuntu
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1032,8 +1026,6 @@ Resources:
                   echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
                   
                   chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}
-
-
           - action: aws:runShellScript
             name: DownloadAssets
             inputs:
