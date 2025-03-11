@@ -287,8 +287,10 @@ Resources:
                   - ssm:SendCommand
                 Resource:
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeSSMDoc}
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeK8sSSMDoc}
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AmazonCloudWatch-ManageAgent
                   - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${VSCodeInstance}
+                
 
   RunSSMDocLambda:
     Type: AWS::Lambda::Function
@@ -1130,6 +1132,103 @@ Resources:
                     sudo -u ${VSCodeUser} git -C ${HomeFolder} branch
                     ls -la ${HomeFolder}
                   fi
+
+
+    VSCodeK8sSSMDoc:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: "VSCodeK8sSetup"
+      DocumentType: Command
+      DocumentFormat: YAML
+      TargetType: "/AWS::EC2::Instance"
+      Content:
+        schemaVersion: "2.2"
+        description: "Bootstrap Kubernetes tools and ArgoCD access for VSCode instance"
+        parameters:
+          EKSClusterName:
+            type: String
+            description: "Name of the EKS cluster"
+            default: "akuity-aws-cluster"
+        mainSteps:
+          - action: aws:runShellScript
+            name: InstallKubectl
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e  # Exit on any error
+                - echo "Installing kubectl..."
+                - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+                - chmod +x ./kubectl
+                - mv ./kubectl /usr/local/bin/kubectl
+                - echo "Kubectl installed successfully."
+                - echo "source <(kubectl completion bash)" >> /home/vscode/.bashrc
+                - echo "alias k=kubectl" >> /home/vscode/.bashrc
+                - echo "complete -o default -F __start_kubectl k" >> /home/vscode/.bashrc
+                - source /home/vscode/.bashrc
+
+          - action: aws:runShellScript
+            name: ConfigureEKSAccess
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
+                - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+                - echo "Setting up kubeconfig for EKS cluster: $EKS_CLUSTER_NAME in region $REGION"
+                - mkdir -p /home/vscode/.kube
+                - aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$REGION" --kubeconfig /home/vscode/.kube/config
+                - chown -R vscode:vscode /home/vscode/.kube
+                - chmod 600 /home/vscode/.kube/config
+                - echo "EKS kubeconfig setup completed."
+
+          - action: aws:runShellScript
+            name: InstallArgoCD
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing ArgoCD CLI..."
+                - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+                - chmod +x /usr/local/bin/argocd
+                - echo "ArgoCD CLI installed."
+
+          - action: aws:runShellScript
+            name: SetupArgoCDAccess
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
+                - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+                - SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
+
+                - echo "Retrieving ArgoCD details from SSM..."
+                - ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
+                - ARGOCD_USERNAME="admin"
+                - ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
+
+                - echo "Creating ArgoCD info script..."
+                - cat <<EOF > /home/vscode/argocd-info.sh
+                  #!/bin/bash
+                  echo "==================================================="
+                  echo "  🚀 ArgoCD Login Details"
+                  echo "==================================================="
+                  echo "🔗 URL: https://$ARGOCD_SERVER"
+                  echo "👤 Username: $ARGOCD_USERNAME"
+                  echo -e "🔑 Password:  \033[1;32m$ARGOCD_PASSWORD\033[0m"
+                  echo "==================================================="
+                  echo "🔹 To login via CLI, run:"
+                  echo "   argocd login $ARGOCD_SERVER --username admin --password \"\$ARGOCD_PASSWORD\" --insecure"
+                  echo "==================================================="
+                - chmod +x /home/vscode/argocd-info.sh
+                - chown vscode:vscode /home/vscode/argocd-info.sh
+                - echo "ArgoCD setup completed."
+
+        precondition:
+          StringEquals:
+            - '{{ platformType }}'
+            - Linux
+                
   
 
   VSCodeInstanceRole:
