@@ -1154,7 +1154,7 @@ Resources:
             name: InstallKubectl
             precondition:
               StringEquals:
-                - '{{ platformType }}'
+                - '{{ LinuxFlavor }}'
                 - al2023
             inputs:
               runCommand:
@@ -1174,7 +1174,7 @@ Resources:
             name: ConfigureEKSAccess
             precondition:
               StringEquals:
-                - '{{ platformType }}'
+                - '{{ LinuxFlavor }}'
                 - al2023
             inputs:
               runCommand:
@@ -1193,7 +1193,7 @@ Resources:
             name: InstallArgoCD
             precondition:
               StringEquals:
-                - '{{ platformType }}'
+                - '{{ LinuxFlavor }}'
                 - al2023
             inputs:
               runCommand:
@@ -1209,7 +1209,7 @@ Resources:
             name: SetupArgoCDAccess
             precondition:
               StringEquals:
-                - '{{ platformType }}'
+                - '{{ LinuxFlavor }}'
                 - al2023
             inputs:
               runCommand:
