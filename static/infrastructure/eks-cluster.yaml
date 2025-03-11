@@ -421,6 +421,8 @@ Resources:
                       cloudWatch:
                           clusterLogging:
                               enableTypes: ["*"]
+                      iam:
+                        withOIDC: true
                       secretsEncryption:
                         keyARN: $KMS_ARN
                       managedNodeGroups:
@@ -437,7 +439,6 @@ Resources:
                             'eks:cluster-name': ${EKSClusterName}
                             'stack-name': ${AWS::StackName}
                           iam:
-                            withOIDC: true
                             withAddonPolicies:
                               imageBuilder: true
                               autoScaler: true
