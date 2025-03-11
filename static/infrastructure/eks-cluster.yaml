@@ -306,6 +306,10 @@ Resources:
                   - ssm:ListCommandInvocations
                   - ssm:ListCommands
                   - ssm:GetCommandInvocation
+                  - ssm:StartSession
+                  - ssm:TerminateSession
+                  - ssm:DescribeInstanceInformation
+                  - ssm:DescribeInstanceAssociationsStatus
                 Resource: "*"
 
   KMSSecretsKey:
