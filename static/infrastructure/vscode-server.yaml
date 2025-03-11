@@ -1145,6 +1145,9 @@ Resources:
         schemaVersion: "2.2"
         description: "Bootstrap Kubernetes tools and ArgoCD access for VSCode instance"
         parameters:
+          LinuxFlavor:
+            type: String
+            default: 'al2023'
           EKSClusterName:
             type: String
             description: "Name of the EKS cluster"
