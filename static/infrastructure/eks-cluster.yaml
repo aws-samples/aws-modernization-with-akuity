@@ -137,16 +137,11 @@ Resources:
                   - iam:ListRoles
                   - iam:TagRole
                 Resource: "*"
-                Condition:
-                  StringLike:
-                    iam:PassedToService:
-                      - eks.amazonaws.com
-                      - ec2.amazonaws.com
-
               - Effect: Allow
                 Action:
                   - tag:GetResources
                   - tag:TagResources
+                  - tag:UntagResources
                 Resource: "*"
 
   KMSSecretsKey:
