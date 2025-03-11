@@ -189,6 +189,7 @@ Resources:
                   - iam:CreateOpenIDConnectProvider
                   - iam:DeleteOpenIDConnectProvider
                   - iam:UpdateOpenIDConnectProviderThumbprint
+                  - iam:TagOpenIDConnectProvider
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/*"
               
               # CloudFormation related permissions
