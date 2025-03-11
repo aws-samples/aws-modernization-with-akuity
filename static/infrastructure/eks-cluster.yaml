@@ -437,6 +437,7 @@ Resources:
                             'eks:cluster-name': ${EKSClusterName}
                             'stack-name': ${AWS::StackName}
                           iam:
+                            withOIDC: true
                             withAddonPolicies:
                               imageBuilder: true
                               autoScaler: true
