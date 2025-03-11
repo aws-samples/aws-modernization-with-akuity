@@ -546,6 +546,7 @@ Resources:
   RunVSCodeSSMDoc:
     Type: Custom::RunSSMDocLambda
     Properties:
+    DependsOn: [BuildProject]
       ServiceToken: !ImportValue RunSSMDocLambdaArn
       InstanceId: !Ref VSCodeInstanceName
       DocumentName: "VSCodeK8sSetup"
