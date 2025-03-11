@@ -1203,7 +1203,8 @@ Resources:
                 - curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
                 - chmod +x /usr/local/bin/argocd
                 - echo "ArgoCD CLI installed."
-  
+
+
           - action: aws:runShellScript
             name: SetupArgoCDAccess
             precondition:
@@ -1212,19 +1213,20 @@ Resources:
                 - al2023
             inputs:
               runCommand:
-                - '#!/bin/bash'
-                - set -e
-                - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
-                - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                - SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
-  
-                - echo "Retrieving ArgoCD details from SSM..."
-                - ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
-                - ARGOCD_USERNAME="admin"
-                - ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
-  
-                - echo "Creating ArgoCD info script..."
-                - cat <<EOF > /home/vscode/argocd-info.sh
+                - |
+                  #!/bin/bash
+                  set -e
+                  EKS_CLUSTER_NAME="{{ EKSClusterName }}"
+                  REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
+                  SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
+
+                  echo "Retrieving ArgoCD details from SSM..."
+                  ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
+                  ARGOCD_USERNAME="admin"
+                  ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
+
+                  echo "Creating ArgoCD info script..."
+                  cat << 'EOF' > /home/vscode/argocd-info.sh
                   #!/bin/bash
                   echo "==================================================="
                   echo "  🚀 ArgoCD Login Details"
@@ -1236,10 +1238,11 @@ Resources:
                   echo "🔹 To login via CLI, run:"
                   echo "   argocd login $ARGOCD_SERVER --username admin --password \"\$ARGOCD_PASSWORD\" --insecure"
                   echo "==================================================="
-                - chmod +x /home/vscode/argocd-info.sh
-                - chown vscode:vscode /home/vscode/argocd-info.sh
-                - echo "ArgoCD setup completed."
-  
+                  EOF
+
+                  chmod +x /home/vscode/argocd-info.sh
+                  chown vscode:vscode /home/vscode/argocd-info.sh
+                  echo "ArgoCD setup completed."  
 
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
