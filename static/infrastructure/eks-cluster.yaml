@@ -182,6 +182,14 @@ Resources:
                   - eks:UpdateAddon
                   - eks:DescribeAddonVersions
                 Resource: "*"
+
+              - Effect: Allow
+                Action:
+                  - iam:GetOpenIDConnectProvider
+                  - iam:CreateOpenIDConnectProvider
+                  - iam:DeleteOpenIDConnectProvider
+                  - iam:UpdateOpenIDConnectProviderThumbprint
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/*"
               
               # CloudFormation related permissions
               - Effect: Allow
