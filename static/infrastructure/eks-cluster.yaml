@@ -65,12 +65,21 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - eks:DescribeCluster
-                  - eks:ListClusters
-                  - eks:UpdateClusterConfig
-                  - eks:TagResource
+                  - eks:DescribeClusterVersions
                   - eks:CreateCluster
                   - eks:DeleteCluster
+                  - eks:ListClusters
+                  - eks:UpdateClusterConfig
+                  - eks:UpdateClusterVersion
+                  - eks:CreateNodegroup
+                  - eks:DeleteNodegroup
+                  - eks:DescribeNodegroup
+                  - eks:ListNodegroups
+                  - eks:UpdateNodegroupConfig
+                  - eks:UpdateNodegroupVersion
+                  - eks:TagResource
+                  - eks:UntagResource
+                  - eks:DescribeCluster
                 Resource: !Sub arn:aws:eks:*:*:cluster/*
               - Effect: Allow
                 Action:
@@ -82,28 +91,25 @@ Resources:
                   - cloudformation:DescribeStackResources
                   - cloudformation:GetTemplateSummary
                   - cloudformation:ListStackResources
+                  - ec2:CreateInternetGateway
+                  - ec2:AttachInternetGateway
+                  - ec2:DeleteInternetGateway
+                  - ec2:CreateVpc
+                  - ec2:DeleteVpc
                   - ec2:DescribeVpcs
                   - ec2:DescribeSubnets
                   - ec2:DescribeSecurityGroups
-                  - ec2:DescribeInstanceTypeOfferings
-                  - ec2:DescribeInternetGateways
+                  - ec2:CreateRouteTable
+                  - ec2:AssociateRouteTable
                   - ec2:DescribeRouteTables
-                  - ec2:DescribeAddresses
-                  - eks:DescribeClusterVersions
-                  - eks:DescribeCluster
-                  - eks:ListClusters
-                  - eks:CreateCluster
-                  - eks:DeleteCluster
-                  - eks:UpdateClusterConfig
-                  - eks:UpdateClusterVersion
-                  - eks:TagResource
-                  - eks:UntagResource
-                  - eks:CreateNodegroup
-                  - eks:DeleteNodegroup
-                  - eks:DescribeNodegroup
-                  - eks:ListNodegroups
-                  - eks:UpdateNodegroupConfig
-                  - eks:UpdateNodegroupVersion
+                  - ec2:CreateNatGateway
+                  - ec2:DeleteNatGateway
+                  - ec2:AllocateAddress
+                  - ec2:ReleaseAddress
+                  - ec2:CreateSecurityGroup
+                  - ec2:AuthorizeSecurityGroupIngress
+                  - ec2:RevokeSecurityGroupIngress
+                  - ec2:DeleteSecurityGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                   - elasticloadbalancing:DescribeLoadBalancers
@@ -121,6 +127,26 @@ Resources:
                   - ssm:DeleteParameter
                   - ec2:DescribeInstances
                   - ssm:SendCommand
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:PassRole
+                  - iam:DeleteRole
+                  - iam:AttachRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:GetRole
+                Resource: "*"
+                Condition:
+                  StringLike:
+                    iam:PassedToService:
+                      - eks.amazonaws.com
+                      - ec2.amazonaws.com
+
+              - Effect: Allow
+                Action:
+                  - tag:GetResources
+                  - tag:TagResources
                 Resource: "*"
 
   KMSSecretsKey:
