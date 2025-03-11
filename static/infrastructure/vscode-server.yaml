@@ -975,6 +975,10 @@ Resources:
 
           - action: aws:runShellScript
             name: ConfigureEKSAccess
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - ubuntu
             inputs:
               runCommand:
                 - '#!/bin/bash'
