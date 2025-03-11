@@ -143,10 +143,12 @@ Resources:
               # EKS specific permissions
               - Effect: Allow
                 Action:
+                  - 
                   - eks:CreateCluster
                   - eks:DeleteCluster
                   - eks:DescribeCluster
                   - eks:DescribeClusterVersions
+                  - eks:DescribeAddonConfiguration
                   - eks:ListClusters
                   - eks:UpdateClusterConfig
                   - eks:UpdateClusterVersion
