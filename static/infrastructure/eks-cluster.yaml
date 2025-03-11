@@ -54,6 +54,7 @@ Resources:
       - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       - arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+      - arn:aws:iam::aws:policy/AWSCloudFormationFullAccess
       
       Path: "/"
       RoleName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
@@ -73,6 +74,14 @@ Resources:
                 Resource: !Sub arn:aws:eks:*:*:cluster/*
               - Effect: Allow
                 Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStackResources
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ListStackResources
                   - ec2:DescribeVpcs
                   - ec2:DescribeSubnets
                   - ec2:DescribeSecurityGroups
