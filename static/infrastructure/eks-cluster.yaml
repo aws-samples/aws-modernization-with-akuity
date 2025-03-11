@@ -477,8 +477,8 @@ Resources:
                         ARGOCD_PASSWORD=$(openssl rand -base64 12)
                         echo "Generated password: $ARGOCD_PASSWORD"
                       fi
-                      - kubectl -n argocd patch secret argocd-secret \
-                        -p "{\"stringData\": {\"admin.password\": \"$(htpasswd -bnBC 10 \"\" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/\$2y/\$2a/')\", \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"}}"
+                    - kubectl -n argocd patch secret argocd-secret \
+                    -p "{\"stringData\": {\"admin.password\": \"$(htpasswd -bnBC 10 \"\" $ARGOCD_PASSWORD | tr -d ':\n' | sed 's/\$2y/\$2a/')\", \"admin.passwordMtime\": \"$(date +%FT%T%Z)\"}}"
                     
                     # Configure ArgoCD server to be accessible
                     - echo ">>> Configuring ArgoCD access"
@@ -529,28 +529,32 @@ Resources:
                         aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
                       fi
 
+                  
                   post_build:
                     commands:
-                      - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING"
+                      - echo ">>> Checking build status: $CODEBUILD_BUILD_SUCCEEDING"
+                
+                      # Ensure INSTANCE_ID is retrieved correctly
+                      - INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeInstance" --query "Reservations[].Instances[].InstanceId" --output text)
+                      - echo ">>> Target Instance ID for SSM Command: $INSTANCE_ID"
+                
                       - |
                         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "Creation complete"}' $CFN_RESPONSE_URL
-                          echo ">>> Triggering SSM document execution for VSCode instance"
-                          aws lambda invoke --function-name RunSSMDocLambda --payload '{"InstanceId": "'"$VSCodeInstanceName"'", "DocumentName": "VSCodeK8sSetup"}' response.json
+                          echo ">>> Build succeeded. Triggering SSM Document execution..."
+                          aws ssm send-command \
+                            --document-name "VSCodeK8sSetup" \
+                            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+                            --region $AWS_REGION
+                
+                          echo ">>> Sending CloudFormation SUCCESS signal..."
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "Creation complete"}' $CFN_RESPONSE_URL
                         else
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'","Data" : "See Codebuild logs for details. '"$CODEBUILD_LOG_PATH"'"}' $CFN_RESPONSE_URL
+                          echo ">>> Build failed. Sending CloudFormation FAILURE signal..."
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "See Codebuild logs for details. '"$CODEBUILD_LOG_PATH"'"}' $CFN_RESPONSE_URL
                         fi
                         
       TimeoutInMinutes: 60
 
-  RunVSCodeSSMDoc:
-    Type: Custom::RunSSMDocLambda
-    Properties:
-    DependsOn: [BuildProject]
-      ServiceToken: !ImportValue RunSSMDocLambdaArn
-      InstanceId: !Ref VSCodeInstanceName
-      DocumentName: "VSCodeK8sSetup"
-      CloudWatchLogGroupName: !Sub "/aws/ssm/${AWS::StackName}-VSCodeSetup"
 
   WaitForStackCreationHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
