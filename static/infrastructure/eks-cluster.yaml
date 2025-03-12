@@ -416,7 +416,17 @@ Resources:
                     python: 3.12
                   commands:
                     - echo ">>> installed python 3.12"
-                    - yum install -y httpd-tools jq
+                    - yum install -y httpd-tools jq || { 
+                        echo "❌ Install failed! Sending failure signal to CloudFormation...";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "Install phase failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
                 pre_build:
                   commands:
                     - echo ">>> build cluster config"
@@ -465,7 +475,17 @@ Resources:
                               albIngress: true
                               xRay: true
                               cloudWatch: true
-                      EOF
+                      EOF || { 
+                        echo "❌ Pre-build phase failed! Sending failure signal to CloudFormation...";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "Pre-build phase failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+
                     - echo ">>> install awscli "
                     - pip3 install --upgrade --user awscli
                     - echo ">>> install kubectl"
@@ -476,22 +496,60 @@ Resources:
                     - mv -v /tmp/eksctl /usr/local/bin
                     - eksctl version
                     - export PATH=$PWD/:$PATH
+
                 build:
                   commands:
                     - echo ">>> creating EKS cluster"
-                    - eksctl create cluster -f cluster-config.yaml || (echo "Failed to create EKS cluster" && exit 1)
-                    - aws eks update-kubeconfig --name $EKSClusterName --region $AWSRegion
-                    
+                    - eksctl create cluster -f cluster-config.yaml || { 
+                        echo "❌ EKS cluster creation failed! Sending failure signal...";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "EKS cluster creation failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
+                    - aws eks update-kubeconfig --name $EKSClusterName --region $AWSRegion || {
+                        echo "❌ EKS update-kubeconfig failed!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "EKS update-kubeconfig failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
                     # Install ArgoCD
                     - echo ">>> Installing ArgoCD"
                     - kubectl create namespace argocd || echo "Namespace argocd already exists"
-                    - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-                    
+                    - kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml || {
+                        echo "❌ Failed to install ArgoCD!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "ArgoCD installation failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
                     # Wait for ArgoCD to be ready
                     - echo ">>> Waiting for ArgoCD to be ready"
-                    - kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s || (echo "ArgoCD server deployment timed out" && exit 1)
-                    
-                    # Create admin password
+                    - kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s || {
+                        echo "❌ ArgoCD server deployment timed out!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "ArgoCD server deployment timed out",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
+                    # Set ArgoCD admin password
                     - echo ">>> Setting up ArgoCD admin password"
                     - |
                       if [ -z "$ARGOCD_PASSWORD" ]; then
@@ -499,7 +557,7 @@ Resources:
                         ARGOCD_PASSWORD=$(openssl rand -base64 12)
                         echo "Generated password: $ARGOCD_PASSWORD"
                       fi
-
+                
                     - |
                       kubectl -n argocd patch secret argocd-secret \
                         --type='merge' \
@@ -511,20 +569,37 @@ Resources:
                         }
                       }
                       EOF
-                      )"
-                    # Configure ArgoCD server to be accessible
+                      )" || {
+                        echo "❌ Failed to set ArgoCD password!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "ArgoCD password setup failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
+                    # Configure ArgoCD LoadBalancer
                     - echo ">>> Configuring ArgoCD access"
-                    - |
-                      kubectl patch svc argocd-server -n argocd -p '{
+                    - kubectl patch svc argocd-server -n argocd -p '{
                         "spec": {
                           "type": "LoadBalancer"
                         }
-                      }'
-                    
-                    # Store ArgoCD URL and credentials in SSM Parameters
+                      }' || {
+                        echo "❌ Failed to configure ArgoCD LoadBalancer!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "ArgoCD LoadBalancer configuration failed",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
+                    # Store ArgoCD URL and credentials in SSM
                     - echo ">>> Storing ArgoCD access information"
                     - |
-                      # Wait for Load Balancer to be assigned
                       counter=0
                       max_attempts=60
                       while [ $counter -lt $max_attempts ]; do
@@ -537,45 +612,54 @@ Resources:
                         counter=$((counter + 1))
                         echo "Waiting for ArgoCD Load Balancer... Attempt $counter of $max_attempts"
                       done
-
+                
                       if [[ -z "$ARGOCD_SERVER" ]]; then
-                        echo "❌ ERROR: LoadBalancer hostname not assigned after $max_attempts attempts"
-                        exit 1
+                        echo "❌ ERROR: LoadBalancer hostname not assigned after $max_attempts attempts";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "ArgoCD LoadBalancer hostname not assigned",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
                       fi
-                    
+                
                     - |
-                      # Store ArgoCD access info in SSM Parameter Store with proper prefix
                       SSM_PREFIX="/eks/${EKSClusterName}-${AWS::StackName}"
-                      
-                      if [ ! -z "$ARGOCD_SERVER" ]; then
-                        # Store ArgoCD access info in SSM Parameter Store
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "$ARGOCD_SERVER" --type "String" --overwrite
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                        echo "ArgoCD access info stored in SSM Parameter Store under prefix $SSM_PREFIX"
-                      else
-                        echo "WARNING: Could not get ArgoCD Server URL - Load Balancer may still be provisioning"
-                        # Proceed anyway, we'll store the fact that it's being provisioned
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                        aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
-                      fi
-
-                    # Ensure INSTANCE_ID is retrieved correctly
+                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "$ARGOCD_SERVER" --type "String" --overwrite
+                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
+                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite || {
+                        echo "❌ Failed to store ArgoCD details in SSM!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "Failed to store ArgoCD details in SSM",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
+                      }
+                
+                    # Ensure VSCode Instance Exists Before Running SSM Document
+                    - echo ">>> Retrieving VSCodeServer Instance ID"
                     - |
                       INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeInstance" --query "Reservations[].Instances[].InstanceId" --output text)
                       if [ -z "$INSTANCE_ID" ]; then
-                        echo "❌ ERROR: Instance ID for VSCodeServer not found!"
-                        exit 1
+                        echo "❌ ERROR: Instance ID for VSCodeServer not found!";
+                        curl -X PUT -H 'Content-Type:' --data-binary '{
+                          "Status": "FAILURE",
+                          "Reason": "VSCodeServer instance not found",
+                          "UniqueId": "'"$CODEBUILD_BUILD_ID"'",
+                          "Data": "Check CodeBuild logs for details."
+                        }' "$CFN_RESPONSE_URL";
+                        exit 1;
                       fi
-                      echo ">>> Target Instance ID for SSM Command: $INSTANCE_ID"
-                    
-                      # Wait for the VSCodeServer instance to be in 'running' state
+                
+                      echo ">>> Waiting for VSCodeServer instance to be running..."
                       counter=0
                       max_attempts=30
                       while [ "$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[*].Instances[*].State.Name' --output text)" != "running" ]; do
                         if [ $counter -ge $max_attempts ]; then
-                          echo "❌ ERROR: Instance is not running after $max_attempts attempts."
+                          echo "❌ ERROR: Instance is not running after $max_attempts attempts.";
                           exit 1
                         fi
                         echo "Waiting for instance to be ready... Attempt $counter of $max_attempts"
@@ -585,13 +669,14 @@ Resources:
 
                       # Ensure AWS_REGION is set
                       if [ -z "$AWS_REGION" ]; then
-                        echo "❌ ERROR: AWS_REGION is not set!"
-                        exit 1
+                        echo "❌ ERROR: AWS_REGION is not set! Defaulting to us-west-2..."
+                        export AWS_REGION="us-west-2"
                       fi
-
+                      
                   post_build:
                     commands:
                       - echo ">>> Checking build status: $CODEBUILD_BUILD_SUCCEEDING"
+                  
                       - |
                         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
                           echo ">>> Build succeeded. Sending CloudFormation SUCCESS signal..."
@@ -602,16 +687,17 @@ Resources:
                             "Data" : "Creation complete"
                           }' "$CFN_RESPONSE_URL"
                         else
-                          echo ">>> Build failed. Sending CloudFormation FAILURE signal..."
+                          echo "❌ Build failed. Sending CloudFormation FAILURE signal..."
                           curl -X PUT -H 'Content-Type:' --data-binary '{
                             "Status" : "FAILURE",
                             "Reason" : "Creation Failed",
                             "UniqueId" : "'"$CODEBUILD_BUILD_ID"'",
                             "Data" : "See CodeBuild logs for details."
                           }' "$CFN_RESPONSE_URL"
+                          
+                          # Explicitly exit to prevent CloudFormation from waiting
                           exit 1
                         fi
-
                         
       TimeoutInMinutes: 60
 
