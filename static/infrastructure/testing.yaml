@@ -562,7 +562,7 @@ Resources:
 
                     # Ensure INSTANCE_ID is retrieved correctly
                     - |
-                      INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeInstance" --query "Reservations[].Instances[].InstanceId" --output text)
+                      INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeServer" --query "Reservations[].Instances[].InstanceId" --output text)
                       
                       if [ -z "$INSTANCE_ID" ]; then
                         echo "❌ ERROR: Instance ID for VSCodeServer not found!"
@@ -590,6 +590,15 @@ Resources:
                         echo "❌ ERROR: AWS_REGION is not set!"
                         exit 1
                       fi
+
+                    - echo ">>> Triggering SSM Document execution..."
+                    - |
+                      aws ssm send-command \
+                        --document-name "VSCodeK8sSetup" \
+                        --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+                        --region $AWS_REGION  
+
+                      
                   post_build:
                     commands:
                       - echo ">>> Checking build status: $CODEBUILD_BUILD_SUCCEEDING"
