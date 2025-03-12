@@ -190,6 +190,7 @@ Resources:
                   - iam:DeleteOpenIDConnectProvider
                   - iam:UpdateOpenIDConnectProviderThumbprint
                   - iam:TagOpenIDConnectProvider
+                  - iam:ListOpenIDConnectProviders
                 Resource: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/oidc.eks.${AWS::Region}.amazonaws.com/*"
               
               # CloudFormation related permissions
@@ -563,16 +564,13 @@ Resources:
                     # Ensure INSTANCE_ID is retrieved correctly
                     - |
                       INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeInstance" --query "Reservations[].Instances[].InstanceId" --output text)
-                      
                       if [ -z "$INSTANCE_ID" ]; then
                         echo "❌ ERROR: Instance ID for VSCodeServer not found!"
                         exit 1
                       fi
-                      
                       echo ">>> Target Instance ID for SSM Command: $INSTANCE_ID"
-                      
-                      # Ensure Instance is Running Before Sending SSM Command
-                      echo ">>> Waiting for VSCodeServer instance to be in 'running' state..."
+                    
+                      # Wait for the VSCodeServer instance to be in 'running' state
                       counter=0
                       max_attempts=30
                       while [ "$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[*].Instances[*].State.Name' --output text)" != "running" ]; do
@@ -584,25 +582,36 @@ Resources:
                         sleep 10
                         counter=$((counter + 1))
                       done
-                      
+
                       # Ensure AWS_REGION is set
                       if [ -z "$AWS_REGION" ]; then
                         echo "❌ ERROR: AWS_REGION is not set!"
                         exit 1
                       fi
+
                   post_build:
                     commands:
                       - echo ">>> Checking build status: $CODEBUILD_BUILD_SUCCEEDING"
-                  
                       - |
                         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
                           echo ">>> Build succeeded. Sending CloudFormation SUCCESS signal..."
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "Creation complete"}' $CFN_RESPONSE_URL
+                          curl -X PUT -H 'Content-Type:' --data-binary '{
+                            "Status" : "SUCCESS",
+                            "Reason" : "Creation Complete",
+                            "UniqueId" : "'"$CODEBUILD_BUILD_ID"'",
+                            "Data" : "Creation complete"
+                          }' "$CFN_RESPONSE_URL"
                         else
                           echo ">>> Build failed. Sending CloudFormation FAILURE signal..."
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "See CodeBuild logs for details."}' $CFN_RESPONSE_URL
+                          curl -X PUT -H 'Content-Type:' --data-binary '{
+                            "Status" : "FAILURE",
+                            "Reason" : "Creation Failed",
+                            "UniqueId" : "'"$CODEBUILD_BUILD_ID"'",
+                            "Data" : "See CodeBuild logs for details."
+                          }' "$CFN_RESPONSE_URL"
                           exit 1
                         fi
+
                         
       TimeoutInMinutes: 60
 
