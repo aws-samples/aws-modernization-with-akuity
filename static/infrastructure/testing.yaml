@@ -418,7 +418,6 @@ Resources:
                     - yum install -y httpd-tools jq
                 pre_build:
                   commands:
-                    - echo "DEBUG: CFN_RESPONSE_URL"
                     - echo ">>> build cluster config"
                     - |
                       cat <<EOF > cluster-config.yaml
