@@ -601,69 +601,14 @@ Resources:
 
                   post_build:
                     commands:
-                      - echo ">>> Build completed with status: $CODEBUILD_BUILD_SUCCEEDING"
+                      # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
+                      - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING "
                       - |
-                        # Create a Python script to handle the signaling reliably
-                        cat > /tmp/signal.py << 'EOF'
-                        import os
-                        import json
-                        import urllib.request
-                        import time
-                  
-                        # Get environment variables
-                        url = os.environ.get("CFN_RESPONSE_URL")
-                        build_id = os.environ.get("CODEBUILD_BUILD_ID", "unknown")
-                        success = os.environ.get("CODEBUILD_BUILD_SUCCEEDING") == "1"
-                  
-                        # Prepare payload
-                        status = "SUCCESS" if success else "FAILURE"
-                        reason = "Build completed successfully" if success else "Build failed"
-                        payload = {
-                            "Status": status,
-                            "Reason": reason,
-                            "UniqueId": build_id,
-                            "Data": reason
-                        }
-                        
-                        # Convert payload to JSON bytes
-                        data = json.dumps(payload).encode("utf-8")
-                        
-                        # Log what we're doing
-                        print(f"Signaling CloudFormation with status: {status}")
-                        print(f"URL: {url}")
-                        print(f"Payload: {json.dumps(payload)}")
-                        
-                        # Create request with proper headers
-                        req = urllib.request.Request(
-                            url,
-                            data=data,
-                            method="PUT",
-                            headers={"Content-Type": ""}
-                        )
-                        
-                        # Send with retries
-                        max_attempts = 3
-                        for attempt in range(1, max_attempts + 1):
-                            print(f"Signal attempt {attempt} of {max_attempts}...")
-                            try:
-                                with urllib.request.urlopen(req) as response:
-                                    print(f"Signal sent successfully! Response code: {response.status}")
-                                    if response.status >= 200 and response.status < 300:
-                                        print("CloudFormation signal succeeded")
-                                        break
-                                    else:
-                                        print(f"Unexpected response status: {response.status}")
-                            except Exception as e:
-                                print(f"Error sending signal: {str(e)}")
-                                if attempt < max_attempts:
-                                    print(f"Retrying in 5 seconds...")
-                                    time.sleep(5)
-                                else:
-                                    print("All signal attempts failed")
-                        EOF
-                        
-                        # Run the Python script
-                        python3 /tmp/signal.py
+                        if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "$CODEBUILD_BUILD_ID","Data" : "Creation complete"}' $CFN_RESPONSE_URL
+                        else
+                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "$CODEBUILD_BUILD_ID","Data" : "See Codebuild logs for details. $CODEBUILD_LOG_PATH"}' $CFN_RESPONSE_URL
+                        fi
                         
       TimeoutInMinutes: 60
 
@@ -714,7 +659,6 @@ Resources:
                 Action:
                     - codebuild:*
                 Resource: !GetAtt BuildProject.Arn
-
   TriggerBuildLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -727,68 +671,42 @@ Resources:
         ZipFile: |
           import boto3
           import logging
-          import traceback
+          import sys
           import json
           import urllib3
-
+  
           logger = logging.getLogger()
           logger.setLevel(logging.INFO)
           http = urllib3.PoolManager()
-
+  
           codebuild_client = boto3.client('codebuild')
-
-          def send_cfn_response(event, context, response_status, reason=None, response_data=None):
-              response_body = {
-                  'Status': response_status,
-                  'Reason': reason or 'See CloudWatch logs for details',
-                  'PhysicalResourceId': event.get('PhysicalResourceId', context.log_stream_name),
-                  'StackId': event['StackId'],
-                  'RequestId': event['RequestId'],
-                  'LogicalResourceId': event['LogicalResourceId'],
-                  'Data': response_data or {}
-              }
-              
-              try:
-                  http.request('PUT', event['ResponseURL'], 
-                          body=json.dumps(response_body).encode('utf-8'),
-                          headers={'Content-Type': 'application/json'})
-                  logger.info("CFN response sent successfully")
-              except Exception as e:
-                  logger.error(f"Failed to send CFN response: {str(e)}")
-                  logger.error(traceback.format_exc())
-
+  
+          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-lambda-function-code-cfnresponsemodule.html
           def handler(event, context):
-              logger.info(f'Incoming Event: {event}')
-              
-              try:
-                  if event['RequestType'] == 'Delete':
-                      logger.info(f'Nothing to do. Request Type: {event["RequestType"]}')
-                      send_cfn_response(event, context, 'SUCCESS')
-                      return 'Delete operation completed'
+              logger.info('Incoming Event: {0}'.format(event))
+              response = {}
+              response['PhysicalResourceId'] = 'hardcodedphyscialid'
+              response['StackId'] = event['StackId']
+              response['RequestId'] = event['RequestId']
+              response['LogicalResourceId'] = event['LogicalResourceId']
+              cfn_response_url = event['ResponseURL']
+  
+              if event['RequestType'] == 'Delete':
+                  # return
+                  logger.info('Nothing to do. Request Type : {0}'.format(event['RequestType']))
+                  response['Status'] = 'SUCCESS'
+  
+              elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+                  try:
+                      codebuild_client.start_build(projectName=event['ResourceProperties']['CodebuildProjectName'])
+                      response['Status'] = 'SUCCESS'
+                  except:
+                      logging.error('Error: {0}'.format(sys.exc_info() ))
+                      response['Status'] = 'FAILED'
+  
+              http.request('PUT', cfn_response_url, body=json.dumps(response).encode('utf-8'), headers={'Content-Type': 'application/json'})
+              return 'Done'
 
-                  elif event['RequestType'] in ['Create', 'Update']:
-                      try:
-                          codebuild_project_name = event['ResourceProperties']['CodebuildProjectName']
-                          logger.info(f'Starting build for project: {codebuild_project_name}')
-                          response = codebuild_client.start_build(projectName=codebuild_project_name)
-                          logger.info(f'Build started successfully: {response}')
-                          send_cfn_response(event, context, 'SUCCESS')
-                          return 'Build triggered successfully'
-                      except Exception as e:
-                          logger.error(f'Error starting build: {str(e)}')
-                          logger.error(traceback.format_exc())
-                          send_cfn_response(event, context, 'FAILED', f'Error starting build: {str(e)}')
-                          return 'Failed to trigger build'
-                  else:
-                      logger.warning(f'Unsupported request type: {event["RequestType"]}')
-                      send_cfn_response(event, context, 'SUCCESS')
-                      return f'Unsupported request type: {event["RequestType"]}'
-              
-              except Exception as e:
-                  logger.error(f'Unexpected error: {str(e)}')
-                  logger.error(traceback.format_exc())
-                  send_cfn_response(event, context, 'FAILED', f'Unexpected error: {str(e)}')
-                  return 'Error handling request'
 
 Outputs:
   ClusterRoleArn:
