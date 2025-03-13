@@ -1156,7 +1156,7 @@ Resources:
           VSCodeUser:
             type: String
             description: "VSCode user"
-            default: "vscode"
+            default: "participant"
         mainSteps:
           - action: aws:runShellScript
             name: ConfigureKubectl
