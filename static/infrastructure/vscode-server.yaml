@@ -925,7 +925,7 @@ Resources:
                 - chmod +x ./snyk
                 - mv ./snyk /usr/local/bin/
                 - echo "Snyk CLI installed."
-          
+
           - action: aws:runShellScript
             name: InstallKubectl
             precondition:
@@ -934,16 +934,31 @@ Resources:
                 - al2023
             inputs:
               runCommand:
-                - '#!/bin/bash'
-                - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-                - chmod +x ./kubectl
-                - mv ./kubectl /usr/local/bin/kubectl
-                - source <(kubectl completion bash)
-                - echo "source <(kubectl completion bash)" >> /home/${VSCodeUser}/.bashrc
-                - echo "alias k=kubectl" >> /home/${VSCodeUser}/.bashrc
-                - echo "complete -o default -F __start_kubectl k" >> /home/${VSCodeUser}/.bashrc
-                - source /home/${VSCodeUser}/.bashrc
-                - echo "Kubectl installed."
+                - |
+                  #!/bin/bash
+                  set -e
+                  echo "Installing kubectl..."
+                  ARCH=$(uname -m)
+                  case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64) ARCH="arm64" ;;
+                    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+                  esac
+                  curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
+                  chmod +x ./kubectl
+                  sudo mv ./kubectl /usr/local/bin/kubectl
+                  echo "Kubectl installed. Version:"
+                  kubectl version --client
+                  
+                  echo "Configuring kubectl for {{ VSCodeUser }}..."
+                  sudo -u {{ VSCodeUser }} bash << EOF
+                  echo 'source <(kubectl completion bash)' >> ~/.bashrc
+                  echo 'alias k=kubectl' >> ~/.bashrc
+                  echo 'complete -o default -F __start_kubectl k' >> ~/.bashrc
+                  EOF
+                  
+                  echo "Kubectl setup completed for {{ VSCodeUser }}."
+          
           - action: aws:runShellScript
             name: ConfigureEKS
             precondition:
