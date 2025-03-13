@@ -418,7 +418,7 @@ Resources:
                     - yum install -y httpd-tools jq
                 pre_build:
                   commands:
-                    - echo "DEBUG: CFN_RESPONSE_URL=$CFN_RESPONSE_URL"
+                    - echo "DEBUG: CFN_RESPONSE_URL=$${CFN_RESPONSE_URL}"
                     - echo ">>> build cluster config"
                     - |
                       cat <<EOF > cluster-config.yaml
@@ -599,47 +599,71 @@ Resources:
                         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
                         --region $AWS_REGION  
 
-
                   post_build:
                     commands:
                       - echo ">>> Build completed with status: $CODEBUILD_BUILD_SUCCEEDING"
                       - |
-                        # Always send a signal regardless of previous command failures
-                        send_signal() {
-                          status=$1
-                          reason=$2
-                          echo "Sending $status signal to CloudFormation..."
-                          
-                          # Log the signal URL and data for debugging
-                          echo "Signal URL: $CFN_RESPONSE_URL"
-                          echo "Signal payload: {\"Status\":\"$status\",\"Reason\":\"$reason\",\"UniqueId\":\"$CODEBUILD_BUILD_ID\",\"Data\":\"$reason\"}"
-                          
-                          # Send the signal with retries
-                          for i in {1..3}; do
-                            echo "Signal attempt $i..."
-                            curl_output=$(curl -s -S -f -X PUT -H 'Content-Type:' \
-                              --data-binary "{\"Status\":\"$status\",\"Reason\":\"$reason\",\"UniqueId\":\"$CODEBUILD_BUILD_ID\",\"Data\":\"$reason\"}" \
-                              "$CFN_RESPONSE_URL" 2>&1)
-                            
-                            if [ $? -eq 0 ]; then
-                              echo "Signal sent successfully!"
-                              return 0
-                            else
-                              echo "Signal attempt failed: $curl_output"
-                              sleep 5
-                            fi
-                          done
-                          
-                          echo "WARNING: Failed to send signal after multiple attempts"
-                          return 1
+                        # Create a Python script to handle the signaling reliably
+                        cat > /tmp/signal.py << 'EOF'
+                        import os
+                        import json
+                        import urllib.request
+                        import time
+                  
+                        # Get environment variables
+                        url = os.environ.get("CFN_RESPONSE_URL")
+                        build_id = os.environ.get("CODEBUILD_BUILD_ID", "unknown")
+                        success = os.environ.get("CODEBUILD_BUILD_SUCCEEDING") == "1"
+                  
+                        # Prepare payload
+                        status = "SUCCESS" if success else "FAILURE"
+                        reason = "Build completed successfully" if success else "Build failed"
+                        payload = {
+                            "Status": status,
+                            "Reason": reason,
+                            "UniqueId": build_id,
+                            "Data": reason
                         }
                         
-                        # Use a separate command to ensure this executes regardless of previous failures
-                        if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                          send_signal "SUCCESS" "Build completed successfully"
-                        else
-                          send_signal "FAILURE" "Build failed"
-                        fi
+                        # Convert payload to JSON bytes
+                        data = json.dumps(payload).encode("utf-8")
+                        
+                        # Log what we're doing
+                        print(f"Signaling CloudFormation with status: {status}")
+                        print(f"URL: {url}")
+                        print(f"Payload: {json.dumps(payload)}")
+                        
+                        # Create request with proper headers
+                        req = urllib.request.Request(
+                            url,
+                            data=data,
+                            method="PUT",
+                            headers={"Content-Type": ""}
+                        )
+                        
+                        # Send with retries
+                        max_attempts = 3
+                        for attempt in range(1, max_attempts + 1):
+                            print(f"Signal attempt {attempt} of {max_attempts}...")
+                            try:
+                                with urllib.request.urlopen(req) as response:
+                                    print(f"Signal sent successfully! Response code: {response.status}")
+                                    if response.status >= 200 and response.status < 300:
+                                        print("CloudFormation signal succeeded")
+                                        break
+                                    else:
+                                        print(f"Unexpected response status: {response.status}")
+                            except Exception as e:
+                                print(f"Error sending signal: {str(e)}")
+                                if attempt < max_attempts:
+                                    print(f"Retrying in 5 seconds...")
+                                    time.sleep(5)
+                                else:
+                                    print("All signal attempts failed")
+                        EOF
+                        
+                        # Run the Python script
+                        python3 /tmp/signal.py
                         
       TimeoutInMinutes: 60
 
