@@ -912,19 +912,6 @@ Resources:
                 - dnf -y install terraform 2>&1
                 - echo "Terraform installed. Checking configuration"
                 - terraform --version
-          - action: aws:runShellScript
-            name: InstallSnyk
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - curl https://static.snyk.io/cli/latest/snyk-linux -o snyk
-                - chmod +x ./snyk
-                - mv ./snyk /usr/local/bin/
-                - echo "Snyk CLI installed."
 
           - action: aws:runShellScript
             name: InstallKubectl
