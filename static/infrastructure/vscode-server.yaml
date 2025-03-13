@@ -5,11 +5,11 @@ Parameters:
   VSCodeUser:
     Type: String
     Description: UserName for VSCode Server
-    Default: participant
+    Default: "participant"
   InstanceName:
     Type: String
     Description: VSCode Server EC2 instance name
-    Default: VSCodeServer
+    Default: "VSCodeServer"
   InstanceVolumeSize:
     Type: Number
     Description: VSCode Server EC2 instance volume size in GB
@@ -17,22 +17,22 @@ Parameters:
   InstanceType:
     Description: VSCode Server EC2 instance type
     Type: String
-    Default: t4g.medium
+    Default: "t4g.medium"
     AllowedPattern: '^(t3|t4|c6|c7|m6|m7|m8)[g|i|a]?(d|n|dn|-flex)?\.(nano|micro|small|medium|large|[2|4|9|12|16|18|24|32|48]?xlarge)$'
     ConstraintDescription: Must be a valid t, c or m series EC2 instance type
   InstanceOperatingSystem:
     Description: VSCode Server EC2 operating system
     Type: String
-    Default: AmazonLinux-2023
+    Default: "AmazonLinux-2023"
     AllowedValues: ['AmazonLinux-2023', 'Ubuntu-22', 'Ubuntu-24']
   HomeFolder:
     Type: String
     Description: Folder to open in VS Code server
-    Default: /Workshop
+    Default: "/Workshop"
   DevServerBasePath:
     Type: String
     Description: Base path for the application to be added to Nginx sites-available list
-    Default: app
+    Default: "app"
   DevServerPort:
     Type: Number
     Description: Port for the DevServer
