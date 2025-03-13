@@ -211,6 +211,8 @@ Resources:
                   - cloudformation:UntagResource
                   - cloudformation:SetStackPolicy
                   - cloudformation:SignalResource
+                  - cloudformation:SignalResource
+                  - cloudformation:DescribeStackResource
                 Resource: "*"
               
               # EC2 Instance & Autoscaling permissions
@@ -328,6 +330,13 @@ Resources:
                   - ssm:TerminateSession
                   - ssm:DescribeInstanceInformation
                   - ssm:DescribeInstanceAssociationsStatus
+                Resource: "*"
+
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:ListBucket
                 Resource: "*"
 
   KMSSecretsKey:
