@@ -598,6 +598,20 @@ Resources:
                         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
                         --region $AWS_REGION  
 
+                    - echo ">>> Sending CloudFormation signal"
+                    - |
+                      if [ $? -eq 0 ]; then
+                        echo "Build was successful, sending SUCCESS signal"
+                        curl -X PUT -H 'Content-Type:' \
+                          --data-binary '{"Status":"SUCCESS","Reason":"Build completed successfully","UniqueId":"'"$CODEBUILD_BUILD_ID"'","Data":"Build succeeded"}' \
+                          "$CFN_RESPONSE_URL"
+                      else
+                        echo "Build failed, sending FAILURE signal"
+                        curl -X PUT -H 'Content-Type:' \
+                          --data-binary '{"Status":"FAILURE","Reason":"Build failed","UniqueId":"'"$CODEBUILD_BUILD_ID"'","Data":"Build failed"}' \
+                          "$CFN_RESPONSE_URL"
+                      fi
+
                   post_build:
                     commands:
                       # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
