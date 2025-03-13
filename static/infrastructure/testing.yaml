@@ -403,7 +403,7 @@ Resources:
           - Name: AWSRegion
             Value: !Ref AWS::Region
           - Name: STACK_NAME
-            Value: ${AWS::StackName}
+            Value: !Ref AWS::StackName
       Source:
         Type: NO_SOURCE
         BuildSpec:
