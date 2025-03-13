@@ -330,6 +330,60 @@ Resources:
                   - s3:ListBucket
                 Resource: "*"
 
+  akuityLambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName:
+          Fn::Join:
+          - ''
+          - - akuityLambdaPolicy-
+            - Ref: AWS::Region
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStackResource
+            - cloudformation:DescribeStackResources
+            - ec2:DescribeInstances
+            - ec2:DescribeInstanceTypeOfferings
+            - ec2:AssociateIamInstanceProfile
+            - ec2:ModifyInstanceAttribute
+            - ec2:ReplaceIamInstanceProfileAssociation
+            - ec2:DescribeIamInstanceProfileAssociations
+            - ec2:DescribeVolumes
+            - ec2:ModifyVolume
+            - ec2:DescribeVolumesModifications
+            - ec2:RebootInstances
+            - iam:ListInstanceProfiles
+            - iam:PassRole
+            - ssm:DescribeInstanceInformation
+            - ssm:SendCommand
+            - ssm:GetCommandInvocation
+            - ssm:ListCommandInvocations
+            Resource: "*"
+
+                
+
   KMSSecretsKey:
     Type: AWS::KMS::Key
     Properties:
@@ -374,10 +428,11 @@ Resources:
 ################## EKS Bootstrap #####################
 
   BuildProject:
+    DependsOn: [WorkshopInstanceProfile]
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub CodeBuild-${AWS::StackName}
-      ServiceRole: !GetAtt ClusterRole.Arn
+      ServiceRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin-${AWS::StackName}"
       Artifacts:
         Type: NO_ARTIFACTS
       LogsConfig:
@@ -390,8 +445,6 @@ Resources:
         EnvironmentVariables:
           - Name: CFN_RESPONSE_URL
             Value: !Ref WaitForStackCreationHandle
-          - Name: WORKSHOP_INSTANCE_PROFILE_ARN
-            Value: !GetAtt WorkshopInstanceProfile.Arn
           - Name: KMS_ARN
             Value: !GetAtt KMSSecretsKey.Arn
           - Name: EKSClusterName
@@ -411,7 +464,6 @@ Resources:
                     python: 3.12
                   commands:
                     - echo ">>> installed python 3.12"
-                    - yum install -y httpd-tools jq
                 pre_build:
                   commands:
                     - echo ">>> build cluster config"
@@ -474,10 +526,7 @@ Resources:
                 build:
                   commands:
                     - echo ">>> creating EKS cluster"
-                    - eksctl create cluster -f cluster-config.yaml || (echo "Failed to create EKS cluster" && exit 1)
-                    - aws eks update-kubeconfig --name $EKSClusterName --region $AWSRegion
-                    
-
+                    - eksctl create cluster -f cluster-config.yaml
                   post_build:
                     commands:
                       # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
@@ -501,13 +550,14 @@ Resources:
     DependsOn: [CustomTriggerBuild]
     Properties:
       Handle: !Ref WaitForStackCreationHandle
-      # wait for 59 minutes before giving up - ensuring it's less than the CodeBuild timeout
-      Timeout: "3540"
+      # wait for 55 minutes before giving up - ensuring it's less than the CodeBuild timeout
+      Timeout: "3300"
       # success or failure signal count
       Count: 1
 
   CustomTriggerBuild:
     Type: Custom::ManageWorkshopIamRole
+    DependsOn: BuildProject
     Properties:
       ServiceToken: !GetAtt TriggerBuildLambda.Arn
       CodebuildProjectName: !Ref BuildProject    
@@ -538,14 +588,14 @@ Resources:
                 Action:
                     - codebuild:*
                 Resource: !GetAtt BuildProject.Arn
+                
   TriggerBuildLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Description: function to trigger CodeBuild project
+      Description: function to retrieve User info
       Handler: index.handler
       Role: !GetAtt TriggerBuildLambdaIamRole.Arn
       Runtime: python3.12
-      Timeout: 60
       Code:
         ZipFile: |
           import boto3
@@ -576,9 +626,11 @@ Resources:
                   response['Status'] = 'SUCCESS'
   
               elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+              
                   try:
                       codebuild_client.start_build(projectName=event['ResourceProperties']['CodebuildProjectName'])
                       response['Status'] = 'SUCCESS'
+                      
                   except:
                       logging.error('Error: {0}'.format(sys.exc_info() ))
                       response['Status'] = 'FAILED'
