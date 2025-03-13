@@ -418,6 +418,7 @@ Resources:
                     - yum install -y httpd-tools jq
                 pre_build:
                   commands:
+                    - echo "DEBUG: CFN_RESPONSE_URL=$CFN_RESPONSE_URL"
                     - echo ">>> build cluster config"
                     - |
                       cat <<EOF > cluster-config.yaml
@@ -598,19 +599,46 @@ Resources:
                         --targets "Key=instanceIds,Values=$INSTANCE_ID" \
                         --region $AWS_REGION  
 
-                      
+
                   post_build:
                     commands:
-                      - echo ">>> Checking build status: $CODEBUILD_BUILD_SUCCEEDING"
-                    finally:
-                      # This block always runs regardless of build success or failure
+                      - echo ">>> Build completed with status: $CODEBUILD_BUILD_SUCCEEDING"
                       - |
+                        # Always send a signal regardless of previous command failures
+                        send_signal() {
+                          status=$1
+                          reason=$2
+                          echo "Sending $status signal to CloudFormation..."
+                          
+                          # Log the signal URL and data for debugging
+                          echo "Signal URL: $CFN_RESPONSE_URL"
+                          echo "Signal payload: {\"Status\":\"$status\",\"Reason\":\"$reason\",\"UniqueId\":\"$CODEBUILD_BUILD_ID\",\"Data\":\"$reason\"}"
+                          
+                          # Send the signal with retries
+                          for i in {1..3}; do
+                            echo "Signal attempt $i..."
+                            curl_output=$(curl -s -S -f -X PUT -H 'Content-Type:' \
+                              --data-binary "{\"Status\":\"$status\",\"Reason\":\"$reason\",\"UniqueId\":\"$CODEBUILD_BUILD_ID\",\"Data\":\"$reason\"}" \
+                              "$CFN_RESPONSE_URL" 2>&1)
+                            
+                            if [ $? -eq 0 ]; then
+                              echo "Signal sent successfully!"
+                              return 0
+                            else
+                              echo "Signal attempt failed: $curl_output"
+                              sleep 5
+                            fi
+                          done
+                          
+                          echo "WARNING: Failed to send signal after multiple attempts"
+                          return 1
+                        }
+                        
+                        # Use a separate command to ensure this executes regardless of previous failures
                         if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                          echo ">>> Build succeeded. Sending CloudFormation SUCCESS signal..."
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "Creation complete"}' $CFN_RESPONSE_URL
+                          send_signal "SUCCESS" "Build completed successfully"
                         else
-                          echo ">>> Build failed. Sending CloudFormation FAILURE signal..."
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "'"$CODEBUILD_BUILD_ID"'", "Data" : "See CodeBuild logs for details."}' $CFN_RESPONSE_URL
+                          send_signal "FAILURE" "Build failed"
                         fi
                         
       TimeoutInMinutes: 60
