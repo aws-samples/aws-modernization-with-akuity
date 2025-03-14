@@ -5,7 +5,7 @@ Parameters:
   KubernetesVersion:
     Description: Kubernetes version
     Type: String
-    Default: "1.31"
+    Default: "1.32"
 
   EKSClusterName:
     Description: Name of EKS Cluster
@@ -382,8 +382,6 @@ Resources:
             - ssm:ListCommandInvocations
             Resource: "*"
 
-                
-
   KMSSecretsKey:
     Type: AWS::KMS::Key
     Properties:
@@ -443,8 +441,6 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         EnvironmentVariables:
-          - Name: CFN_RESPONSE_URL
-            Value: !Ref WaitForStackCreationHandle
           - Name: KMS_ARN
             Value: !GetAtt KMSSecretsKey.Arn
           - Name: EKSClusterName
@@ -529,39 +525,8 @@ Resources:
                     - eksctl create cluster -f cluster-config.yaml
                   post_build:
                     commands:
-                      # CODEBUILD_BUILD_SUCCEEDING = 1 Set to 0 if the build is failing, or 1 if the build is succeeding.
-                      - echo ">>> build status $CODEBUILD_BUILD_SUCCEEDING "
-                      - |
-                        if [ "$CODEBUILD_BUILD_SUCCEEDING" -eq "1" ]; then
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "SUCCESS","Reason" : "Creation Complete", "UniqueId" : "$CODEBUILD_BUILD_ID","Data" : "Creation complete"}' $CFN_RESPONSE_URL
-                        else
-                          curl -X PUT -H 'Content-Type:' --data-binary '{"Status" : "FAILURE","Reason" : "Creation Failed", "UniqueId" : "$CODEBUILD_BUILD_ID","Data" : "See Codebuild logs for details. $CODEBUILD_LOG_PATH"}' $CFN_RESPONSE_URL
-                        fi
-                        
+                      - echo ">>> EKS cluster creation complete"
       TimeoutInMinutes: 60
-
-
-  WaitForStackCreationHandle:
-    Type: AWS::CloudFormation::WaitConditionHandle
-
-  WaitCondition:
-    Type: AWS::CloudFormation::WaitCondition
-    # don't start till we create a lambda function
-    DependsOn: [CustomTriggerBuild]
-    Properties:
-      Handle: !Ref WaitForStackCreationHandle
-      # wait for 55 minutes before giving up - ensuring it's less than the CodeBuild timeout
-      Timeout: "3300"
-      # success or failure signal count
-      Count: 1
-
-  CustomTriggerBuild:
-    Type: Custom::ManageWorkshopIamRole
-    DependsOn: BuildProject
-    Properties:
-      ServiceToken: !GetAtt TriggerBuildLambda.Arn
-      CodebuildProjectName: !Ref BuildProject    
-
 
   TriggerBuildLambdaIamRole:
     Type: AWS::IAM::Role
@@ -592,7 +557,7 @@ Resources:
   TriggerBuildLambda:
     Type: AWS::Lambda::Function
     Properties:
-      Description: function to retrieve User info
+      Description: function to trigger CodeBuild project
       Handler: index.handler
       Role: !GetAtt TriggerBuildLambdaIamRole.Arn
       Runtime: python3.12
@@ -602,15 +567,12 @@ Resources:
           import logging
           import sys
           import json
-          import urllib3
-  
+          
           logger = logging.getLogger()
           logger.setLevel(logging.INFO)
-          http = urllib3.PoolManager()
-  
+          
           codebuild_client = boto3.client('codebuild')
-  
-          # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-lambda-function-code-cfnresponsemodule.html
+          
           def handler(event, context):
               logger.info('Incoming Event: {0}'.format(event))
               response = {}
@@ -618,26 +580,27 @@ Resources:
               response['StackId'] = event['StackId']
               response['RequestId'] = event['RequestId']
               response['LogicalResourceId'] = event['LogicalResourceId']
-              cfn_response_url = event['ResponseURL']
-  
+              
               if event['RequestType'] == 'Delete':
-                  # return
                   logger.info('Nothing to do. Request Type : {0}'.format(event['RequestType']))
                   response['Status'] = 'SUCCESS'
-  
-              elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
               
+              elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
                   try:
                       codebuild_client.start_build(projectName=event['ResourceProperties']['CodebuildProjectName'])
                       response['Status'] = 'SUCCESS'
-                      
                   except:
                       logging.error('Error: {0}'.format(sys.exc_info() ))
                       response['Status'] = 'FAILED'
-  
-              http.request('PUT', cfn_response_url, body=json.dumps(response).encode('utf-8'), headers={'Content-Type': 'application/json'})
-              return 'Done'
+              
+              return response
 
+  CustomTriggerBuild:
+    Type: Custom::TriggerBuild
+    DependsOn: BuildProject
+    Properties:
+      ServiceToken: !GetAtt TriggerBuildLambda.Arn
+      CodebuildProjectName: !Ref BuildProject
 
 Outputs:
   ClusterRoleArn:
