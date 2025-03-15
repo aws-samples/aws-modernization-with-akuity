@@ -441,6 +441,8 @@ Resources:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         EnvironmentVariables:
+          - Name: WAIT_HANDLE_URL
+            Value: !Ref EKSClusterWaitHandle
           - Name: KMS_ARN
             Value: !GetAtt KMSSecretsKey.Arn
           - Name: EKSClusterName
@@ -523,9 +525,14 @@ Resources:
                   commands:
                     - echo ">>> creating EKS cluster"
                     - eksctl create cluster -f cluster-config.yaml
-                  post_build:
-                    commands:
-                      - echo ">>> EKS cluster creation complete"
+                post_build:
+                  commands:
+                    - echo ">>> EKS cluster creation complete"
+                    - |
+                      curl -X PUT -H 'Content-Type:' \
+                        --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
+                        "${WAIT_HANDLE_URL}"
+                     
       TimeoutInMinutes: 60
 
   TriggerBuildLambdaIamRole:
@@ -601,6 +608,17 @@ Resources:
     Properties:
       ServiceToken: !GetAtt TriggerBuildLambda.Arn
       CodebuildProjectName: !Ref BuildProject
+
+
+  EKSClusterWaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref EKSClusterWaitHandle
+      Timeout: '1800'  # 30 minutes
+      Count: 1
+
+  EKSClusterWaitHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
 
 Outputs:
   ClusterRoleArn:
