@@ -586,23 +586,11 @@ Resources:
 
                     kubectl -n argocd patch secret argocd-secret \
                       --type='merge' \
-                      -p "$(cat <<EOF
-                    {
-                      "stringData": {
-                        "admin.password": "$(htpasswd -bnBC 10 "" "$ARGOCD_PASSWORD" | tr -d ':\n' | sed 's/\$2y/\$2a/')",
-                        "admin.passwordMtime": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-                      }
-                    }
-                    EOF
-                    )"
+                      -p '{"stringData": {"admin.password": "'$(htpasswd -bnBC 10 "" "$ARGOCD_PASSWORD" | tr -d ':\n' | sed 's/\$2y/\$2a/')'", "admin.passwordMtime": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}}'
                     
                     # Configure ArgoCD server to be accessible
                     echo ">>> Configuring ArgoCD access"
-                    kubectl patch svc argocd-server -n argocd -p '{
-                      "spec": {
-                        "type": "LoadBalancer"
-                      }
-                    }'
+                    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
                     
                     # Store ArgoCD URL and credentials in SSM Parameters
                     echo ">>> Storing ArgoCD access information"
@@ -620,8 +608,8 @@ Resources:
                       echo "Waiting for ArgoCD Load Balancer... Attempt $counter of $max_attempts"
                     done
 
-                    if [[ -z "$ARGOCD_SERVER" ]]; then
-                      echo "❌ ERROR: LoadBalancer hostname not assigned after $max_attempts attempts"
+                    if [ -z "$ARGOCD_SERVER" ]; then
+                      echo "WARNING: LoadBalancer hostname not assigned after $max_attempts attempts"
                       # Continue anyway, we'll handle this
                     fi
                     
@@ -636,25 +624,27 @@ Resources:
                       echo "ArgoCD access info stored in SSM Parameter Store under prefix $SSM_PREFIX"
                     else
                       echo "WARNING: Could not get ArgoCD Server URL - Load Balancer may still be provisioning"
-                      # Proceed anyway, we'll store the fact that it's being provisioned
+                      # Proceed anyway, we'll store the fact that it's being provisioning
                       aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
                       aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
                       aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
                     fi
 
                     # VSCode server integration (optional based on instance existence)
-                    INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeServer" --query "Reservations[].Instances[].InstanceId" --output text || echo "")
+                    INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeServer" --query "Reservations[].Instances[].InstanceId" --output text 2>/dev/null || echo "")
                     
                     if [ ! -z "$INSTANCE_ID" ]; then
                       echo ">>> Target Instance ID for SSM Command: $INSTANCE_ID"
                       
                       # Ensure Instance is Running Before Sending SSM Command
-                      echo ">>> Waiting for VSCodeServer instance to be in 'running' state..."
                       counter=0
                       max_attempts=30
-                      while [ "$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[*].Instances[*].State.Name' --output text 2>/dev/null)" != "running" ]; do
-                        if [ $counter -ge $max_attempts ]; then
-                          echo "❌ WARNING: Instance is not running after $max_attempts attempts."
+                      INSTANCE_RUNNING=false
+                      
+                      while [ $counter -lt $max_attempts ]; do
+                        STATUS=$(aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[*].Instances[*].State.Name' --output text 2>/dev/null || echo "unknown")
+                        if [ "$STATUS" = "running" ]; then
+                          INSTANCE_RUNNING=true
                           break
                         fi
                         echo "Waiting for instance to be ready... Attempt $counter of $max_attempts"
@@ -662,25 +652,34 @@ Resources:
                         counter=$((counter + 1))
                       done
                       
-                      # Send SSM command if document exists
-                      if aws ssm describe-document --name "VSCodeK8sSetup" > /dev/null 2>&1; then
-                        echo ">>> Triggering SSM Document execution..."
-                        aws ssm send-command \
-                          --document-name "VSCodeK8sSetup" \
-                          --targets "Key=instanceIds,Values=$INSTANCE_ID" \
-                          --region $AWSRegion || echo "Failed to send SSM command"
+                      if [ "$INSTANCE_RUNNING" = "true" ]; then
+                        # Send SSM command if document exists
+                        if aws ssm describe-document --name "VSCodeK8sSetup" > /dev/null 2>&1; then
+                          echo ">>> Triggering SSM Document execution..."
+                          aws ssm send-command \
+                            --document-name "VSCodeK8sSetup" \
+                            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+                            --region $AWSRegion || echo "Failed to send SSM command"
+                        else
+                          echo "SSM Document 'VSCodeK8sSetup' not found - skipping integration"
+                        fi
                       else
-                        echo "SSM Document 'VSCodeK8sSetup' not found - skipping integration"
+                        echo "WARNING: Instance is not running after $max_attempts attempts."
                       fi
                     else
                       echo "No VSCodeServer instance found - skipping VSCode integration"
                     fi
                     
                     echo "ArgoCD installation complete"
-                    
-                    echo "Signaling CloudFormation with SUCCESS status"
-                    echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
-                    if [ -n "$WAIT_HANDLE_URL" ]; then
+                  fi
+                
+                # Signal CloudFormation with success/failure status
+                - |
+                  echo "Signaling CloudFormation"
+                  echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
+                  
+                  if [ -n "$WAIT_HANDLE_URL" ]; then
+                    if [ "$BUILD_SUCCESS" = "true" ]; then
                       # Try to send SUCCESS signal, with retry logic
                       MAX_RETRIES=3
                       RETRY_COUNT=0
@@ -702,22 +701,17 @@ Resources:
                       
                       if [ "$SIGNAL_SENT" != "true" ]; then
                         echo "All attempts to send SUCCESS signal failed. Sending FAILURE signal instead."
-                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"Failed to send SUCCESS signal","UniqueId":"EKSCluster","Data":"Signal Transmission Failed"}' "$WAIT_HANDLE_URL" || echo "Also failed to send FAILURE signal. CloudFormation may time out."
+                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"Failed to send SUCCESS signal","UniqueId":"EKSCluster","Data":"Signal Transmission Failed"}' "$WAIT_HANDLE_URL" || echo "Also failed to send FAILURE signal."
                         exit 1
                       fi
                     else
-                      echo "ERROR: WAIT_HANDLE_URL is not set."
-                      exit 1
-                    fi
-                  else
-                    echo "Build was not successful. A FAILURE signal should have been sent during the build phase."
-                    # Double-check to make sure a failure signal was sent
-                    if [ -n "$WAIT_HANDLE_URL" ]; then
-                      echo "Sending another FAILURE signal just to be sure"
+                      echo "Build was not successful. Sending FAILURE signal."
                       curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"Post-build verification of failure"}' "$WAIT_HANDLE_URL" || echo "Failed to send FAILURE signal"
                     fi
+                  else
+                    echo "ERROR: WAIT_HANDLE_URL is not set."
+                    exit 1
                   fi
-      TimeoutInMinutes: 35
 
   TriggerBuildLambdaIamRole:
     Type: AWS::IAM::Role
