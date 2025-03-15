@@ -1269,17 +1269,6 @@ Resources:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonQDeveloperAccess
         - !Sub arn:${AWS::Partition}:iam::aws:policy/ReadOnlyAccess
       Policies:
-      - PolicyName: AllowSSMParameterAccess
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-            - Effect: Allow
-              Action:
-                - ssm:GetParameter
-              Resource:
-                - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/rds/db-endpoint
-                - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/rds/db-username
-                - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/rds/db-password
       - PolicyName: EKSPermissions
         PolicyDocument:
           Version: '2012-10-17'
