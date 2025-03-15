@@ -471,54 +471,51 @@ Resources:
             pre_build:
               commands:
                 - echo ">>> build cluster config with Region $AWSRegion"
-                - echo "Creating cluster config file"
-                - echo "apiVersion: eksctl.io/v1alpha5" > cluster-config.yaml
-                - echo "kind: ClusterConfig" >> cluster-config.yaml
-                - echo "availabilityZones:" >> cluster-config.yaml
-                - echo "  - ${AWSRegion}a" >> cluster-config.yaml
-                - echo "  - ${AWSRegion}b" >> cluster-config.yaml
-                - echo "  - ${AWSRegion}c" >> cluster-config.yaml
-                - echo "metadata:" >> cluster-config.yaml
-                - echo "  name: ${EKSClusterName}" >> cluster-config.yaml
-                - echo "  region: ${AWSRegion}" >> cluster-config.yaml
-                - echo "  version: \"${KubernetesVersion}\"" >> cluster-config.yaml
-                - echo "cloudWatch:" >> cluster-config.yaml
-                - echo "  clusterLogging:" >> cluster-config.yaml
-                - echo "    enableTypes: [\"*\"]" >> cluster-config.yaml
-                - echo "iam:" >> cluster-config.yaml
-                - echo "  withOIDC: true" >> cluster-config.yaml
-                - echo "secretsEncryption:" >> cluster-config.yaml
-                - echo "  keyARN: ${KMS_ARN}" >> cluster-config.yaml
-                - echo "managedNodeGroups:" >> cluster-config.yaml
-                - echo "  - name: nodegroup" >> cluster-config.yaml
-                - echo "    instanceType: ${WorkerNodeInstanceType}" >> cluster-config.yaml
-                - echo "    desiredCapacity: 1" >> cluster-config.yaml
-                - echo "    minSize: 1" >> cluster-config.yaml
-                - echo "    maxSize: 2" >> cluster-config.yaml
-                - echo "    privateNetworking: true" >> cluster-config.yaml
-                - echo "    volumeSize: 100" >> cluster-config.yaml
-                - echo "    volumeType: gp3" >> cluster-config.yaml
-                - echo "    volumeEncrypted: true" >> cluster-config.yaml
-                - echo "    tags:" >> cluster-config.yaml
-                - echo "      'eks:cluster-name': ${EKSClusterName}" >> cluster-config.yaml
-                - echo "      'stack-name': ${STACK_NAME}" >> cluster-config.yaml
-                - echo "    iam:" >> cluster-config.yaml
-                - echo "      withAddonPolicies:" >> cluster-config.yaml
-                - echo "        imageBuilder: true" >> cluster-config.yaml
-                - echo "        autoScaler: true" >> cluster-config.yaml
-                - echo "        externalDNS: true" >> cluster-config.yaml
-                - echo "        certManager: true" >> cluster-config.yaml
-                - echo "        appMesh: true" >> cluster-config.yaml
-                - echo "        ebs: true" >> cluster-config.yaml
-                - echo "        fsx: true" >> cluster-config.yaml
-                - echo "        efs: true" >> cluster-config.yaml
-                - echo "        albIngress: true" >> cluster-config.yaml
-                - echo "        xRay: true" >> cluster-config.yaml
-                - echo "        cloudWatch: true" >> cluster-config.yaml
+                - python -c "print(f'''apiVersion: eksctl.io/v1alpha5
+          kind: ClusterConfig
+          availabilityZones:
+            - {AWSRegion}a
+            - {AWSRegion}b
+            - {AWSRegion}c
+          metadata:
+            name: {EKSClusterName}
+            region: {AWSRegion}
+            version: \"{KubernetesVersion}\"
+          cloudWatch:
+            clusterLogging:
+              enableTypes: [\"*\"]
+          iam:
+            withOIDC: true
+          secretsEncryption:
+            keyARN: {KMS_ARN}
+          managedNodeGroups:
+            - name: nodegroup
+              instanceType: {WorkerNodeInstanceType}
+              desiredCapacity: 1
+              minSize: 1
+              maxSize: 2
+              privateNetworking: true
+              volumeSize: 100
+              volumeType: gp3
+              volumeEncrypted: true
+              tags:
+                'eks:cluster-name': {EKSClusterName}
+                'stack-name': {STACK_NAME}
+              iam:
+                withAddonPolicies:
+                  imageBuilder: true
+                  autoScaler: true
+                  externalDNS: true
+                  certManager: true
+                  appMesh: true
+                  ebs: true
+                  fsx: true
+                  efs: true
+                  albIngress: true
+                  xRay: true
+                  cloudWatch: true''')" > cluster-config.yaml
                 - cat cluster-config.yaml
-                - echo ">>> install awscli"
                 - pip3 install --upgrade --user awscli
-                - echo ">>> install kubectl"
                 - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                 - chmod +x ./kubectl
                 - curl --silent --fail --retry 5 --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
@@ -528,37 +525,52 @@ Resources:
             build:
               commands:
                 - echo ">>> creating EKS cluster in region $AWSRegion"
-                - |
-                  eksctl create cluster -f cluster-config.yaml --region $AWSRegion
-                  if [ $? -eq 0 ]; then
-                    export BUILD_SUCCESS=true
-                    echo "EKS cluster creation successful"
-                  else
-                    echo "EKS cluster creation failed"
-                    if [ -n "$WAIT_HANDLE_URL" ]; then
-                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"
-                      echo "Sent FAILURE signal to CloudFormation"
-                    fi
-                    exit 1
-                  fi
+                - eksctl create cluster -f cluster-config.yaml --region $AWSRegion || { echo "EKS cluster creation failed"; if [ -n "$WAIT_HANDLE_URL" ]; then curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"; fi; exit 1; }
+                - export BUILD_SUCCESS=true
+                - echo "EKS cluster creation successful"
             post_build:
               commands:
                 - echo ">>> Post-build phase"
                 - |
-                  if [ "$BUILD_SUCCESS" = "true" ]; then
+                  if [ "$BUILD_SUCCESS" = "true" ]; then 
                     echo "Signaling CloudFormation with SUCCESS status"
                     echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
                     if [ -n "$WAIT_HANDLE_URL" ]; then
-                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster Created","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Complete"}' "$WAIT_HANDLE_URL"
-                      if [ $? -ne 0 ]; then
-                        echo "Failed to send success signal to CloudFormation"
+                      # Try to send SUCCESS signal, with retry logic
+                      MAX_RETRIES=3
+                      RETRY_COUNT=0
+                      SIGNAL_SENT=false
+                      
+                      while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SIGNAL_SENT" != "true" ]; do
+                        if curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster Created","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Complete"}' "$WAIT_HANDLE_URL"; then
+                          echo "Successfully sent SUCCESS signal to CloudFormation"
+                          SIGNAL_SENT=true
+                        else
+                          RETRY_COUNT=$((RETRY_COUNT+1))
+                          echo "Failed to send SUCCESS signal to CloudFormation (attempt $RETRY_COUNT/$MAX_RETRIES)"
+                          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                            echo "Retrying in 5 seconds..."
+                            sleep 5
+                          fi
+                        fi
+                      done
+                      
+                      if [ "$SIGNAL_SENT" != "true" ]; then
+                        echo "All attempts to send SUCCESS signal failed. Sending FAILURE signal instead."
+                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"Failed to send SUCCESS signal","UniqueId":"EKSCluster","Data":"Signal Transmission Failed"}' "$WAIT_HANDLE_URL" || echo "Also failed to send FAILURE signal. CloudFormation may time out."
+                        exit 1
                       fi
                     else
-                      echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
+                      echo "ERROR: WAIT_HANDLE_URL is not set."
                       exit 1
                     fi
                   else
-                    echo "Build was not successful, not sending SUCCESS signal"
+                    echo "Build was not successful. A FAILURE signal should have been sent during the build phase."
+                    # Double-check to make sure a failure signal was sent
+                    if [ -n "$WAIT_HANDLE_URL" ]; then
+                      echo "Sending another FAILURE signal just to be sure"
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"Post-build verification of failure"}' "$WAIT_HANDLE_URL" || echo "Failed to send FAILURE signal"
+                    fi
                   fi
       TimeoutInMinutes: 35
 
