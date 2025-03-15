@@ -463,20 +463,21 @@ Resources:
                 python: 3.12
               commands:
                 - echo ">>> installed python 3.12"
+                - export BUILD_SUCCESS=false
             pre_build:
               commands:
-                - echo ">>> build cluster config"
+                - echo ">>> build cluster config with Region: $AWSRegion"
                 - |
                   cat <<EOF > cluster-config.yaml
                   apiVersion: eksctl.io/v1alpha5
                   kind: ClusterConfig
                   availabilityZones:
-                    - ${AWS::Region}a
-                    - ${AWS::Region}b
-                    - ${AWS::Region}c
+                    - ${AWSRegion}a
+                    - ${AWSRegion}b
+                    - ${AWSRegion}c
                   metadata:
                     name: ${EKSClusterName}
-                    region: ${AWS::Region}
+                    region: ${AWSRegion}
                     version: "${KubernetesVersion}"
                   cloudWatch:
                       clusterLogging:
@@ -497,7 +498,7 @@ Resources:
                       volumeEncrypted: true
                       tags:
                         'eks:cluster-name': ${EKSClusterName}
-                        'stack-name': ${AWS::StackName}
+                        'stack-name': ${STACK_NAME}
                       iam:
                         withAddonPolicies:
                           imageBuilder: true
@@ -512,6 +513,7 @@ Resources:
                           xRay: true
                           cloudWatch: true
                   EOF
+                - cat cluster-config.yaml
                 - echo ">>> install awscli "
                 - pip3 install --upgrade --user awscli
                 - echo ">>> install kubectl"
@@ -525,28 +527,36 @@ Resources:
                 - export PATH=$PWD/:$PATH
             build:
               commands:
-                - echo ">>> creating EKS cluster"
+                - echo ">>> creating EKS cluster in region $AWSRegion"
                 - |
-                  eksctl create cluster -f cluster-config.yaml || { 
-                    echo "EKS cluster creation failed"; 
-                    if [ -n "$WAIT_HANDLE_URL" ]; then 
-                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status": "FAILURE", "Reason": "EKS Cluster Creation Failed", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"; 
-                    fi; 
-                    exit 1; 
-                  }
+                  if eksctl create cluster -f cluster-config.yaml --region $AWSRegion; then
+                    export BUILD_SUCCESS=true
+                    echo "EKS cluster creation successful"
+                  else
+                    echo "EKS cluster creation failed"
+                    if [ -n "$WAIT_HANDLE_URL" ]; then
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status": "FAILURE", "Reason": "EKS Cluster Creation Failed", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"
+                      echo "Sent FAILURE signal to CloudFormation"
+                    fi
+                    exit 1
+                  fi
             post_build:
               commands:
-                - echo ">>> EKS cluster creation complete"
+                - echo ">>> Post-build phase"
                 - |
-                  echo "Signaling CloudFormation with success status"
-                  echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
-                  if [ -n "$WAIT_HANDLE_URL" ]; then
-                    curl -X PUT -H 'Content-Type:' \
-                      --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
-                      "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
+                  if [ "$BUILD_SUCCESS" = "true" ]; then
+                    echo "Signaling CloudFormation with SUCCESS status"
+                    echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
+                    if [ -n "$WAIT_HANDLE_URL" ]; then
+                      curl -X PUT -H 'Content-Type:' \
+                        --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
+                        "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
+                    else
+                      echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
+                      exit 1
+                    fi
                   else
-                    echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
-                    exit 1
+                    echo "Build was not successful, not sending SUCCESS signal"
                   fi
       TimeoutInMinutes: 35
 
