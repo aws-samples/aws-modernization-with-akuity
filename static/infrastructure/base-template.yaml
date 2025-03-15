@@ -528,9 +528,18 @@ Resources:
             build:
               commands:
                 - echo ">>> creating EKS cluster in region $AWSRegion"
-                - eksctl create cluster -f cluster-config.yaml --region $AWSRegion || { echo "EKS cluster creation failed"; if [ -n "$WAIT_HANDLE_URL" ]; then curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"; fi; exit 1; }
-                - export BUILD_SUCCESS=true
-                - echo "EKS cluster creation successful"
+                - |
+                  if eksctl create cluster -f cluster-config.yaml; then
+                    export BUILD_SUCCESS=true
+                    echo "EKS cluster creation successful"
+                  else
+                    echo "EKS cluster creation failed"
+                    if [ -n "$WAIT_HANDLE_URL" ]; then
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"
+                      echo "Sent FAILURE signal to CloudFormation"
+                    fi
+                    exit 1
+                  fi
             post_build:
               commands:
                 - echo ">>> Post-build phase"
