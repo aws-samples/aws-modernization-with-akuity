@@ -453,6 +453,10 @@ Resources:
             Value: !Ref AWS::Region
           - Name: STACK_NAME
             Value: !Ref AWS::StackName
+          - Name: KubernetesVersion
+            Value: !Ref KubernetesVersion
+          - Name: WorkerNodeInstanceType
+            Value: !Ref WorkerNodeInstanceType
       Source:
         Type: NO_SOURCE
         BuildSpec: |
@@ -466,9 +470,8 @@ Resources:
                 - export BUILD_SUCCESS=false
             pre_build:
               commands:
-                - echo ">>> build cluster config with Region: $AWSRegion"
-                - |
-                  cat <<EOF > cluster-config.yaml
+                - echo ">>> build cluster config with Region $AWSRegion"
+                - cat > cluster-config.yaml << EOF
                   apiVersion: eksctl.io/v1alpha5
                   kind: ClusterConfig
                   availabilityZones:
@@ -514,14 +517,12 @@ Resources:
                           cloudWatch: true
                   EOF
                 - cat cluster-config.yaml
-                - echo ">>> install awscli "
+                - echo ">>> install awscli"
                 - pip3 install --upgrade --user awscli
                 - echo ">>> install kubectl"
-                - |
-                  curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
                 - chmod +x ./kubectl
-                - |
-                  curl --silent --fail --retry 5 --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                - curl --silent --fail --retry 5 --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
                 - mv -v /tmp/eksctl /usr/local/bin
                 - eksctl version
                 - export PATH=$PWD/:$PATH
@@ -548,9 +549,7 @@ Resources:
                     echo "Signaling CloudFormation with SUCCESS status"
                     echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
                     if [ -n "$WAIT_HANDLE_URL" ]; then
-                      curl -X PUT -H 'Content-Type:' \
-                        --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
-                        "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
                     else
                       echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
                       exit 1
