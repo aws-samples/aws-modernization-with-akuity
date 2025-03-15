@@ -455,93 +455,99 @@ Resources:
             Value: !Ref AWS::StackName
       Source:
         Type: NO_SOURCE
-        BuildSpec:
-          !Sub |
-              version: 0.2
-              phases:
-                install:
-                  runtime-versions:
-                    python: 3.12
-                  commands:
-                    - echo ">>> installed python 3.12"
-                pre_build:
-                  commands:
-                    - echo ">>> build cluster config"
-                    - |
-                      cat <<EOF > cluster-config.yaml
-                      apiVersion: eksctl.io/v1alpha5
-                      kind: ClusterConfig
-                      availabilityZones:
-                        - ${AWS::Region}a
-                        - ${AWS::Region}b
-                        - ${AWS::Region}c
-                      metadata:
-                        name: ${EKSClusterName}
-                        region: ${AWS::Region}
-                        version: "${KubernetesVersion}"
-                      cloudWatch:
-                          clusterLogging:
-                              enableTypes: ["*"]
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                python: 3.12
+              commands:
+                - echo ">>> installed python 3.12"
+            pre_build:
+              commands:
+                - echo ">>> build cluster config"
+                - |
+                  cat <<EOF > cluster-config.yaml
+                  apiVersion: eksctl.io/v1alpha5
+                  kind: ClusterConfig
+                  availabilityZones:
+                    - ${AWS::Region}a
+                    - ${AWS::Region}b
+                    - ${AWS::Region}c
+                  metadata:
+                    name: ${EKSClusterName}
+                    region: ${AWS::Region}
+                    version: "${KubernetesVersion}"
+                  cloudWatch:
+                      clusterLogging:
+                          enableTypes: ["*"]
+                  iam:
+                    withOIDC: true
+                  secretsEncryption:
+                    keyARN: ${KMS_ARN}
+                  managedNodeGroups:
+                    - name: nodegroup
+                      instanceType: ${WorkerNodeInstanceType}
+                      desiredCapacity: 1
+                      minSize: 1
+                      maxSize: 2
+                      privateNetworking: true
+                      volumeSize: 100
+                      volumeType: gp3
+                      volumeEncrypted: true
+                      tags:
+                        'eks:cluster-name': ${EKSClusterName}
+                        'stack-name': ${AWS::StackName}
                       iam:
-                        withOIDC: true
-                      secretsEncryption:
-                        keyARN: $KMS_ARN
-                      managedNodeGroups:
-                        - name: nodegroup
-                          instanceType: ${WorkerNodeInstanceType}
-                          desiredCapacity: 1
-                          minSize: 1
-                          maxSize: 2
-                          privateNetworking: true
-                          volumeSize: 100
-                          volumeType: gp3
-                          volumeEncrypted: true
-                          tags:
-                            'eks:cluster-name': ${EKSClusterName}
-                            'stack-name': ${AWS::StackName}
-                          iam:
-                            withAddonPolicies:
-                              imageBuilder: true
-                              autoScaler: true
-                              externalDNS: true
-                              certManager: true
-                              appMesh: true
-                              ebs: true
-                              fsx: true
-                              efs: true
-                              albIngress: true
-                              xRay: true
-                              cloudWatch: true
-                      EOF
-                    - echo ">>> install awscli "
-                    - pip3 install --upgrade --user awscli
-                    - echo ">>> install kubectl"
-                    - curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
-                    - chmod +x ./kubectl
-                    - |
-                      curl --silent --fail --retry 5 --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-                    - mv -v /tmp/eksctl /usr/local/bin
-                    - eksctl version
-                    - export PATH=$PWD/:$PATH
-                build:
-                  commands:
-                    - echo ">>> creating EKS cluster"
-                    - eksctl create cluster -f cluster-config.yaml || { echo "EKS cluster creation failed"; if [ -n "$WAIT_HANDLE_URL" ]; then curl -X PUT -H 'Content-Type:' --data-binary '{"Status": "FAILURE", "Reason": "EKS Cluster Creation Failed", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"; fi; exit 1; }
-                post_build:
-                  commands:
-                    - echo ">>> EKS cluster creation complete"
-                    - |
-                      echo "Signaling CloudFormation with success status"
-                      echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
-                      if [ -n "$WAIT_HANDLE_URL" ]; then
-                        curl -X PUT -H 'Content-Type:' \
-                          --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
-                          "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
-                      else
-                        echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
-                        exit 1
-                      fi
-                     
+                        withAddonPolicies:
+                          imageBuilder: true
+                          autoScaler: true
+                          externalDNS: true
+                          certManager: true
+                          appMesh: true
+                          ebs: true
+                          fsx: true
+                          efs: true
+                          albIngress: true
+                          xRay: true
+                          cloudWatch: true
+                  EOF
+                - echo ">>> install awscli "
+                - pip3 install --upgrade --user awscli
+                - echo ">>> install kubectl"
+                - |
+                  curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+                - chmod +x ./kubectl
+                - |
+                  curl --silent --fail --retry 5 --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+                - mv -v /tmp/eksctl /usr/local/bin
+                - eksctl version
+                - export PATH=$PWD/:$PATH
+            build:
+              commands:
+                - echo ">>> creating EKS cluster"
+                - |
+                  eksctl create cluster -f cluster-config.yaml || { 
+                    echo "EKS cluster creation failed"; 
+                    if [ -n "$WAIT_HANDLE_URL" ]; then 
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status": "FAILURE", "Reason": "EKS Cluster Creation Failed", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Failed"}' "$WAIT_HANDLE_URL"; 
+                    fi; 
+                    exit 1; 
+                  }
+            post_build:
+              commands:
+                - echo ">>> EKS cluster creation complete"
+                - |
+                  echo "Signaling CloudFormation with success status"
+                  echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
+                  if [ -n "$WAIT_HANDLE_URL" ]; then
+                    curl -X PUT -H 'Content-Type:' \
+                      --data-binary '{"Status": "SUCCESS", "Reason": "EKS Cluster Created", "UniqueId": "EKSCluster", "Data": "EKS Cluster Creation Complete"}' \
+                      "$WAIT_HANDLE_URL" || echo "Failed to send success signal to CloudFormation"
+                  else
+                    echo "ERROR: WAIT_HANDLE_URL is not set. Skipping wait condition signal."
+                    exit 1
+                  fi
       TimeoutInMinutes: 35
 
   TriggerBuildLambdaIamRole:
