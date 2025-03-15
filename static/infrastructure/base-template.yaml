@@ -471,49 +471,58 @@ Resources:
             pre_build:
               commands:
                 - echo ">>> build cluster config with Region $AWSRegion"
-                - python -c "print(f'''apiVersion: eksctl.io/v1alpha5
-          kind: ClusterConfig
-          availabilityZones:
-            - {AWSRegion}a
-            - {AWSRegion}b
-            - {AWSRegion}c
-          metadata:
-            name: {EKSClusterName}
-            region: {AWSRegion}
-            version: \"{KubernetesVersion}\"
-          cloudWatch:
-            clusterLogging:
-              enableTypes: [\"*\"]
-          iam:
-            withOIDC: true
-          secretsEncryption:
-            keyARN: {KMS_ARN}
-          managedNodeGroups:
-            - name: nodegroup
-              instanceType: {WorkerNodeInstanceType}
-              desiredCapacity: 1
-              minSize: 1
-              maxSize: 2
-              privateNetworking: true
-              volumeSize: 100
-              volumeType: gp3
-              volumeEncrypted: true
-              tags:
-                'eks:cluster-name': {EKSClusterName}
-                'stack-name': {STACK_NAME}
-              iam:
-                withAddonPolicies:
-                  imageBuilder: true
-                  autoScaler: true
-                  externalDNS: true
-                  certManager: true
-                  appMesh: true
-                  ebs: true
-                  fsx: true
-                  efs: true
-                  albIngress: true
-                  xRay: true
-                  cloudWatch: true''')" > cluster-config.yaml
+                - |
+                  cat << 'EKSCONFIG' > cluster-config.yaml
+                  apiVersion: eksctl.io/v1alpha5
+                  kind: ClusterConfig
+                  availabilityZones:
+                    - ${AWSRegion}a
+                    - ${AWSRegion}b
+                    - ${AWSRegion}c
+                  metadata:
+                    name: ${EKSClusterName}
+                    region: ${AWSRegion}
+                    version: "${KubernetesVersion}"
+                  cloudWatch:
+                    clusterLogging:
+                      enableTypes: ["*"]
+                  iam:
+                    withOIDC: true
+                  secretsEncryption:
+                    keyARN: ${KMS_ARN}
+                  managedNodeGroups:
+                    - name: nodegroup
+                      instanceType: ${WorkerNodeInstanceType}
+                      desiredCapacity: 1
+                      minSize: 1
+                      maxSize: 2
+                      privateNetworking: true
+                      volumeSize: 100
+                      volumeType: gp3
+                      volumeEncrypted: true
+                      tags:
+                        'eks:cluster-name': ${EKSClusterName}
+                        'stack-name': ${STACK_NAME}
+                      iam:
+                        withAddonPolicies:
+                          imageBuilder: true
+                          autoScaler: true
+                          externalDNS: true
+                          certManager: true
+                          appMesh: true
+                          ebs: true
+                          fsx: true
+                          efs: true
+                          albIngress: true
+                          xRay: true
+                          cloudWatch: true
+                  EKSCONFIG
+                - sed -i "s/\${AWSRegion}/$AWSRegion/g" cluster-config.yaml
+                - sed -i "s/\${EKSClusterName}/$EKSClusterName/g" cluster-config.yaml
+                - sed -i "s/\${KubernetesVersion}/$KubernetesVersion/g" cluster-config.yaml
+                - sed -i "s/\${KMS_ARN}/$KMS_ARN/g" cluster-config.yaml
+                - sed -i "s/\${WorkerNodeInstanceType}/$WorkerNodeInstanceType/g" cluster-config.yaml
+                - sed -i "s/\${STACK_NAME}/$STACK_NAME/g" cluster-config.yaml
                 - cat cluster-config.yaml
                 - pip3 install --upgrade --user awscli
                 - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
