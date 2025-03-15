@@ -16,6 +16,18 @@ Parameters:
     Description: Worker Node cluster instances
     Type: String
     Default: "t3.large"
+
+  VSCodeInstanceName:
+    Description: Name of the VSCode server instance
+    Type: String
+    Default: "VSCodeServer"
+    
+  ArgocdAdminPassword:
+    Description: Admin password for ArgoCD
+    Type: String
+    Default: "Akuity@AWS123"
+    MinLength: 8
+    NoEcho: true
     
 
 Resources:
@@ -457,6 +469,11 @@ Resources:
             Value: !Ref KubernetesVersion
           - Name: WorkerNodeInstanceType
             Value: !Ref WorkerNodeInstanceType
+          - Name: ARGOCD_PASSWORD
+            Value: !Ref ArgocdAdminPassword
+          - Name: VSCodeInstanceName
+            Value: !Ref VSCodeInstanceName
+          
       Source:
         Type: NO_SOURCE
         BuildSpec: |
