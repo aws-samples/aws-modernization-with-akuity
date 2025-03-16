@@ -273,11 +273,9 @@ Resources:
       ServiceToken: !GetAtt RunSSMDocLambda.Arn
       ServiceTimeout: 600
       InstanceId: !Ref VSCodeInstance
-      DocumentName: "VSCodeK8sSetup"
+      DocumentName: !Ref VSCodeK8sSSMDoc
       CloudWatchLogGroupName: "/aws/ssm/VSCodeK8sSetup"
-      Parameters:
-        EKSClusterName: !Ref EKSClusterName
-      IAMRole: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
+      EKSClusterName: !Ref EKSClusterName
 
   RunSSMDocLambdaRole:
     Type: AWS::IAM::Role
