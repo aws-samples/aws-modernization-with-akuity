@@ -267,7 +267,6 @@ Resources:
 
   RunVSCodeK8sSetupDoc:
     Type: Custom::RunSSMDocLambda
-    DependsOn: RunVSCodeSSMDoc
     Properties:
       ServiceToken: !GetAtt RunSSMDocLambda.Arn
       ServiceTimeout: 600
