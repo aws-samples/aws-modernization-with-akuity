@@ -534,9 +534,6 @@ Resources:
     Type: AWS::CloudFormation::WaitConditionHandle
 
 Outputs:
-  ClusterRoleArn:
-    Description: Cluster Role ARN
-    Value: !GetAtt ClusterRole.Arn
   EKSClusterName:
     Description: EKS Cluster Name
     Value: !Ref EKSClusterName
