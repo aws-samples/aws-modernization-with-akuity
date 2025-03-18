@@ -431,9 +431,9 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
-      InstanceProfileName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
+      InstanceProfileName: "akuity-and-aws-workshop-admin"
       Roles:
-      - Ref: ClusterRole
+      Fn::ImportValue: "AkuityAWSWorkshop-VSCodeRoleArn"
 
 ################## EKS Bootstrap #####################
 
@@ -442,7 +442,7 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: !Sub CodeBuild-${AWS::StackName}
-      ServiceRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin-${AWS::StackName}"
+      ServiceRole: !Sub "arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin"
       Artifacts:
         Type: NO_ARTIFACTS
       LogsConfig:
