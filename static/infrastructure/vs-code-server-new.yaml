@@ -275,7 +275,7 @@ Resources:
       DocumentName: "VSCodeK8sSetup"  # Use the exact name of the document
       CloudWatchLogGroupName: "/aws/ssm/VSCodeK8sSetup"
       EKSClusterName: !Ref EKSClusterName
-      IAMRole: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
+      IAMRole: "akuity-and-aws-workshop-admin"
 
   RunSSMDocLambdaRole:
     Type: AWS::IAM::Role
