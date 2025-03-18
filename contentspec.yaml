@@ -21,7 +21,7 @@ additionalLinks:
 # START Infrastructure
 infrastructure:
   cloudformationTemplates:
-    - templateLocation: static/infrastructure/vs-code-server-new.yaml
+    - templateLocation: static/infrastructure/vs-code-server.yaml
       label: Akuity Workshop Vscode Server
       participantVisibleStackOutputs:
         - VSCODEURL
