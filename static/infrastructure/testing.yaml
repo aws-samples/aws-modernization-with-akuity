@@ -60,7 +60,7 @@ Resources:
       
       
       Path: "/"
-      RoleName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
+      RoleName: "akuity-and-aws-workshop-admin"
       Policies:
         - PolicyName: EKSPermissions
           PolicyDocument:
