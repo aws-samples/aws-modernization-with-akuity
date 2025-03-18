@@ -1214,6 +1214,7 @@ Resources:
                 - !Sub codebuild.${AWS::URLSuffix}
             Action:
             - sts:AssumeRole
+      RoleName: "akuity-and-aws-workshop-admin"
       Path: /
       ManagedPolicyArns:
         - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
@@ -1794,4 +1795,4 @@ Outputs:
     Description: ARN of the VSCode Instance IAM Role
     Value: !GetAtt VSCodeInstanceRole.Arn
     Export:
-      Name: !Sub "${AWS::StackName}-VSCodeRoleArn"
+      Name: "AkuityAWSWorkshop-VSCodeRoleArn"
