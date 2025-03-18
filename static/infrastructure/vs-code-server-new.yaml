@@ -272,10 +272,10 @@ Resources:
       ServiceToken: !GetAtt RunSSMDocLambda.Arn
       ServiceTimeout: 600
       InstanceId: !Ref VSCodeInstance
-      DocumentName: "VSCodeK8sSetup"  # Use the exact name of the document
+      DocumentName: !Ref VSCodeK8sSetup
       CloudWatchLogGroupName: "/aws/ssm/VSCodeK8sSetup"
       EKSClusterName: !Ref EKSClusterName
-      IAMRole: "akuity-and-aws-workshop-admin"
+      VSCodeUser: !Ref VSCodeUser
 
   RunSSMDocLambdaRole:
     Type: AWS::IAM::Role
@@ -1170,14 +1170,17 @@ Resources:
             type: String
             description: "Name of the EKS cluster"
             default: "akuity-aws-cluster"
+          VSCodeUser:
+            type: String
+            description: "VSCode user name"
         mainSteps:
           - action: aws:runShellScript
             name: ConfigureKubectl
             inputs:
               runCommand:
                 - '#!/bin/bash'
-                - echo "alias k=kubectl" >> /home/${VSCodeUser}/.bashrc
-                - echo "complete -o default -F __start_kubectl k" >> /home/${VSCodeUser}/.bashrc
+                - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
+                - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
                 - source /home/${VSCodeUser}/.bashrc
   
           - action: aws:runShellScript
@@ -1194,9 +1197,9 @@ Resources:
                 - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
                 - echo "Setting up kubeconfig for EKS cluster: $EKS_CLUSTER_NAME in region $REGION"
                 - mkdir -p /home/${VSCodeUser}/.kube
-                - aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$REGION" --kubeconfig /home/${VSCodeUser}/.kube/config
-                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
-                - chmod 600 /home/${VSCodeUser}/.kube/config
+                - aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$REGION" --kubeconfig /home/{{ VSCodeUser }}/.kube/config
+                - chown -R ${VSCodeUser}:${VSCodeUser} /home/{{ VSCodeUser }}/.kube
+                - chmod 600 /home/{{ VSCodeUser }}/.kube/config
                 - echo "EKS kubeconfig setup completed."
   
           - action: aws:runShellScript
@@ -1257,8 +1260,8 @@ Resources:
                   echo "==================================================="
                   EOF
   
-                  chmod +x /home/${VSCodeUser}/argocd-info.sh
-                  chown ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/argocd-info.sh
+                  chmod +x /home/{{ VSCodeUser }}/argocd-info.sh
+                  chown {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/argocd-info.sh
                   echo "ArgoCD setup completed."
 
   VSCodeInstanceRole:
