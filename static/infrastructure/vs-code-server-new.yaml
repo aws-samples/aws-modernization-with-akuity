@@ -1238,12 +1238,11 @@ Resources:
                   set -e
                   EKS_CLUSTER_NAME="{{ EKSClusterName }}"
                   REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                  SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
   
                   echo "Retrieving ArgoCD details from SSM..."
-                  ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
+                  ARGOCD_SERVER=$(aws ssm get-parameter --name "/eks/akuity-aws-cluster/argocd-server" --with-decryption --query "Parameter.Value" --output text --output text || echo "Not available yet")
                   ARGOCD_USERNAME="admin"
-                  ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
+                  ARGOCD_PASSWORD=$(aws ssm get-parameter --name "/eks/akuity-aws-cluster/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
   
                   echo "Creating ArgoCD info script..."
                   cat << EOF > /home/{{ VSCodeUser }}/argocd-info.sh
