@@ -123,7 +123,7 @@ Resources:
       Path: "/"
       InstanceProfileName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Roles:
-      - Fn::ImportValue: "AkuityAWSWorkshop-VSCodeRoleArn"
+        - "VSCodeInstanceRole"
 
 ################## EKS Bootstrap #####################
 
