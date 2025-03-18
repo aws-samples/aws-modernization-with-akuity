@@ -431,7 +431,7 @@ Resources:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: "/"
-      InstanceProfileName: "akuity-and-aws-workshop-admin"
+      InstanceProfileName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Roles:
       - Fn::ImportValue: "AkuityAWSWorkshop-VSCodeRoleArn"
 
