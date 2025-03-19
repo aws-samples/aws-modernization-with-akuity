@@ -64,9 +64,7 @@ The output should be similar to the following:
 
 ```shell
 NAME                              STATUS   ROLES    AGE   VERSION
-ip-192-168-108-33.ec2.internal    Ready    <none>   2d    v1.28.8-eks-ae9a62a
-ip-192-168-158-117.ec2.internal   Ready    <none>   2d    v1.28.8-eks-ae9a62a
-ip-192-168-182-251.ec2.internal   Ready    <none>   2d    v1.28.8-eks-ae9a62a
+ip-192-168-108-33.ec2.internal    Ready    <none>   2d    v1.31.1-eks-ae9a62a
 ```
 
 Now you're ready to set up your Argo CD Instance.

@@ -23,7 +23,7 @@ To best understand this tutorial, make sure you have at least minimal working kn
 
 [GitHub account](https://github.com)
 
-[GitHub PAT](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens)
+[GitHub PAT](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token)
 [Akuity account - A 30 Day Free Trial is Available ](https://akuity.cloud)
 
 [AWS account - Will be provided if this is a AWS Co-Hosted Event](https://catalog.us-east-1.prod.workshops.aws/event/account-login)
