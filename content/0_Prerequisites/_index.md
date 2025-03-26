@@ -1,7 +1,7 @@
 ---
-title = "Getting Started"
-chapter = true
-weight = 12
+title: "Getting Started"
+chapter: true
+weight: 12
 ---
 
 # Getting Started
