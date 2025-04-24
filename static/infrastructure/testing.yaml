@@ -22,13 +22,6 @@ Parameters:
     Type: String
     Default: "VSCodeServer"
     
-  ArgocdAdminPassword:
-    Description: Admin password for ArgoCD
-    Type: String
-    Default: "Akuity@AWS123"
-    MinLength: 8
-    NoEcho: true
-    
 
 Resources:
 ################## PERMISSIONS AND ROLES #################
@@ -159,8 +152,6 @@ Resources:
             Value: !Ref KubernetesVersion
           - Name: WorkerNodeInstanceType
             Value: !Ref WorkerNodeInstanceType
-          - Name: ARGOCD_PASSWORD
-            Value: !Ref ArgocdAdminPassword
           - Name: VSCodeInstanceName
             Value: !Ref VSCodeInstanceName
           
@@ -250,76 +241,7 @@ Resources:
             post_build:
               commands:
                 - echo ">>> Post-build phase"
-                - |
-                  if [ "$BUILD_SUCCESS" = "true" ]; then 
-                    echo "EKS cluster creation successful, installing ArgoCD"
-                    
-                    # Install ArgoCD
-                    echo ">>> Installing ArgoCD"
-                    kubectl create namespace argocd || echo "Namespace argocd already exists"
-                    kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-                    
-                    # Wait for ArgoCD to be ready
-                    echo ">>> Waiting for ArgoCD to be ready"
-                    kubectl -n argocd wait --for=condition=available deployment/argocd-server --timeout=300s || { echo "ArgoCD server deployment timed out"; exit 1; }
-                    
-                    # Install Apache utils for htpasswd
-                    yum install -y httpd-tools || apt-get install -y apache2-utils
-                    
-                    # Create admin password
-                    echo ">>> Setting up ArgoCD admin password"
-                    if [ -z "$ARGOCD_PASSWORD" ]; then
-                      echo "No password provided, generating secure password"
-                      ARGOCD_PASSWORD=$(openssl rand -base64 12)
-                      echo "Generated password: $ARGOCD_PASSWORD"
-                    fi
-
-                    kubectl -n argocd patch secret argocd-secret \
-                      --type='merge' \
-                      -p '{"stringData": {"admin.password": "'$(htpasswd -bnBC 10 "" "$ARGOCD_PASSWORD" | tr -d ':\n' | sed 's/\$2y/\$2a/')'", "admin.passwordMtime": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}}'
-                    
-                    # Configure ArgoCD server to be accessible
-                    echo ">>> Configuring ArgoCD access"
-                    kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-                    
-                    # Store ArgoCD URL and credentials in SSM Parameters
-                    echo ">>> Storing ArgoCD access information"
-                    # Wait for Load Balancer to be assigned
-                    counter=0
-                    max_attempts=60
-                    while [ $counter -lt $max_attempts ]; do
-                      ARGOCD_SERVER=$(kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
-                      if [ ! -z "$ARGOCD_SERVER" ]; then
-                        echo "LoadBalancer hostname: $ARGOCD_SERVER"
-                        break
-                      fi
-                      sleep 10
-                      counter=$((counter + 1))
-                      echo "Waiting for ArgoCD Load Balancer... Attempt $counter of $max_attempts"
-                    done
-
-                    if [ -z "$ARGOCD_SERVER" ]; then
-                      echo "WARNING: LoadBalancer hostname not assigned after $max_attempts attempts"
-                      # Continue anyway, we'll handle this
-                    fi
-                    
-                    # Store ArgoCD access info in SSM Parameter Store with proper prefix
-                    SSM_PREFIX="/eks/${EKSClusterName}"
-                    
-                    if [ ! -z "$ARGOCD_SERVER" ]; then
-                      # Store ArgoCD access info in SSM Parameter Store
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "$ARGOCD_SERVER" --type "String" --overwrite
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                      echo "ArgoCD access info stored in SSM Parameter Store under prefix $SSM_PREFIX"
-                    else
-                      echo "WARNING: Could not get ArgoCD Server URL - Load Balancer may still be provisioning"
-                      # Proceed anyway, we'll store the fact that it's being provisioning
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-username" --value "admin" --type "String" --overwrite
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-password" --value "$ARGOCD_PASSWORD" --type "SecureString" --overwrite
-                      aws ssm put-parameter --name "$SSM_PREFIX/argocd-server" --value "pending-loadbalancer-creation" --type "String" --overwrite
-                    fi
-
+                
                     # VSCode server integration (optional based on instance existence)
                     INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=VSCodeServer" --query "Reservations[].Instances[].InstanceId" --output text 2>/dev/null || echo "")
                     
@@ -359,8 +281,6 @@ Resources:
                     else
                       echo "No VSCodeServer instance found - skipping VSCode integration"
                     fi
-                    
-                    echo "ArgoCD installation complete"
                   fi
                 
                 # Signal CloudFormation with success/failure status
@@ -376,7 +296,7 @@ Resources:
                       SIGNAL_SENT=false
                       
                       while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SIGNAL_SENT" != "true" ]; do
-                        if curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster and ArgoCD Created","UniqueId":"EKSCluster","Data":"Deployment Complete"}' "$WAIT_HANDLE_URL"; then
+                        if curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster Created","UniqueId":"EKSCluster","Data":"Deployment Complete"}' "$WAIT_HANDLE_URL"; then
                           echo "Successfully sent SUCCESS signal to CloudFormation"
                           SIGNAL_SENT=true
                         else
