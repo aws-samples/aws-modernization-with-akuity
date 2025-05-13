@@ -38,7 +38,7 @@ Use the command: ```aws eks list-clusters```<br>
 <br>
 
 The output should be similar to the following:<br>
-```shell
+```
  Added new context arn:aws:eks:us-east-1:338615488317:cluster/<cluster-name> to /home/vscode/.kube/config
  ```
 <br>
@@ -57,12 +57,15 @@ Lastly, ```jq -r .clusters[0]```jq is a command line tool for processing JSON. T
 {{% /notice %}}<br>
 
 1. Let's test to see if ```kubectl``` can access the cluster.<br>
-```k get nodes```
+
+```bash
+k get nodes
+```
 <br>
 
 The output should be similar to the following:
 
-```shell
+```
 NAME                              STATUS   ROLES    AGE   VERSION
 ip-192-168-108-33.ec2.internal    Ready    <none>   2d    v1.31.1-eks-ae9a62a
 ```
