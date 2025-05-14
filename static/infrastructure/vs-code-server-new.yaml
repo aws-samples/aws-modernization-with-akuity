@@ -266,20 +266,6 @@ Resources:
       LinuxFlavor: !If [IsAL2023, 'al2023', 'ubuntu']
 
 
-  RunVSCodeK8sSetupDoc:
-    Type: Custom::RunSSMDocLambda
-    DependsOn: RunVSCodeSSMDoc
-    Properties:
-      ServiceToken: !GetAtt RunSSMDocLambda.Arn
-      ServiceTimeout: 700
-      InstanceId: !Ref VSCodeInstance
-      DocumentName: "VSCodeK8sSetup"
-      CloudWatchLogGroupName: "/aws/ssm/VSCodeK8sSetup"
-      EKSClusterName: !Ref EKSClusterName
-      VSCodeUser: !Ref VSCodeUser
-      LinuxFlavor: !If [IsAL2023, 'al2023', 'ubuntu']
-
-
   RunSSMDocLambdaRole:
     Type: AWS::IAM::Role
     Metadata:
@@ -1003,9 +989,51 @@ Resources:
                 - 'REGION="${AWS::Region}"'
                 - !Sub |
                   mkdir -p /home/${VSCodeUser}/.kube
+                  # Create a script to update kubeconfig when the cluster is available
+                  cat > /usr/local/bin/update-kubeconfig.sh << 'EOF'
+                  #!/bin/bash
                   EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME"
                   REGION="$REGION"
-                  USER_HOME="/home/${VSCodeUser}"                  
+                  USER_HOME="/home/${VSCodeUser}"
+                  
+                  # Function to check if EKS cluster exists
+                  check_eks_cluster() {
+                    aws eks describe-cluster --name $EKS_CLUSTER_NAME --region $REGION &> /dev/null
+                    return $?
+                  }
+                  
+                  # Try to update kubeconfig
+                  MAX_ATTEMPTS=90
+                  ATTEMPT=0
+                  SLEEP_TIME=30
+                  
+                  while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+                    ATTEMPT=$((ATTEMPT+1))
+                    if check_eks_cluster; then
+                      echo "EKS cluster found. Updating kubeconfig..."
+                      aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $REGION --kubeconfig $USER_HOME/.kube/config
+                      chown -R ${VSCodeUser}:${VSCodeUser} $USER_HOME/.kube
+                      chmod 600 $USER_HOME/.kube/config
+                      echo "Kubeconfig updated successfully!"
+                      exit 0
+                    else
+                      echo "Attempt $ATTEMPT: EKS cluster not found. Waiting $SLEEP_TIME seconds..."
+                      sleep $SLEEP_TIME
+                    fi
+                  done
+                  
+                  echo "Failed to find EKS cluster after $MAX_ATTEMPTS attempts."
+                  exit 1
+                  EOF
+                  
+                  chmod +x /usr/local/bin/update-kubeconfig.sh
+                  
+                  # Run the script in the background so it doesn't block instance startup
+                  nohup /usr/local/bin/update-kubeconfig.sh > /var/log/update-kubeconfig.log 2>&1 &
+
+                  # Add alias for kubectl
+                  echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
+                  
                   chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}
           - action: aws:runShellScript
             name: DownloadAssets
@@ -1119,6 +1147,7 @@ Resources:
                 - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
                 - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
                 - source /home/{{ VSCodeUser }}/.bashrc
+                
           - action: aws:runShellScript
             name: InstallHelm
             inputs:
@@ -1129,7 +1158,8 @@ Resources:
                 - |
                   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
                 - echo "Helm installed successfully"
-                - helm version              
+                - helm version
+                
           - action: aws:runShellScript
             name: InstallGitHubCLI
             inputs:
@@ -1154,6 +1184,7 @@ Resources:
                   fi
                 - echo "GitHub CLI installed successfully"
                 - gh --version || echo "GitHub CLI installation failed"
+                
           - action: aws:runShellScript
             name: InstallKargo
             inputs:
@@ -1168,29 +1199,21 @@ Resources:
                     aarch64) ARCH="arm64" ;;
                     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
                   esac
+                  
                   echo "Architecture detected: $ARCH"
+                  
                   # Download the binary directly with the correct naming format
                   echo "Downloading Kargo CLI v1.3.4 for ${ARCH}..."
                   sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.3.4/kargo-linux-${ARCH}"
+                  
                   # Make it executable
                   sudo chmod +x /usr/local/bin/kargo
+                  
                   # Verify installation
                   echo "Verifying Kargo CLI installation..."
                 - kargo version || echo "Kargo CLI installation verification failed"
                 - echo "Kargo CLI v1.3.4 installation completed"
-                - source /home/{{ VSCodeUser }}/.bashrc
-          - action: aws:runShellScript
-            name: ConfigureKubectlBasics
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - set -e
-                - echo "Setting up basic kubectl configuration"
-                - mkdir -p /home/${VSCodeUser}/.kube
-                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
-                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
-                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
-                - echo "Basic kubectl configuration completed."
+                - source /home/{{ VSCodeUser }}/.bashrc        
 
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
