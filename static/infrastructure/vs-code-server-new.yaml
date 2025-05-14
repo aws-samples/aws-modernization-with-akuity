@@ -991,6 +991,17 @@ Resources:
                   echo 'Bootstrap completed with return code $?'
                   aws eks update-kubeconfig --name $(aws eks list-clusters --query 'clusters[0]' --output text)
           - action: aws:runShellScript
+            name: ConfigureKubectlBasics
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Setting up basic kubectl configuration"
+                - mkdir -p /home/${VSCodeUser}/.kube
+                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
+                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
+                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
+                - echo "Basic kubectl configuration completed."
           - action: aws:runShellScript
             name: DownloadFolders
             inputs:
