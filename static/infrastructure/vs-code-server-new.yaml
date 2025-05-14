@@ -991,17 +991,43 @@ Resources:
                   echo 'Bootstrap completed with return code $?'
                   aws eks update-kubeconfig --name $(aws eks list-clusters --query 'clusters[0]' --output text)
           - action: aws:runShellScript
-            name: ConfigureKubectlBasics
+            name: ConfigureEKSAccess
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
-                - set -e
-                - echo "Setting up basic kubectl configuration"
-                - mkdir -p /home/${VSCodeUser}/.kube
-                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
-                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
-                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
-                - echo "Basic kubectl configuration completed."
+                - 'EKS_CLUSTER_NAME="akuity-aws-cluster"'  # Change to match your cluster name
+                - 'REGION="${AWS::Region}"'
+                - !Sub |
+                  mkdir -p /home/${VSCodeUser}/.kube
+                  EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME"
+                  REGION="$REGION"
+                  USER_HOME="/home/${VSCodeUser}"                  
+                  chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}
+          - action: aws:runShellScript
+            name: DownloadAssets
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - !Sub |
+                  if [[ -z "${AssetZipS3Path}" ]]
+                  then
+                    echo "No assets"
+                  else
+                    mkdir -p ${HomeFolder} && chown -R ${VSCodeUser}:${VSCodeUser} ${HomeFolder}
+                    aws s3 cp s3://${AssetZipS3Path} /tmp/assets.zip
+                    unzip -o /tmp/assets.zip -d ${HomeFolder}
+                    chown -R ${VSCodeUser}:${VSCodeUser} ${HomeFolder}
+                    sudo -u ${VSCodeUser} git -C ${HomeFolder} init
+                    sudo -u ${VSCodeUser} git -C ${HomeFolder} add .
+                    sudo -u ${VSCodeUser} git -C ${HomeFolder} commit -m 'Initial commit'
+                    echo "Assets downloaded. Checking configuration: ${HomeFolder}"
+                    ls -la ${HomeFolder}
+                    sudo -u ${VSCodeUser} git -C ${HomeFolder} branch
+                  fi
           - action: aws:runShellScript
             name: DownloadFolders
             inputs:
@@ -1085,7 +1111,6 @@ Resources:
                     sudo -u ${VSCodeUser} git -C ${HomeFolder} branch
                     ls -la ${HomeFolder}
                   fi
-
           - action: aws:runShellScript
             name: ConfigureKubectl
             inputs:
@@ -1094,36 +1119,6 @@ Resources:
                 - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
                 - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
                 - source /home/{{ VSCodeUser }}/.bashrc
-  
-          - action: aws:runShellScript
-            name: ConfigureKubectlBasics
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - set -e
-                - echo "Setting up basic kubectl configuration"
-                - mkdir -p /home/${VSCodeUser}/.kube
-                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
-                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
-                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
-                - echo "Basic kubectl configuration completed."
-              runCommand:
-                - '#!/bin/bash'
-                - set -e
-                - echo "Setting up basic kubectl configuration"
-                - mkdir -p /home/${VSCodeUser}/.kube
-                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
-                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
-                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
-                - echo "Basic kubectl configuration completed."
-                - set -e
-                - echo "Setting up basic kubectl configuration"
-                - mkdir -p /home/{{ VSCodeUser }}/.kube
-                - chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.kube
-                - echo 'alias k=kubectl' >> /home/{{ VSCodeUser }}/.bashrc
-                - echo 'complete -o default -F __start_kubectl k' >> /home/{{ VSCodeUser }}/.bashrc
-                - echo "Basic kubectl configuration completed."
-                
           - action: aws:runShellScript
             name: InstallHelm
             inputs:
@@ -1134,8 +1129,7 @@ Resources:
                 - |
                   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
                 - echo "Helm installed successfully"
-                - helm version
-                
+                - helm version              
           - action: aws:runShellScript
             name: InstallGitHubCLI
             inputs:
@@ -1160,7 +1154,6 @@ Resources:
                   fi
                 - echo "GitHub CLI installed successfully"
                 - gh --version || echo "GitHub CLI installation failed"
-                
           - action: aws:runShellScript
             name: InstallKargo
             inputs:
@@ -1175,22 +1168,29 @@ Resources:
                     aarch64) ARCH="arm64" ;;
                     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
                   esac
-                  
                   echo "Architecture detected: $ARCH"
-                  
                   # Download the binary directly with the correct naming format
                   echo "Downloading Kargo CLI v1.3.4 for ${ARCH}..."
                   sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.3.4/kargo-linux-${ARCH}"
-                  
                   # Make it executable
                   sudo chmod +x /usr/local/bin/kargo
-                  
                   # Verify installation
                   echo "Verifying Kargo CLI installation..."
                 - kargo version || echo "Kargo CLI installation verification failed"
                 - echo "Kargo CLI v1.3.4 installation completed"
-                - source /home/{{ VSCodeUser }}/.bashrc      
-
+                - source /home/{{ VSCodeUser }}/.bashrc
+          - action: aws:runShellScript
+            name: ConfigureKubectlBasics
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Setting up basic kubectl configuration"
+                - mkdir -p /home/${VSCodeUser}/.kube
+                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
+                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
+                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
+                - echo "Basic kubectl configuration completed."
 
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
@@ -1788,4 +1788,3 @@ Outputs:
     Value: !GetAtt VSCodeInstanceRole.Arn
     Export:
       Name: "AkuityAWSWorkshop-VSCodeRoleArn"
-          
