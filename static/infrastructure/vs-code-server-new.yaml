@@ -450,6 +450,9 @@ Resources:
             allowedValues:
               - '8.0'
               - '7.0'
+          VSCodeUser:
+            type: String
+            description: "VSCode user name"
         # all mainSteps scripts are in in /var/lib/amazon/ssm/<instanceid>/document/orchestration/<uuid>/<StepName>/_script.sh
         mainSteps:
           - action: aws:configurePackage
