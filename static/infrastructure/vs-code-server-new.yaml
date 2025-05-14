@@ -1859,6 +1859,26 @@ Outputs:
     Value: !GetAtt VSCodeInstanceRole.Arn
     Export:
       Name: "AkuityAWSWorkshop-VSCodeRoleArn"
+
+  VSCodeK8sSSMDoc:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: "VSCodeK8sSetup"
+      DocumentType: "Command"
+      Content:
+        schemaVersion: "2.2"
+        description: "Configure VSCode instance for Kubernetes and EKS"
+        parameters:
+          LinuxFlavor:
+            type: String
+            default: 'al2023'
+          EKSClusterName:
+            type: String
+            description: "Name of the EKS cluster"
+          VSCodeUser:
+            type: String
+            description: "VSCode user name"
+        mainSteps:
           - action: aws:runShellScript
             name: SetupWorkshopEnvironment
             inputs:
