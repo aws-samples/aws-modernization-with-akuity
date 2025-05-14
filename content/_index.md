@@ -20,3 +20,4 @@ By the end of this workshop, you'll have practical experience with:
 - **KubeVision** - Advanced monitoring and troubleshooting capabilities
 
 ::alert[This workshop demonstrates how AWS and Akuity work together to provide a comprehensive solution for Kubernetes management on AWS.]{header="Workshop Goal"}
+
