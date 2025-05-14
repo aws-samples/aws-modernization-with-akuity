@@ -151,8 +151,7 @@
                 "eks:DeleteCluster"
             ],
             "Resource": [
-                "arn:aws:eks:*:*:cluster/akuity-aws-cluster",
-                "arn:aws:eks:*:*:cluster/*"
+                "arn:aws:eks:*:*:cluster/akuity-aws-cluster"
             ]
         },
         {
