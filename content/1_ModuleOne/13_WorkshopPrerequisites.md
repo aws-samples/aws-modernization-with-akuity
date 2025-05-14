@@ -1,38 +1,69 @@
 ---
-title: "Workshop Prerequisites" # MODIFY THIS TITLE IF APPLICABLE
+title: "Workshop Prerequisites"
 chapter: true
-weight: 4 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 4
 ---
 
-# Workshop Prerequisites<!-- MODIFY THIS HEADING IF APPLICABLE -->
+# 📋 Workshop Prerequisites
 
-## Getting Started <!-- MODIFY THIS SUBHEADING -->
-To best understand this tutorial, make sure you have at least minimal working knowledge of **GitOps, Argo CD, Kargo, and KubeVision**. Luckily, we have a few guides here:
+## Background Knowledge
 
-[GitOps](https://akuity.io/gitops)
+To get the most from this AWS workshop, it helps to have basic familiarity with:
 
-[Argo CD](https://akuity.io/blog/deployment-made-easy-with-argo-cd)
+::tabs{name="prerequisites"}
 
-[Kargo](https://akuity.io/blog/promotion-made-easy-with-kargo)
+::tab{name="GitOps" active=true}
+GitOps is a set of practices that uses Git as the single source of truth for declarative infrastructure and applications.
 
-[KubeVision](https://akuity.io/blog/cluster-monitoring-made-easy-with-kubevision-kubevision-for-beginners)
+[Learn more about GitOps](https://akuity.io/gitops)
 
 ![GitOps](/images/GitOps.png)
+::
 
-## To Start This Workshop, You'll Need: 
+::tab{name="Amazon EKS"}
+Amazon Elastic Kubernetes Service (EKS) is a managed Kubernetes service that makes it easy to run Kubernetes on AWS without needing to install, operate, and maintain your own Kubernetes control plane.
 
-[GitHub account](https://github.com)
+[Learn more about Amazon EKS](https://aws.amazon.com/eks/)
+::
 
-[GitHub PAT](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token)
-[Akuity account - A 30 Day Free Trial is Available ](https://akuity.cloud)
+::tab{name="Argo CD"}
+Argo CD is a declarative, GitOps continuous delivery tool for Kubernetes that follows the GitOps pattern of using Git repositories as the source of truth for defining the desired application state.
 
-[AWS account - Will be provided if this is a AWS Co-Hosted Event](https://catalog.us-east-1.prod.workshops.aws/event/account-login)
+[Deployment made easy with Argo CD](https://akuity.io/blog/deployment-made-easy-with-argo-cd)
+::
 
-[EKS Cluster - Will be provided if this is a AWS Co-Hosted Event](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html)
+::tab{name="Kargo"}
+Kargo is a promotion engine that helps you move code through different environments in a controlled, automated way.
 
+[Promotion made easy with Kargo](https://akuity.io/blog/promotion-made-easy-with-kargo)
+::
 
-![AkuityLogIn](/images/AkuityLogIn.png)
+::tab{name="KubeVision"}
+KubeVision provides enhanced visibility into your Kubernetes clusters, making monitoring and troubleshooting easier.
 
-{{% notice info %}}
-You can skip this step if you already have these tools installed/configured.
-{{% /notice %}}
+[Cluster monitoring with KubeVision](https://akuity.io/blog/cluster-monitoring-made-easy-with-kubevision-kubevision-for-beginners)
+::
+
+## Required Accounts and Resources
+
+To complete this workshop, you'll need:
+
+1. **GitHub Account** - [Create one here](https://github.com)
+2. **GitHub CLI** - For repository operations (pre-installed in AWS Cloud9 environments)
+3. **Akuity Account** - [Sign up for a 30-day free trial](https://akuity.cloud)
+4. **AWS Account** - Will be provided if this is an AWS co-hosted event
+5. **Amazon EKS Cluster** - Will be provided if this is an AWS co-hosted event
+
+![Akuity Login](/images/AkuityLogIn.png)
+
+## Required CLI Tools
+
+The following command-line tools should be installed:
+
+1. **AWS CLI** - For interacting with AWS services
+2. **kubectl** - For interacting with Kubernetes clusters
+3. **git** - For source code management
+4. **gh** - GitHub CLI for repository operations
+5. **helm** - For managing Kubernetes applications
+
+::alert[If you're using an AWS-provided environment for this workshop, these tools will already be installed.]{header="Note"}

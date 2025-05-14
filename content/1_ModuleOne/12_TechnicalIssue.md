@@ -1,25 +1,46 @@
 ---
-title: "Technical Issue" # MODIFY THIS TITLE
+title: "AWS EKS Challenges"
 chapter: true
-weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 3
 ---
 
-## How You Can Mend the Common Pain Points with Kubernetes with a Single AWS Add-On?
+# 🔧 Solving Common EKS Challenges
 
-Nowadays there are plenty of tools available to address the common pain points for Kubernetes. <br> 
-Why use multiple, separate tools or add-ons when you can get an all-in-one package with the **Akuity Platform Agent**? 
-![AWSAddOn](/images/AWSMarketplaceAkuity.png)
-The **Akuity Platform Agent** allows users to install the Akuity Platform directly into their EKS cluster. This provides solutions to aforementioned pain points such as: <br>
+## The Amazon EKS Complexity Challenge
 
-- **Better Visibility**: Allows users deeper insights into their clusters' status, resources, and provides a visual for deployments and code promotion.
-- **Better Scalability**: Akuity's unique [agent-based architecture](https://akuity.io/blog/argo-cd-architectures-explained) makes scaling easier by running a dedicated application controller and repo server in each manager cluster. Using this approach simplifies any scalability challenges encountered since the work is no longer distrubuted across all clusters.
-- **Better Security**: Another perk of our agent-based architecture enables clusters access to the Argo Control plane which in turn allows secrets (such as sensitive information) to stay safe inside the cluster.
-- **Better Resource Organization**: Manage your cluster's resources with ease with KubeVision. KubeVision exposes the data already collected from your deployments, so the information is readily available.
-- **Better Cluster Monitoring**: When an error occurs, the error is logged in KubeVision and presents suggestions to aid in troubleshooting. Users can use KubeVision Timeline view to keep track of a cluster's status and any errors that may have occurred during a specific timeframe.
+While Amazon EKS provides a managed Kubernetes service that simplifies cluster operations, AWS customers still face challenges in:
 
+- **Deployment management** - Maintaining consistency across AWS environments
+- **Application promotion** - Moving code through development, staging, and production on AWS
+- **Troubleshooting** - Identifying and resolving issues in EKS clusters quickly
+- **Resource visibility** - Understanding EKS cluster state and resource utilization
 
+## The AWS Marketplace Solution
 
+AWS and Akuity have partnered to provide an all-in-one solution with the **Akuity Platform Agent** available as an EKS add-on through AWS Marketplace:
 
+![AWS Marketplace Add-On](/images/AWSMarketplaceAkuity.png)
 
+The **Akuity Platform Agent** installs directly into your Amazon EKS cluster and provides comprehensive solutions:
 
+### 👁️ Enhanced EKS Visibility
 
+Gain deeper insights into EKS cluster status, resources, and visualize deployments and code promotion workflows.
+
+### 📏 Improved AWS Scalability
+
+Akuity's unique [agent-based architecture](https://akuity.io/blog/argo-cd-architectures-explained) simplifies scaling across multiple AWS regions and accounts by running dedicated application controllers and repo servers in each manager cluster.
+
+### 🔐 Better AWS Security
+
+The agent-based architecture enables EKS clusters to access the Argo Control plane while keeping sensitive information safely inside the cluster, aligning with AWS security best practices.
+
+### 🗂️ Streamlined EKS Resource Organization
+
+Manage EKS cluster resources effortlessly with KubeVision, which exposes data already collected from your deployments for immediate access.
+
+### 🔔 Proactive EKS Monitoring
+
+When errors occur in your EKS clusters, they're logged in KubeVision with troubleshooting suggestions. Use the Timeline view to track cluster status and identify issues within specific timeframes.
+
+::alert[AWS and Akuity have worked together to ensure the Akuity Platform integrates seamlessly with Amazon EKS through the AWS Marketplace, making it easy to add to your existing EKS clusters.]{header="AWS Integration"}

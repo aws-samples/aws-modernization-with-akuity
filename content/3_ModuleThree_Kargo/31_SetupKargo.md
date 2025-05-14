@@ -1,63 +1,88 @@
 ---
-title: "Set Up Kargo Instance" # MODIFY THIS TITLE
+title: "Set Up Kargo Instance"
 chapter: true
-weight: 1 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
+weight: 1
 ---
 
-## Set Up Your Kargo Instance
-1. Let's head on over to the Akuity Platform and click the **Kargo** tab under the Argo CD tab.
-<br>
+# 🚀 Creating Your Kargo Instance
 
-2. On the top right, click **+ Create**
-<br>
+Let's set up a Kargo instance to manage promotions between environments.
 
-3. Go ahead and name your Kargo Instance ```kargo-demo``` and add a description if you'd like. Click **CREATE** when you're satisfied.
-<br>
+## Create a Kargo Instance
 
-![Createinstance](/images/KargoCreateInstance.png)
+::steps{name="kargo-instance"}
 
-<br>
+1. In the Akuity Platform, click the **Kargo** tab (located next to the Argo CD tab)
 
+2. Click **+ Create** in the top right corner
 
-4. You'll need to connect a Kargo Agent next. Go ahead and do so by clicking that **Register an Agent** button on the right.
-<br>
+3. Name your Kargo instance `kargo-demo` and optionally add a description
 
-
-5. Set the agent name, add a description, and then click the dropdown menu for **Akuity Managed Argo CD** and connect your Argo CD instance you created earlier.
-<br>
-
-![ConnectKargoAgent](/images/KargoRegisteranAgent.png)
-
-<br>
-
-6. Click **Connect** once you're done.
-<br>
-
-7. Just like Argo CD, we'll need to set up an admin account. Click **Settings**, and go into **System Accounts**.
-<br>
-
-8. Enable admin accounts by hitting the switch, then set a password. Hit **Save** on the top right. The cogwheel next to your Kargo Instance's name will start spinning.
-<br>
-
-![AdminAcc](/images/KargoCreateAdminAcc.png)
-
-
-<br>
-
-{{% notice info %}}
-Put a pin in this!: keep your password handy, we'll need it to access the Kargo UI.
-{{% /notice %}}
-
-1. Log in to Kargo CLI in your terminal with this command. Use the instance URL next to your Kargo instance's name (with https:// in front), and add your password you set in the last step: <br>
+4. Click **CREATE** to initialize your instance
    
-   
-   ```shell
+   ![Create instance](/images/KargoCreateInstance.png)
 
-   kargo login https://<your instance URL> \
+::
+
+## Register a Kargo Agent
+
+::steps{name="kargo-agent"}
+
+1. Click the **Register an Agent** button on the right side of the screen
+
+2. Set a name for your agent (e.g., `workshop-agent`)
+
+3. Optionally add a description
+
+4. Click the dropdown menu for **Akuity Managed Argo CD** and select your Argo CD instance from the previous module
+   
+   ![Connect Kargo Agent](/images/KargoRegisteranAgent.png)
+
+5. Click **Connect** to register the agent
+
+::
+
+## Configure Admin Access
+
+::steps{name="kargo-admin"}
+
+1. Click **Settings** in the top navigation bar
+
+2. Navigate to **System Accounts** in the left sidebar
+
+3. Enable admin accounts by toggling the switch
+
+4. Set a password for the admin account
+
+5. Click **Save** in the top right corner
+   
+   ![Admin Account](/images/KargoCreateAdminAcc.png)
+
+   ::alert[Keep this password handy! You'll need it to access the Kargo UI and CLI.]{header="Important"}
+
+::
+
+## Log in to Kargo CLI
+
+::steps{name="kargo-login"}
+
+1. In your terminal, run the following command:
+
+   ```bash
+   kargo login https://<your-instance-URL> \
    --admin \
    --password <password> \
    --insecure-skip-tls-verify
+   ```
 
+   Replace:
+   - `<your-instance-URL>` with your Kargo instance URL (without the `https://` prefix)
+   - `<password>` with the admin password you set earlier
 
-:tada: You are now logged in to Kargo. Now let's set the stage...literally. :arrow_right:
+2. Verify successful login (you should see a confirmation message)
 
+::
+
+🎉 Congratulations! You're now logged in to Kargo and ready to set up your promotion workflow.
+
+::button[Continue to Setting the Stage]{href="32_SettheStage.html" variant="primary"}

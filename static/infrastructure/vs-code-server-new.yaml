@@ -1201,71 +1201,67 @@ Resources:
                 - chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.kube
                 - chmod 600 /home/{{ VSCodeUser }}/.kube/config
                 - echo "EKS kubeconfig setup completed."
-  
+                
           - action: aws:runShellScript
-            name: InstallArgoCD
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
+            name: InstallGitHubCLI
             inputs:
               runCommand:
                 - '#!/bin/bash'
                 - set -e
-                - echo "Installing ArgoCD CLI..."
-                - VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-                - curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-arm64
-                - if [ $? -eq 0 ] && [ -f argocd ]; then
-                -   chmod +x ./argocd
-                -   sudo mv ./argocd /usr/local/bin/argocd
-                -   echo "ArgoCD CLI installed successfully."
-                -   argocd version --client
-                - else
-                -   echo "Failed to download ArgoCD CLI."
-                -   exit 1
-                - fi
-  
+                - echo "Installing GitHub CLI..."
+                - |
+                  if [ "{{ LinuxFlavor }}" = "al2023" ]; then
+                    # For Amazon Linux 2023
+                    dnf install -y 'dnf-command(config-manager)'
+                    dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+                    dnf install -y gh
+                  else
+                    # For Ubuntu
+                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                    apt-get update
+                    apt-get install -y gh
+                  fi
+                - echo "GitHub CLI installed successfully"
+                - gh --version
+                
           - action: aws:runShellScript
-            name: SetupArgoCDAccess
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
+            name: InstallHelm
             inputs:
               runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Helm..."
                 - |
-                  #!/bin/bash
-                  set -e
-                  EKS_CLUSTER_NAME="{{ EKSClusterName }}"
-                  REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                  SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
-  
-                  echo "Retrieving ArgoCD details from SSM..."
-                  ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
-                  ARGOCD_USERNAME="admin"
-                  ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
-  
-                  echo "Creating ArgoCD info script..."
-                  cat << EOF > /home/{{ VSCodeUser }}/argocd-info.sh
-                  #!/bin/bash
-                  echo "==================================================="
-                  echo "  ? ArgoCD Login Details"
-                  echo "==================================================="
-                  echo "? URL: https://$ARGOCD_SERVER"
-                  echo "? Username: $ARGOCD_USERNAME"
-                  echo -e "? Password:  \033[1;32m$ARGOCD_PASSWORD\033[0m"
-                  echo "==================================================="
-                  echo "? To login via CLI, run:"
-                  echo "   argocd login $ARGOCD_SERVER --username admin --password \"\$ARGOCD_PASSWORD\" --insecure"
-                  echo "==================================================="
-                  EOF
-  
-                  chmod +x /home/{{ VSCodeUser }}/argocd-info.sh
-                  chown {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/argocd-info.sh
-                  echo "ArgoCD setup completed."
+                  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                - echo "Helm installed successfully"
+                - helm version
+                
+          - action: aws:runShellScript
+            name: InstallKargo
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Kargo CLI..."
+                - |
+                  ARCH=$(uname -m)
+                  case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64) ARCH="arm64" ;;
+                    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+                  esac
                   
+                  # Download and install Kargo CLI
+                  curl -sSL -o /tmp/kargo.tar.gz "https://github.com/akuity/kargo/releases/latest/download/kargo_linux_${ARCH}.tar.gz"
+                  tar -xzf /tmp/kargo.tar.gz -C /tmp
+                  sudo mv /tmp/kargo /usr/local/bin/
+                  sudo chmod +x /usr/local/bin/kargo
+                  
+                  # Verify installation
+                  kargo version
+                - echo "Kargo CLI installed successfully"
 
- 
 
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
@@ -1863,3 +1859,54 @@ Outputs:
     Value: !GetAtt VSCodeInstanceRole.Arn
     Export:
       Name: "AkuityAWSWorkshop-VSCodeRoleArn"
+          - action: aws:runShellScript
+            name: SetupWorkshopEnvironment
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Setting up workshop environment..."
+                - |
+                  # Create workshop directory
+                  mkdir -p /home/{{ VSCodeUser }}/Workshop
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/Workshop
+                  
+                  # Create a welcome file
+                  cat > /home/{{ VSCodeUser }}/Workshop/README.md << 'EOF'
+                  # AWS Modernization Workshop with Akuity
+                  
+                  Welcome to the AWS Modernization Workshop with Akuity! This environment has been set up with all the tools you need to complete the workshop:
+                  
+                  - kubectl - For interacting with your Amazon EKS cluster
+                  - helm - For managing Kubernetes applications
+                  - kargo - For managing promotions between environments
+                  - GitHub CLI - For repository operations
+                  
+                  ## Getting Started
+                  
+                  1. Configure kubectl to access your EKS cluster:
+                     ```
+                     aws eks update-kubeconfig --name akuity-aws-cluster
+                     ```
+                  
+                  2. Fork the workshop repository using GitHub CLI:
+                     ```
+                     gh repo fork akuity/eks-workshop-template --clone=true
+                     cd akuity-eks-workshop
+                     ```
+                  
+                  3. Follow the workshop instructions to set up your Akuity account and connect it to your EKS cluster.
+                  
+                  Happy learning!
+                  EOF
+                  
+                  chown {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/Workshop/README.md
+                - echo "Workshop environment setup completed"
+          - action: aws:runShellScript
+            name: ConfigureKubectl
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
+                - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
+                - source /home/{{ VSCodeUser }}/.bashrc

@@ -1,23 +1,37 @@
 ---
-title: "Get to Know Akuity" # MODIFY THIS TITLE
+title: "AWS and Akuity Partnership"
 chapter: true
-weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 2
 ---
-![Akuitylogo](/images/akuity-logo.png)
-# Who We Are: Akuity
 
-![DeployPromoteMonitor](/images/DeployPromoteMonitor.png)
+# 🏢 AWS and Akuity: Better Together
 
-We at Akuity understand the complexities of working with Kubernetes and have created a simpler, faster, inexpensive solution for all the common pain points of working with Kubernetes:<br>
+![Akuity logo](/images/akuity-logo.png)
 
-- Lack of Visibility
-- Lack of Scalability
-- Lack of Security
-- Lack of Organization of Resources
-- Lack of Efficent Monitoring for Clusters
+![Deploy Promote Monitor](/images/DeployPromoteMonitor.png)
 
-The **Akuity Platform** offers a unique agent-based architecture that allows the cluster to connect to the Argo control plane, which in turn keeps secrets safe inside the cluster.
+## The Kubernetes Challenge on AWS
 
+Many AWS customers face common challenges when working with Kubernetes on Amazon EKS:
 
+- 👁️ **Lack of Visibility** - Limited insight into EKS cluster state and application health
+- 📏 **Limited Scalability** - Difficulty managing multiple EKS clusters and applications
+- 🔐 **Security Concerns** - Challenges with secret management and access control
+- 🗂️ **Resource Disorganization** - Trouble tracking and managing EKS cluster resources
+- 🔔 **Inefficient Monitoring** - Difficulty detecting and resolving issues quickly
 
+## Our Joint Solution
 
+The **Akuity Platform on AWS** offers a unique agent-based architecture that integrates seamlessly with Amazon EKS, allowing clusters to connect to the Argo control plane while keeping secrets safe inside the cluster.
+
+::expand[AWS and Akuity have partnered to make the Akuity Platform available directly through the AWS Marketplace as an EKS add-on, simplifying deployment and integration.]{header="AWS Integration"}
+
+### Key Benefits for AWS Customers
+
+- **Simplified EKS Management** - Streamline deployments to your Amazon EKS clusters
+- **AWS Marketplace Integration** - Easy procurement and deployment through AWS Marketplace
+- **EKS Add-on** - Native integration with Amazon EKS
+- **AWS IAM Compatible** - Works with your existing AWS Identity and Access Management setup
+- **AWS Security Best Practices** - Follows AWS security guidelines for Kubernetes
+
+::alert[The Akuity Platform is designed to work seamlessly with AWS services, particularly Amazon EKS, providing a comprehensive solution for Kubernetes management on AWS.]{header="AWS Integration"}

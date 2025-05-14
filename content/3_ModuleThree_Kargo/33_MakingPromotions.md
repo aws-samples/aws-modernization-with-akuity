@@ -1,32 +1,73 @@
 ---
 title: "Making Promotions"
 chapter: true
-weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
+weight: 3
 ---
 
-## Time to Make Your First Promotion
-Now that the stages are set, we can now make our first promotion. When we promote, we are moving the **freight** to the next stage, or environment. We can visualize where our code is moving through an application's lifecycle.
+# 🚀 Promoting Changes with Kargo
 
-1. To make a promotion, click the blue **bullseye** icon on the left of the first stage, **dev**.
+Now that we have our Kargo pipeline set up, let's make our first promotion to move changes between environments.
 
-2. Select your **freight** on the top in the freight line. When prompted, select **yes**.
-3. Watch the status next to **dev**. If it a full heart, your promotion was successful. If you receive a broken heart, it means there was an issue. You can click the stage and select the name of the promotion for more information on the error.
+## Your First Promotion
 
-:tada: It's that easy to make a promotion in Kargo! 
+::steps{name="first-promotion"}
 
-## Making a replicaSet with Kargo
-Like we did in Argo, we can create a replicaSet in Kargo. Navigate to the ```base/values.yaml``` in your repository. It should look something like this:
-```yaml
-replicaCount: 1
-```
-1. Change the value from 1 to 2.
-<br>
+1. In the Kargo UI, locate the blue **bullseye** icon on the left side of the first stage (**dev**)
+   
+2. Click the bullseye to initiate a promotion
 
-2. Commit your changes.
-<br>
+3. Select your **freight** from the freight line at the top of the screen
 
-3. Push your changes back to the repo, and refresh the Kargo UI.
+4. When prompted to confirm the promotion, select **yes**
 
-You should see a replica sitting in the **Freight line** at the top. 
-<br>
-:thinking: We have some replicaSets, we have a cluster full of resources and namespaces we'll need to track. Select the next module to see how we can easily manage and monitor our cluster. :arrow_right:
+5. Monitor the status next to the **dev** stage:
+   - A full heart indicates a successful promotion
+   - A broken heart indicates an issue (click on the stage and select the promotion name for error details)
+
+::
+
+::alert[Promotions in Kargo are tracked and auditable. You can see who promoted what and when, providing valuable traceability for your deployment process.]{header="Promotion Tracking"}
+
+## Creating a ReplicaSet with Kargo
+
+Just as we did with Argo CD, we can modify the number of replicas using Kargo's promotion workflow:
+
+::steps{name="update-replicas"}
+
+1. Navigate to `base/values.yaml` in your GitHub repository
+
+2. Change the `replicaCount` value from `1` to `2`:
+
+   ```yaml
+   replicaCount: 2
+   ```
+
+3. Commit your changes
+
+4. Push your changes back to the repository
+
+5. Refresh the Kargo UI
+
+::
+
+You should now see a new freight item in the freight line at the top of the Kargo UI, representing your updated configuration.
+
+## Understanding the Promotion Process
+
+When you promote this change:
+
+1. Kargo will detect the change in the `base/values.yaml` file
+2. The promotion steps will:
+   - Clone your repository
+   - Copy the updated values to the target environment's values file
+   - Commit and push the changes
+   - Trigger Argo CD to update the deployment
+
+This ensures a consistent, automated process for moving changes through your environments.
+
+🎉 Congratulations! You've successfully:
+- Set up a Kargo promotion workflow
+- Made your first promotion
+- Updated a configuration value that will be promoted through your environments
+
+::button[Continue to Module 4: Monitor with KubeVision]{href="/4_ModuleFour_KubeVision/_index.html" variant="primary"}

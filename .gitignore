@@ -35,3 +35,6 @@ msbuild.wrn
 # Node Modules
 node_modules/
 public/
+
+#Amazon Q
+AmazonQ.md

@@ -1,112 +1,180 @@
 ---
-title: "Dashboards Overview"
+title: "KubeVision Dashboards"
 chapter: true
 weight: 2
 ---
 
+# 📊 Exploring KubeVision Dashboards
 
-## Explorer Dashboard 
+KubeVision provides several specialized dashboards to help you monitor and manage your Kubernetes clusters. Let's explore each one.
+
+## Explorer Dashboard
+
 ![Explorer Dashboard](/images/KubeVisionExplorer.png)
-The Explorer Dashboard allows users to browse through cluster resources. Users can customize and tailor the Explorer Dashboard to suit their needs by using the drop boxes above.
 
-![ExplorerDropDown](/images/KubeVisionExplorer2.png)
+The Explorer Dashboard is your central hub for browsing cluster resources. It provides a comprehensive view of all resources in your cluster, organized in a way that makes them easy to find and understand.
 
-<br>
+### Customizing Your View
 
-## Deprecated APIs Dashboard 
+You can tailor the Explorer Dashboard to your specific needs using the dropdown filters at the top:
+
+![Explorer Dropdown](/images/KubeVisionExplorer2.png)
+
+Filter by:
+- Namespace
+- Resource type
+- Status
+- Labels
+- And more
+
+::alert[The Explorer Dashboard is a great starting point for investigating issues or getting a high-level overview of your cluster's resources.]{header="Tip"}
+
+## Deprecated APIs Dashboard
+
 ![Deprecated APIs](/images/KubeVisionDeprecatedApis.png)
-Sometimes, deprecated APIs can cause trouble in an application. The Deprecated APIs Dashboard helps you stay on top of obsolete APIs, by giving you suggestions of what version you can migrate/update to instead.
 
-![DeprecatedAPIS](/images/KubeVisionDeprecatedAPIs2.png)
+The Deprecated APIs Dashboard helps you identify and address obsolete Kubernetes APIs in your cluster. This is crucial for maintaining compatibility with future Kubernetes versions.
+
+### Proactive API Management
+
+For each deprecated API, KubeVision provides:
+- The current API version being used
+- The recommended replacement API version
+- The number of resources affected
+- When the API will be removed
+
+![Deprecated APIs Details](/images/KubeVisionDeprecatedAPIs2.png)
 
 ## Stuck in Deletion Dashboard
-As the name suggests, this dashboard is for resources that are stuck in deletion. Resources displayed here have been stuck in the deletion state for more than 1 hour, as indicated by their deletion timestamps set over 1 hour ago.
+
+This specialized dashboard identifies resources that have been stuck in the deletion state for more than 1 hour. These resources can cause issues with cluster management and should be addressed.
+
+::expand{header="Common Causes for Stuck Deletions"}
+Resources can get stuck in deletion due to:
+- Finalizers that haven't completed
+- Dependencies that haven't been resolved
+- Custom resource controllers that aren't functioning properly
+- Networking issues preventing proper cleanup
+::
 
 ## Container Dashboard
+
 ![Container Dashboard](/images/KubeVisionContainers.png)
-You can view your containers on the Container Dashboard. You can filter the Container Dashboard by clicking on the boxes. You can filter by Resource Usage, Resource Limits, and Resource requests. You can see how much memory and CPU a container uses at a glance.
 
-![ContainersResources](/images/KubeVisionContainersResource.png)
+The Container Dashboard provides detailed information about all containers running in your cluster, with powerful filtering capabilities.
 
-By clicking the arrows next to **Memory**, you can even filter by most memory used and least. This is great for those who wish to be mindful of how much CPU and RAM a cluster is using.
+### Resource Utilization Insights
+
+Filter containers by:
+- Resource usage
+- Resource limits
+- Resource requests
+
+![Containers Resources](/images/KubeVisionContainersResource.png)
+
+You can sort by memory or CPU usage (click the arrows next to "Memory") to quickly identify the most resource-intensive containers. This is invaluable for optimizing resource allocation and identifying potential issues.
 
 ## Image Dashboard
-![Images](/images/KubeVisionImages.png)
-This is where your images information is stored. You can filter by:
 
-- Image Name
+![Images Dashboard](/images/KubeVisionImages.png)
 
-- The amount of containers
+The Image Dashboard provides comprehensive information about all container images used in your cluster.
 
-- Image Tags: These let you identify different versions of the same series of images
+### Image Details
 
-- Digest (if applicable): consists of a hash algorithm (such as sha256) and a hash value.
+For each image, you can see:
+- Image name
+- Number of containers using the image
+- Image tags (to identify different versions)
+- Digest (if applicable)
+- CVEs (Common Vulnerabilities and Exposures)
 
-- CVEs (Common Vulnerabilities and Exposures): publicly accessible databases that catalog known software and hardware security flaws. Ensure CVE scanning is enabled in KubeVision and only public images are scanned.
+![CVE Information](/images/KubeVisionCVEs.png)
 
-![CVE](/images/KubeVisionCVEs.png)
+::alert[CVE scanning is available for public images. Enable CVE scanning in KubeVision settings to identify potential security vulnerabilities.]{header="Security Note"}
 
-You can also find your CVEs in the **Security** tab of your Argo CD Instance.
+You can also find CVE information in the **Security** tab of your Argo CD instance.
 
-## Infrastructure
-![infrastructurepods](/images/InfrastructurePods.png)
-The infrastructure dashboard offers two different perspectives: **Pods** and **Nodes**. 
+## Infrastructure Dashboard
 
-In **Pods** view, you can group by:
-![PodsView](/images/InfrastructurePodsrunning.png)
+![Infrastructure Pods](/images/InfrastructurePods.png)
 
+The Infrastructure dashboard offers two perspectives: **Pods** and **Nodes**.
+
+### Pods View
+
+In the Pods view, you can group by:
 - Cluster
-
-- Availability Zone: a part of a cloud computing infrastructure that's designed to protect data and applications from data center failures
-
+- Availability Zone
 - Region
-
 - Node
 
+![Pods View](/images/InfrastructurePodsrunning.png)
 
-In **Nodes** view, you can group by:
+### Nodes View
 
-![infrastructurenodes](/images/InfrastructureNode.png)
-
+In the Nodes view, you can group by:
 - CPU Utilization
-
 - Memory Utilization
-
 - Pod Count
-
 - Pod Utilization
 
+![Infrastructure Nodes](/images/InfrastructureNode.png)
 
+This dashboard is particularly useful for understanding how your workloads are distributed across your infrastructure and identifying potential imbalances.
 
 ## Timeline View
+
 ![Timeline](/images/KubeVisionTimeline1.png)
-KubeVision’s Timeline view captures errors in real-time. You can set the time period you would like to see events from. The Akuity Platform stores and displays information on critical workload events, which can be a clutch for troubleshooting deployment failures, promotion failures, cluster health changes, etc. If you take a look at the image above, there are **yellow circles** with Kargo's head in the center. That signifies an issue with Kargo.
 
-![Timeline2](/images/KubeVisionTimeline2.png)
-If we scroll down to the log, we can see details about an error (in this case, a promotion failure). All the information is kept on the right, and the times and dates that the error occurred is on the left. 
+The Timeline view captures events and errors in real-time, providing a chronological view of what's happening in your cluster.
 
-## Enable the AI Assistant
-![Ai Assist](/images/AkuityAssistant.png)
-There is an extension available that allows an AI-powered assistant analyze your Kubernetes resources behavior and can provide insights and suggestions. Here's how to enable the AI assistant:
-1. Go to Your **Argo CD Instance**.
-<br>
+### Event Tracking
 
-2. Click the cogwheel on the top right for **Settings**.
+You can:
+- Set the time period for displayed events
+- Filter by event type
+- Search for specific events
 
-<br>
+The timeline shows critical workload events, which is invaluable for troubleshooting deployment failures, promotion issues, cluster health changes, and more.
 
-3. Under **General** is **Extensions**:
-![Extensions](/images/AkuityExtensions.png)
+![Timeline Details](/images/KubeVisionTimeline2.png)
 
-4. Find **Akuity Assistant**, and click **Install**.
-<br>
+Yellow circles with Kargo's logo indicate issues with Kargo. Clicking on these events provides detailed information about what went wrong and when.
 
-5. Your Akuity Assistant is ready! Go ahead and go to the **Explorer** dashboard and click on any instance. A new tab, **Assistant** will show up. You can ask the assistant to analyze deployment logs, review deployment issues, etc.
+## AI Assistant
 
+![AI Assistant](/images/AkuityAssistant.png)
 
+KubeVision includes an AI-powered assistant that can analyze your Kubernetes resources and provide insights and suggestions.
 
-![AiAssistant](/images/AkuityAIAssist2.png)
+### Enabling the AI Assistant
 
-<br>
+::steps{name="enable-ai"}
 
-:tada: Congratulations! You have completed the workshop. Let's review what we learned today. :arrow_right:
+1. Navigate to your Argo CD instance
+
+2. Click the cogwheel in the top right for **Settings**
+
+3. Under **General**, click **Extensions**
+   
+   ![Extensions](/images/AkuityExtensions.png)
+
+4. Find **Akuity Assistant** and click **Install**
+
+5. Once installed, go to the **Explorer** dashboard and click on any resource
+
+6. A new **Assistant** tab will appear, allowing you to ask questions about the resource
+   
+   ![AI Assistant Details](/images/AkuityAIAssist2.png)
+
+::
+
+The AI Assistant can help you:
+- Analyze deployment logs
+- Review deployment issues
+- Suggest optimizations
+- Explain resource configurations
+- Provide troubleshooting guidance
+
+::button[Continue to Review]{href="51_Review.html" variant="primary"}

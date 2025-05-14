@@ -1,143 +1,156 @@
 ---
-title: "Deploy Helm Charts" # MODIFY THIS TITLE
+title: "Deploy Helm Charts"
 chapter: true
-weight: 3 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
+weight: 3
 ---
 
-# Deploying Helm Charts with Argo CD
-We have a sample helm chart in the template. Let's deploy with Argo CD.
-<br>
+# 📦 Deploying Helm Charts with Argo CD
+
+Now that we have our Argo CD instance set up, let's deploy a sample application using a Helm chart from our template repository.
 
 ## Create an Application in Argo CD
-1. Navigate to Argo CD UI using the instance URL.
-<br>
 
-2. Click **+ NEW APP**
-<br>
+::steps{name="create-app"}
 
-3. Select **EDIT AS YAML**
-<br>
+1. Navigate to the Argo CD UI using your instance URL
 
-4. Paste this from the template in ```apps/guestbook-dev.yaml```:<br>
+2. Click **+ NEW APP** in the top left corner
+
+3. Select **EDIT AS YAML** to use the YAML editor
+
+4. Paste the following YAML from the template in `apps/guestbook-dev.yaml`:
+
+   ```yaml
+   apiVersion: argoproj.io/v1alpha1
+   kind: Application
+   metadata:
+     name: guestbook-dev
+     namespace: argocd
+   spec:
+     project: default
+     source:
+       repoURL: 'https://github.com/<github-username>/<repo-name>'
+       path: guestbook
+       targetRevision: HEAD
+       helm:
+         valueFiles:
+           - values-dev.yaml
+     destination:
+       namespace: guestbook-dev
+       name: <cluster-name>
+     syncPolicy:
+       syncOptions:
+         - CreateNamespace=true
+   ```
+
+5. Replace the placeholders:
+   - `<github-username>` with your GitHub username
+   - `<repo-name>` with your repository name (should be `akuity-eks-workshop`)
+   - `<cluster-name>` with your cluster name (should be `eks-cluster`)
+
+6. Click **SAVE** to convert the YAML into the form fields
+
+7. Review the settings and click **CREATE** to create the application
+
+   ![Complete App Card](/images/ArgoCDCompleteApplication.png)
+
+::
+
+::alert[The application status will initially show as **Missing** and **OutOfSync**. This is expected because we haven't synchronized it yet.]{header="Note"}
+
+## Synchronize Your Application
+
+::steps{name="sync-app"}
+
+1. Click on your application card titled `argocd/guestbook-dev`
+
+2. Click the **SYNC** button and then **SYNCHRONIZE** to deploy the resources defined in your application
    
-```yaml
+   ![Sync](/images/ArgoCDSync.png)
 
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  name: guestbook-dev
-  namespace: argocd
-spec:
-  project: default
-  source:
-    repoURL: 'https://github.com/<github-username>/<repo-name>'
-    path: guestbook
-    targetRevision: HEAD
-    helm:
-      valueFiles:
-        - values-dev.yaml
-  destination:
-    namespace: guestbook-dev
-    name: <cluster-name>
-  syncPolicy:
-    syncOptions:
-      - CreateNamespace=true
-```
-<br>
+::
 
-5. Edit the necessary information into this template if needed (repository name, username, cluster name)
-<br>
+The resource tree will expand as Argo CD creates the resources:
+- The Deployment creates a ReplicaSet that creates a Pod
+- The Service creates an Endpoint and EndpointSlice
 
-6. Once everything looks good, click **SAVE**. The UI will then translate the Application manifest into the corresponding fields in the wizard.
-<br>
+The application will remain in "Progressing" state until the pod is running. Once complete, all top-level resources in the tree will show a green checkmark, indicating they are successfully synchronized.
 
+## Update and Sync Changes Manually
 
-7. Finally, click **CREATE**.The new app pane will close and show the card for the Application you created. 
-<br>
+Let's see how to deploy a new version of our application:
 
-![CompleteAppCard](/images/ArgoCDCompleteApplication.png)
+::steps{name="update-app"}
 
-<br>
+1. Navigate to `guestbook/values-dev.yaml` in your GitHub repository
 
-{{% notice info %}}
-The status on the card will show **Missing** and **OutOfSync**, but don't worry, this is intended.
-{{% /notice %}}
+2. Edit the `image.tag` value to update the version:
 
-## Time to Sync!
+   ```yaml
+   image:
+     tag: 0.2.0
+   ```
 
-1. Click on your Application Card titled ```argocd/guestbook-dev```.
-<br>
+3. Commit these changes with a descriptive message
 
+4. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
 
-2. Click **SYNC** then **SYNCHRONIZE** to instruct Argo CD to create the resources defined by the Application.
-<br>
+5. Click **REFRESH** to trigger Argo CD to check for changes in your repository
 
-![Sync](/images/ArgoCDSync.png)
+6. Click **SYNC** then **SYNCHRONIZE** to deploy the changes
 
-<br>
+::
 
+Argo CD will detect that the application is out-of-sync due to the change in the repository. It will template the Helm chart and patch the `guestbook-dev` deployment with the new image tag, triggering a rolling update.
 
-The resource tree will expand as the Deployment creates a ``replicaSet`` that makes a pod, and the Service creates an ``Endpoint`` and ``EndpointSlice``. The Application will remain in the "Progressing" state until the pod for the deployment is running.
+![Updated Helm Chart](/images/ImageTagUpdated.png)
 
-Afterwards, all the top-level resources (i.e., those rendered from the Application source) in the tree will show a green checkmark, indicating that they are **synced** (i.e., present in the cluster).
+## Enable Auto-Sync and Self-Healing
 
-## Syncing Changes Manually
-An Application now manages the deployment of the guestbook Helm chart. So what happens when you want to deploy a new image tag?
+Let's configure the application to automatically apply changes without manual intervention:
 
-1. Navigate to ```guestbook/values-dev.yaml``` in your repository.
-  <br>
+::steps{name="auto-sync"}
 
-2. Go ahead and edit the ```image.tag``` value.
-<br>
-```yaml
-image:
-    tag: 0.2.0
-```
-<br>
-3. Commit these changes, add a commit message.
-<br>
-4. Go back to the Argo CD UI, and go back to your ```argocd/guestbook-dev``` Application. <br>
-  
-5.Click **REFRESH** to trigger Argo CD to check for any changes to the Application source.
-<br>
+1. Click **APP DETAILS** in the top menu
 
-6.Click **SYNC** then **SYNCHRONIZE** to instruct Argo CD to deploy the changes.
-<br>
+2. Under the **SYNC POLICY** section, click **ENABLE AUTO-SYNC** and confirm by clicking **OK**
 
-Due to the change in the repo, Argo CD will detect that the Application is out-of-sync. It will template the Helm chart (i.e., ```helm template```) and patch the ```guestbook-dev``` deployment with the new image tag, triggering a rolling update.
-<br>
+3. Below that, next to **SELF HEAL**, click **ENABLE**
 
-![UpdatedHelmChart](/images/ImageTagUpdated.png)
+::
 
-## Enable Auto-Sync and Self-Healing for the Guestbook
-Now that you are using an Application to describe how to deploy the Helm chart into the cluster, you can configure the sync policy to automatically apply changes — removing the need for developers to manually trigger a deployment for changes that already made it through the approval processes.
+With auto-sync enabled, any changes to the `main` branch in your repository will be automatically applied to the cluster. Self-healing ensures that any manual changes to the cluster resources will be reverted to match the desired state in Git.
 
-1. On the top menu, click **DETAILS**.
+## Demonstrate Auto-Sync via Git
 
-2. Under the **SYNC POLICY** section, click **ENABLE AUTO-SYNC** and on the prompt click OK.
+Let's test the auto-sync feature by updating the number of replicas:
 
-3. Below that, on the right of **SELF HEAL**, click **ENABLE**.
+::steps{name="test-auto-sync"}
 
-If the Application was out-of-sync, this would immediately trigger a sync. In this case, your Application is already in sync, so Argo CD made no changes.
+1. Navigate to your repository and open `guestbook/values.yaml`
 
-## Demonstrate Application Auto-sync via Git
-With auto-sync enabled on the ```guestbook-dev``` Application, changes made to the ```main``` branch in the repo will be applied automatically to the cluster. You will demonstrate this by updating the number of replicas for the ```guestbook-dev``` deployment.
+2. Update the `replicaCount` value from `1` to `2`
 
-1. Navigate to your repo, and open the file ```guestbook/values.yaml```.
+3. Commit your changes
 
-2. Update the ```replicaCount``` to 2.
+4. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
 
-3. Commit your changes.
+5. Click **REFRESH** to trigger Argo CD to check for changes
+   
+   ![ReplicaSet Created](/images/ArgoCDReplicaSet.png)
 
-4. Switch to the Argo CD UI and go back to the ```argocd/guestbook-dev``` Application.
+::
 
+You can view the details of the sync operation by clicking **SYNC STATUS** in the top menu. This will show:
+- Which revision was synchronized
+- What triggered the sync (e.g., "INITIATED BY: automated sync policy")
+- What resources were changed
 
-5. In the top right, click the **REFRESH** button to trigger Argo CD to check for any changes to the Application source and resources.
-<br>
+🎉 Congratulations! You've successfully:
+- Created an Argo CD application
+- Deployed a Helm chart
+- Updated the application manually
+- Configured auto-sync and self-healing
+- Verified automatic synchronization
 
-![ReplicaSetCreated](/images/ArgoCDReplicaSet.png)
-
-You can view the details of the sync operation by, in the top menu, clicking SYNC STATUS. Here it will display, what **REVISION** it was for, what triggered it (i.e., "INITIATED BY: automated sync policy"), and the result of the sync (i.e., what resources changed).
-<br>
-
-Let's try doing the same thing, adding a ```replicaSet``` with **Kargo**! :arrow_right:
+::button[Continue to Module 3: Promote with Kargo]{href="/3_ModuleThree_Kargo/_index.html" variant="primary"}

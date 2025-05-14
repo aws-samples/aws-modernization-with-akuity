@@ -1,21 +1,37 @@
 ---
-title: "Enable the Visibility Tool"
+title: "Enable KubeVision"
 chapter: true
-weight: 4
+weight: 1
 ---
 
-## Turn on KubeVision
+# 🔌 Activating KubeVision
 
-1. Go to your Argo CD instance and click on Settings in the top right corner.
-<br>
+KubeVision is Akuity's Kubernetes-native visibility tool that provides comprehensive insights across your clusters. Let's enable it for our workshop environment.
 
-1. Search for KubeVision on the Feature tab on the left.
-<br>
+## Enable KubeVision for Your Cluster
 
-2. Enable the KubeVision feature for your Argo CD instance.
-<br>
+::steps{name="enable-kubevision"}
 
-3. Once enabled, it'll list all the clusters configured in your Argo CD Instance. Enable the KubeVision feature for your desired cluster.
-<br>
+1. Navigate to your Argo CD instance in the Akuity Platform
 
-![kubevisionenabled](/images/KuebeVisionEnabled.png)
+2. Click **Settings** in the top right corner
+
+3. In the left sidebar, locate and click on **Features**
+
+4. Find **KubeVision** in the features list
+
+5. Toggle the switch to enable KubeVision for your Argo CD instance
+
+6. Once enabled, you'll see a list of all clusters configured in your Argo CD instance
+
+7. Enable KubeVision for your EKS cluster by toggling the switch next to it
+   
+   ![KubeVision Enabled](/images/KuebeVisionEnabled.png)
+
+::
+
+::alert[KubeVision collects data from your cluster to provide insights. This process may take a few minutes to fully populate all dashboards.]{header="Note"}
+
+Once enabled, KubeVision will begin collecting data from your cluster. This information will be used to populate the various dashboards we'll explore in the next section.
+
+::button[Continue to Dashboards Overview]{href="42_KubeVisionOverview.html" variant="primary"}

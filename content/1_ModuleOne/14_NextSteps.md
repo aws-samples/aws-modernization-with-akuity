@@ -1,54 +1,61 @@
 ---
-title: "Next Steps" # MODIFY THIS TITLE TO REFLECT NEXT STEPS IF APPLICABLE
+title: "Akuity Account Setup"
 chapter: true
-weight: 5 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES IF APPLICABLE
+weight: 7
 ---
 
-# How to Set Up Your Environment for the Workshop
+# 🛠️ Setting Up Your Akuity Account
 
-# GitHub
-A template is provided for this workshop. You have the option of using this template in **Codespaces**.
+Now that you've set up your GitHub repository, let's create and configure your Akuity account to manage your Amazon EKS cluster.
 
-To use the <b>template</b>:
-![CreateTemplate](/images/CreateTemplate.png)
+## Creating Your Akuity Account
 
-1. Click this [link](https://github.com/akuity/eks-workshop-template) to clone the repository to your GitHub.
-Ensure the desired "Owner" is selected (e.g., your account and not an organization).
-<br>
-2. Enter ``akuity-eks-workshop`` for the repository name.
-<br>
-3. Click ``Create repository from template``.
-<br>
-4. *(Optional)* You can start a Codespace by clicking the green code button on the repo page, selecting the Codespaces tab, and then selecting ``Create codespace on main.`` <br>
-The codespace will open in another browser tab with information about setting up your Codespace. Once it's done setting up, you should see a terminal in the browser with the repo open.
+::steps{name="akuity-setup"}
 
-{{% notice info %}}
-Unfamiliar with Codespaces? Check out the official documentation [here.](https://docs.github.com/en/codespaces/overview)
-{{% /notice %}}
+1. Visit [akuity.cloud](https://akuity.cloud) to create an account
+   ![Akuity Sign On](/images/AkuityCreateAccount.png)
 
-# Akuity
-![AkuitySignOn](/images/AkuityCreateAccount.png)
+2. Choose to sign in with your **email**, **GitHub**, or **Google Account**
 
-1. You can create an Akuity Account [here](akuity.cloud).
-   <br>
-2. You have 3 options to choose from, sign in with your **email**, **GitHub** or **Google Account**.
-<br>
+3. After creating your account, you'll be prompted to create an [organization](https://akuity.io/blog/introducing-akuity-workspaces)
+   ![Akuity First Sign Up](/images/AkuityFirstPage.png)
 
-![AkuityFirstSignUp](/images/AkuityFirstPage.png)
+4. Click on the **Organization** tab to get started
+   ![Organization Page](/images/AkuityOrganizationsPage.png)
 
-3. Once you've created an account, you'll receive a prompt to create an [organization](https://akuity.io/blog/introducing-akuity-workspaces). Click on the **Organization** tab to get started.
-<br>
+5. Click **New Organization** in the top right corner
+   ![Create an Organization](/images/AkuityCreateOrganization.png)
 
-![OrganizationPage](/images/AkuityOrganizationsPage.png)
+6. Enter a name for your organization (e.g., `aws-workshop`) and click **Create**
 
-4. On the organizations page, go ahead and click **New Organization** in the top right corner.
-<br>
+::
 
-![CreateanOrganization](/images/AkuityCreateOrganization.png)
+## Understanding Akuity Organizations
 
-5. Enter a name for your organization, and click **Create**. 
-<br>
+::expand{header="What is an Akuity Organization?"}
+An Akuity Organization is a top-level container for your Akuity resources. It allows you to:
 
-:tada: Congratulations, your **Akuity Account** is ready to deploy, promote, and monitor your EKS cluster.
+- Group related projects and clusters
+- Manage user access and permissions
+- Configure shared settings
+- Track usage and billing
 
-In the next module, we'll discuss how to set up your **Argo CD Instance** within the Akuity Platform.
+Organizations are particularly useful in enterprise environments where you might have multiple teams or projects using the Akuity Platform.
+::
+
+## What's Next?
+
+Now that you have:
+1. Set up your GitHub repository with the workshop template
+2. Created a GitHub Personal Access Token for Kargo
+3. Created your Akuity account and organization
+
+You're ready to move on to the next module, where we'll:
+1. Configure kubectl to access your Amazon EKS cluster
+2. Create an Argo CD instance on the Akuity Platform
+3. Connect your EKS cluster to Argo CD
+4. Deploy your first application using GitOps principles
+
+🎉 Congratulations! Your **Akuity Account** is now ready to deploy, promote, and monitor your Amazon EKS cluster.
+
+::button[Continue to Module 2]{href="/2_ModuleTwo_ArgoCD/_index.html" variant="primary"}

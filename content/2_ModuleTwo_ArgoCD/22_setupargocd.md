@@ -1,123 +1,122 @@
 ---
-title: "Set Up Your Argo CD Instance" # MODIFY THIS TITLE
+title: "Set Up Your Argo CD Instance"
 chapter: true
-weight: 2 # MODIFY THIS VALUE TO REFLECT THE ORDERING OF THE MODULES
+weight: 2
 ---
 
-Now that our Akuity Add-On is configured, we can move over to the Akuity Platform to set up your instance and connect our EKS add-on.
+# 🚀 Creating Your Argo CD Instance
+
+Now that we have kubectl access to our EKS cluster, let's set up an Argo CD instance on the Akuity platform.
 
 ## Create an Argo CD Instance
-1. Navigate to **Argo CD**
-<br>
-2. Click **+ Create** in the upper right hand corner of the dashboard.
-<br>
-3. Name your instance.
-<br>
-4. *(Optional)* Add a description.
 
-![ArgoCDCreateanInstance](/images/ArgoCDCreateanInstance2.png)
+::steps{name="argocd-instance"}
 
-<br>
+1. Log in to the [Akuity Platform](https://akuity.cloud) and navigate to **Argo CD**
 
-5. Click **+ Create** when you're satisfied with the name.
+2. Click **+ Create** in the upper right corner of the dashboard
 
-<br>
-Once you click create, your Argo CD instance will begin initializing. This takes a few minutes. You'll know it's done when the cogwheel next to your instance name stops turning, and the status becomes :green_heart: healthy.
+3. Enter a name for your instance (e.g., `workshop-argocd`)
+
+4. Optionally add a description to help identify this instance
+
+   ![Argo CD Create an Instance](/images/ArgoCDCreateanInstance2.png)
+
+5. Click **+ Create** to initialize your instance
+
+::
+
+Your Argo CD instance will begin initializing. This process takes a few minutes. You'll know it's complete when the cogwheel next to your instance name stops turning and the status shows a 💚 healthy indicator.
 
 ## Configure Your Argo CD Admin Account
-Now that you have your instance set up, you'll need to set up your admin account.
-1. In the dashboard for the Argo CD Instance, click **Settings**.
-<br>
 
-2. On the sidebar on the right, under **Security & Access**, and then click **System Accounts**.
-<br>
+::steps{name="admin-setup"}
 
-3. Enable **Admin Account** by clicking the toggle and clicking confirm when prompted.
-<br>
+1. In the dashboard for your Argo CD instance, click **Settings**
 
-4. Go ahead and set your admin password by clicking **Set Password**. Once a password is set, Argo CD will need to reinitialize, so wait until the cogwheel is done turning.
-<br>
+2. On the sidebar, under **Security & Access**, click **System Accounts**
 
-![SetPassword](/images/ArgoCDSetPassword.png)
+3. Enable the **Admin Account** by clicking the toggle and confirming when prompted
 
-<br>
+4. Set your admin password by clicking **Set Password**
+   
+   ![Set Password](/images/ArgoCDSetPassword.png)
 
-{{% notice info %}}
-Put a pin in this!: keep your password handy, we'll need it to access the Argo UI.
-{{% /notice %}}
+   ::alert[Keep this password handy! You'll need it to access the Argo CD UI.]{header="Important"}
 
-5. To access your Argo CD Instance, click the instance URL in the **Summary** tab. Your URL may look like this:<br>
-```123456letters.cd.akuity.cloud```
-<br>
+5. Wait for Argo CD to reinitialize (the cogwheel will spin and then stop)
 
-6. You'll be brought to the Argo CD login. **admin** is your user, and use the password you set in step 4.
-<br>
+6. Access your Argo CD instance by clicking the instance URL in the **Summary** tab
+   
+   Your URL will look similar to: `123456letters.cd.akuity.cloud`
 
-![ArgoCDLogin](/images/ArgoCDLogin.png)
-<br>
+7. At the Argo CD login screen, enter `admin` as the username and use the password you set in step 4
 
-## Configure Your Cluster
-1. On your Argo CD Instance, click **Clusters**.
-<br>
+   ![Argo CD Login](/images/ArgoCDLogin.png)
 
-2. Click **Connect a Cluster**.
-<br>
+::
 
-3. For the sake of this workshop, set your cluster's name to ```eks-cluster```.
-<br>
+## Connect Your EKS Cluster
 
-4. *(Optional)* Add a description. You can put your EKS cluster's name in this field.
-<br>
+::steps{name="connect-cluster"}
+
+1. In your Argo CD instance dashboard, click **Clusters**
+
+2. Click **Connect a Cluster**
+
+3. Set your cluster name to `eks-cluster`
+
+4. Optionally add a description with your EKS cluster's name
 
 5. Click **Advanced Settings**
-<br>
 
-6. On the Add-Ons tab, you'll see two options: **Datadog**, and **AWS EKS**.
-<br>
+6. On the Add-Ons tab, locate the **AWS EKS** option
 
-7. Make sure you click **+Add** on AWS EKS.
-<br>
+7. Click **+Add** on the AWS EKS option
+   
+   ![Connect a Cluster](/images/ArgoCDConnectaCluster.png)
 
-![ConnectaCluster](/images/ArgoCDConnectaCluster.png)
+8. Click **Connect Cluster** to proceed
 
-<br>
+9. You'll be prompted to install the agent using either the AWS Console or AWS CLI
+   
+   ![AWS Add-On](/images/EKSAddOnPrompts.png)
+   
+   Follow the instructions for your preferred method
 
-8. Go ahead and click **Connect Cluster** once you're done.
-<br>
+10. Verify you're targeting the correct cluster:
 
-9. You'll be prompted to either use the AWS Console or AWS CLI to install the agent to your cluster. Follow the directions on whichever one you prefer.
-<br>
+    ```bash
+    kubectl config current-context
+    ```
 
-![AWSAddOn](/images/EKSAddOnPrompts.png)
+    The output should look similar to:
+    ```
+    arn:aws:eks:us-east-1:338615488317:cluster/cluster-name
+    ```
 
-<br>
+11. Check that the Akuity agent pods are running:
 
-10.  Check that your target is the correct cluster by running this command:<br>
-```kubectl config current-context ```
-<br>
+    ```bash
+    kubectl get pods -n akuity
+    ```
 
-The output should look something like this:
-```shell
-arn:aws:eks:us-east-1:338615488317:cluster/cluster-name
-```
-<br>
-11. You can check the pods in the <code>akuity</code> namespace by using the command: <code>kubectl get pods -n akuity</code>
+    You should see output similar to:
+    ```
+    NAME                                                       READY   STATUS    RESTARTS   AGE
+    akuity-agent-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
+    akuity-agent-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
+    argocd-application-controller-<replicaset-id>-<pod-id>     2/2     Running   0          65s
+    argocd-notifications-controller-<replicaset-id>-<pod-id>   1/1     Running   0          65s
+    argocd-redis-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
+    argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
+    argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
+    ```
 
-<br>
+::
 
-The output should look something like this:
-```shell
-NAME                                                       
-akuity-agent-<replicaset-id>-<pod-id>                       1/1     Running   0          65s
-akuity-agent-<replicaset-id>-<pod-id>                       1/1     Running   0          65s
-argocd-application-controller-<replicaset-id>-<pod-id>      2/2     Running   0          65s
-argocd-notifications-controller-<replicaset-id>-<pod-id>    1/1     Running   0          65s
-argocd-redis-<replicaset-id>-<pod-id>                       1/1     Running   0          65s
-argocd-repo-server-<replicaset-id>-<pod-id>                 1/1     Running   0          64s
-argocd-repo-server-<replicaset-id>-<pod-id>                 1/1     Running   0          64s
+When you see a 💚 green heart before the cluster name in your Argo CD instance, it indicates that your cluster is healthy and properly connected.
 
-```
+🎉 Congratulations! Your cluster is now set up on the Akuity Platform. The cluster data is uploaded to the platform, so we don't need to repeat this process for Kargo and KubeVision.
 
-Once you see a :green_heart: green heart before the cluster name on your Argo CD instance, it signifies that your cluster health is **Healthy**.<br>
-Now your cluster is set up on the Akuity Platform. Your cluster data is uploaded to the platform so we have don't have to do this for Kargo and KubeVision.<br>
-Now let's deploy the sample helm chart from the template. :arrow_right:
+::button[Continue to Deploy Helm Charts]{href="23_DeployHelmCharts.html" variant="primary"}
