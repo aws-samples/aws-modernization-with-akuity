@@ -1910,3 +1910,70 @@ Outputs:
                 - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
                 - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
                 - source /home/{{ VSCodeUser }}/.bashrc
+                
+          - action: aws:runShellScript
+            name: InstallHelm
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Helm..."
+                - |
+                  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                - echo "Helm installed successfully"
+                - helm version
+                
+          - action: aws:runShellScript
+            name: InstallGitHubCLI
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing GitHub CLI..."
+                - |
+                  # Determine OS type
+                  if grep -q "ID=amzn" /etc/os-release; then
+                    echo "Detected Amazon Linux, installing GitHub CLI via dnf..."
+                    sudo dnf install -y 'dnf-command(config-manager)'
+                    sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
+                    sudo dnf install -y gh
+                  else
+                    echo "Detected Ubuntu, installing GitHub CLI via apt..."
+                    sudo mkdir -p /usr/share/keyrings
+                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+                    sudo apt-get update
+                    sudo apt-get install -y gh
+                  fi
+                - echo "GitHub CLI installed successfully"
+                - gh --version || echo "GitHub CLI installation failed"
+                
+          - action: aws:runShellScript
+            name: InstallKargo
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Kargo CLI v1.3.4..."
+                - |
+                  ARCH=$(uname -m)
+                  case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64) ARCH="arm64" ;;
+                    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+                  esac
+                  
+                  echo "Architecture detected: $ARCH"
+                  
+                  # Download the binary directly with the correct naming format
+                  echo "Downloading Kargo CLI v1.3.4 for ${ARCH}..."
+                  sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.3.4/kargo-linux-${ARCH}"
+                  
+                  # Make it executable
+                  sudo chmod +x /usr/local/bin/kargo
+                  
+                  # Verify installation
+                  echo "Verifying Kargo CLI installation..."
+                - kargo version || echo "Kargo CLI installation verification failed"
+                - echo "Kargo CLI v1.3.4 installation completed"
+                - source /home/{{ VSCodeUser }}/.bashrc
