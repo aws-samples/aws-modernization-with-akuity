@@ -307,7 +307,6 @@ Resources:
                   - ssm:SendCommand
                 Resource:
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeSSMDoc}
-                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeK8sSSMDoc}
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AmazonCloudWatch-ManageAgent
                   - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${VSCodeInstance}
                 
@@ -992,85 +991,6 @@ Resources:
                   echo 'Bootstrap completed with return code $?'
                   aws eks update-kubeconfig --name $(aws eks list-clusters --query 'clusters[0]' --output text)
           - action: aws:runShellScript
-            name: ConfigureEKSAccess
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - 'EKS_CLUSTER_NAME="akuity-aws-cluster"'  # Change to match your cluster name
-                - 'REGION="${AWS::Region}"'
-                - !Sub |
-                  mkdir -p /home/${VSCodeUser}/.kube
-                  # Create a script to update kubeconfig when the cluster is available
-                  cat > /usr/local/bin/update-kubeconfig.sh << 'EOF'
-                  #!/bin/bash
-                  EKS_CLUSTER_NAME="$EKS_CLUSTER_NAME"
-                  REGION="$REGION"
-                  USER_HOME="/home/${VSCodeUser}"
-                  
-                  # Function to check if EKS cluster exists
-                  check_eks_cluster() {
-                    aws eks describe-cluster --name $EKS_CLUSTER_NAME --region $REGION &> /dev/null
-                    return $?
-                  }
-                  
-                  # Try to update kubeconfig
-                  MAX_ATTEMPTS=90
-                  ATTEMPT=0
-                  SLEEP_TIME=30
-                  
-                  while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
-                    ATTEMPT=$((ATTEMPT+1))
-                    if check_eks_cluster; then
-                      echo "EKS cluster found. Updating kubeconfig..."
-                      aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $REGION --kubeconfig $USER_HOME/.kube/config
-                      chown -R ${VSCodeUser}:${VSCodeUser} $USER_HOME/.kube
-                      chmod 600 $USER_HOME/.kube/config
-                      echo "Kubeconfig updated successfully!"
-                      exit 0
-                    else
-                      echo "Attempt $ATTEMPT: EKS cluster not found. Waiting $SLEEP_TIME seconds..."
-                      sleep $SLEEP_TIME
-                    fi
-                  done
-                  
-                  echo "Failed to find EKS cluster after $MAX_ATTEMPTS attempts."
-                  exit 1
-                  EOF
-                  
-                  chmod +x /usr/local/bin/update-kubeconfig.sh
-                  
-                  # Run the script in the background so it doesn't block instance startup
-                  nohup /usr/local/bin/update-kubeconfig.sh > /var/log/update-kubeconfig.log 2>&1 &
-
-                  # Add alias for kubectl
-                  echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
-                  
-                  chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}
-          - action: aws:runShellScript
-            name: DownloadAssets
-            inputs:
-              runCommand:
-                - '#!/bin/bash'
-                - !Sub |
-                  if [[ -z "${AssetZipS3Path}" ]]
-                  then
-                    echo "No assets"
-                  else
-                    mkdir -p ${HomeFolder} && chown -R ${VSCodeUser}:${VSCodeUser} ${HomeFolder}
-                    aws s3 cp s3://${AssetZipS3Path} /tmp/assets.zip
-                    unzip -o /tmp/assets.zip -d ${HomeFolder}
-                    chown -R ${VSCodeUser}:${VSCodeUser} ${HomeFolder}
-                    sudo -u ${VSCodeUser} git -C ${HomeFolder} init
-                    sudo -u ${VSCodeUser} git -C ${HomeFolder} add .
-                    sudo -u ${VSCodeUser} git -C ${HomeFolder} commit -m 'Initial commit'
-                    echo "Assets downloaded. Checking configuration: ${HomeFolder}"
-                    ls -la ${HomeFolder}
-                    sudo -u ${VSCodeUser} git -C ${HomeFolder} branch
-                  fi
           - action: aws:runShellScript
             name: DownloadFolders
             inputs:
@@ -1165,32 +1085,33 @@ Resources:
                 - source /home/{{ VSCodeUser }}/.bashrc
   
           - action: aws:runShellScript
-            name: ConfigureEKSAccess
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
+            name: ConfigureKubectlBasics
             inputs:
               runCommand:
                 - '#!/bin/bash'
                 - set -e
-                - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
-                - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                - echo "Setting up kubeconfig for EKS cluster: $EKS_CLUSTER_NAME in region $REGION"
-                - mkdir -p /home/{{ VSCodeUser }}/.kube
-                - aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$REGION" --kubeconfig /home/{{ VSCodeUser }}/.kube/config
-                - chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.kube
-                - chmod 600 /home/{{ VSCodeUser }}/.kube/config
-                - echo "EKS kubeconfig setup completed."
-                
-          - action: aws:runShellScript
-            name: ConfigureKubectl
-            inputs:
+                - echo "Setting up basic kubectl configuration"
+                - mkdir -p /home/${VSCodeUser}/.kube
+                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
+                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
+                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
+                - echo "Basic kubectl configuration completed."
               runCommand:
                 - '#!/bin/bash'
-                - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
-                - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
-                - source /home/{{ VSCodeUser }}/.bashrc
+                - set -e
+                - echo "Setting up basic kubectl configuration"
+                - mkdir -p /home/${VSCodeUser}/.kube
+                - chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
+                - echo 'alias k=kubectl' >> /home/${VSCodeUser}/.bashrc
+                - echo 'complete -o default -F __start_kubectl k' >> /home/${VSCodeUser}/.bashrc
+                - echo "Basic kubectl configuration completed."
+                - set -e
+                - echo "Setting up basic kubectl configuration"
+                - mkdir -p /home/{{ VSCodeUser }}/.kube
+                - chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.kube
+                - echo 'alias k=kubectl' >> /home/{{ VSCodeUser }}/.bashrc
+                - echo 'complete -o default -F __start_kubectl k' >> /home/{{ VSCodeUser }}/.bashrc
+                - echo "Basic kubectl configuration completed."
                 
           - action: aws:runShellScript
             name: InstallHelm
