@@ -1,0 +1,147 @@
+---
+title: "GitHub Repository Setup"
+chapter: true
+weight: 6
+---
+
+# 🔄 Setting Up Your GitHub Repository
+
+## Why GitHub for GitOps?
+
+GitOps uses Git repositories as the single source of truth for declarative infrastructure and applications. For this workshop, we'll use GitHub to:
+
+1. Store our application manifests and Helm charts
+2. Trigger deployments to our Amazon EKS cluster via Argo CD
+3. Manage promotions between environments with Kargo
+
+## GitHub Authentication
+
+Let's start by authenticating with GitHub:
+
+::steps{name="github-auth"}
+
+1. Check if you're already authenticated with GitHub:
+
+   ```bash
+   gh auth status || gh auth login
+   ```
+
+2. If you need to authenticate, follow these steps:
+   - Select **GitHub.com**
+   - Select **HTTPS** as your preferred protocol
+   - When asked "Authenticate Git with your GitHub credentials?": Enter **Y**
+   - Select **Login with a web browser**
+   - Copy the one-time code shown in your terminal
+   - Press Enter to open the browser
+   - Paste the code in GitHub and authorize access
+   - Return to your terminal and wait for authentication to complete
+
+::
+
+![GitHub CLI Authentication](/images/gh-auth.png)
+
+::alert[If you don't have the GitHub CLI installed, you can install it with `brew install gh` on macOS or follow the [installation instructions](https://github.com/cli/cli#installation) for your operating system.]{header="Note"}
+
+## Fork the Workshop Repository
+
+For this workshop, we'll fork the Akuity EKS workshop template repository:
+
+::steps{name="fork-repo"}
+
+1. Fork and clone the repository using the GitHub CLI:
+
+   ```bash
+   gh repo fork akuity/eks-workshop-template --clone=true
+   ```
+
+2. If you prefer to use the GitHub web interface instead:
+   - Visit [https://github.com/akuity/eks-workshop-template](https://github.com/akuity/eks-workshop-template)
+   - Click the "Fork" button in the top-right corner
+   - Ensure your personal account is selected as the owner
+   - Name the repository `akuity-eks-workshop`
+   - Click "Create fork"
+   - Clone the repository to your local machine:
+     ```bash
+     git clone https://github.com/YOUR-USERNAME/akuity-eks-workshop.git
+     cd akuity-eks-workshop
+     ```
+
+::
+
+## Create a GitHub Personal Access Token (PAT)
+
+Kargo will need a GitHub Personal Access Token to make commits to your repository:
+
+::steps{name="create-pat"}
+
+1. Go to [GitHub Settings > Developer settings > Personal access tokens > Fine-grained tokens](https://github.com/settings/tokens?type=beta)
+
+2. Click "Generate new token"
+
+3. Set the following:
+   - Token name: `akuity-workshop`
+   - Expiration: 7 days (or your preferred duration)
+   - Repository access: Select "Only select repositories" and choose your forked repository
+   - Permissions:
+     - Repository permissions:
+       - Contents: Read and write
+       - Metadata: Read-only
+
+4. Click "Generate token"
+
+5. **Important**: Copy the generated token and store it securely. You'll need it when setting up Kargo.
+
+::
+
+::alert[Keep your Personal Access Token secure! It provides access to your GitHub account with the permissions you specified.]{header="Security Warning" type="warning"}
+
+## Verify Repository Structure
+
+Let's examine the repository structure to understand what we'll be working with:
+
+::steps{name="verify-structure"}
+
+1. Navigate to your cloned repository:
+
+   ```bash
+   cd akuity-eks-workshop
+   ```
+
+2. List the key directories:
+
+   ```bash
+   ls -la
+   ```
+
+3. You should see directories including:
+   - `guestbook/` - Contains the Helm chart for our sample application
+   - `base/` - Contains base configuration values
+   - `kargo/` - Contains Kargo configuration files
+
+::
+
+## Repository Structure Explained
+
+::expand{header="Understanding the Repository Structure"}
+
+- **guestbook/** - The main application Helm chart
+  - `Chart.yaml` - Helm chart metadata
+  - `values.yaml` - Default values for the chart
+  - `values-dev.yaml` - Development environment values
+  - `values-staging.yaml` - Staging environment values
+  - `values-prod.yaml` - Production environment values
+  - `templates/` - Kubernetes manifest templates
+
+- **base/** - Base configuration that will be promoted through environments
+  - `values.yaml` - Base values that Kargo will copy to environment-specific files
+
+- **kargo/** - Kargo configuration
+  - `project.yaml` - Defines the Kargo project
+  - `warehouse.yaml` - Configures the source of artifacts (your Git repo)
+  - `stages.yaml` - Defines the promotion stages and steps
+
+::
+
+Now that your GitHub repository is set up, you're ready to create your Akuity account and connect it to your Amazon EKS cluster!
+
+::button[Continue to Akuity Setup]{href="14_NextSteps.html" variant="primary"}
