@@ -266,6 +266,20 @@ Resources:
       LinuxFlavor: !If [IsAL2023, 'al2023', 'ubuntu']
 
 
+  RunVSCodeK8sSetupDoc:
+    Type: Custom::RunSSMDocLambda
+    DependsOn: RunVSCodeSSMDoc
+    Properties:
+      ServiceToken: !GetAtt RunSSMDocLambda.Arn
+      ServiceTimeout: 700
+      InstanceId: !Ref VSCodeInstance
+      DocumentName: "VSCodeK8sSetup"
+      CloudWatchLogGroupName: "/aws/ssm/VSCodeK8sSetup"
+      EKSClusterName: !Ref EKSClusterName
+      VSCodeUser: !Ref VSCodeUser
+      LinuxFlavor: !If [IsAL2023, 'al2023', 'ubuntu']
+
+
   RunSSMDocLambdaRole:
     Type: AWS::IAM::Role
     Metadata:
@@ -293,6 +307,7 @@ Resources:
                   - ssm:SendCommand
                 Resource:
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeSSMDoc}
+                  - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/${VSCodeK8sSSMDoc}
                   - !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:document/AmazonCloudWatch-ManageAgent
                   - !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/${VSCodeInstance}
                 
@@ -450,9 +465,6 @@ Resources:
             allowedValues:
               - '8.0'
               - '7.0'
-          VSCodeUser:
-            type: String
-            description: "VSCode user name"
         # all mainSteps scripts are in in /var/lib/amazon/ssm/<instanceid>/document/orchestration/<uuid>/<StepName>/_script.sh
         mainSteps:
           - action: aws:configurePackage
@@ -1142,17 +1154,72 @@ Resources:
                     sudo -u ${VSCodeUser} git -C ${HomeFolder} branch
                     ls -la ${HomeFolder}
                   fi
+
+  VSCodeK8sSSMDoc:
+    Type: AWS::SSM::Document
+    Properties:
+      Name: "VSCodeK8sSetup"
+      DocumentType: "Command"
+      Content:
+        schemaVersion: "2.2"
+        description: "Configure VSCode instance for Kubernetes and EKS"
+        parameters:
+          LinuxFlavor:
+            type: String
+            default: 'al2023'
+          EKSClusterName:
+            type: String
+            description: "Name of the EKS cluster"
+          VSCodeUser:
+            type: String
+            description: "VSCode user name"
+        mainSteps:
           - action: aws:runShellScript
-            name: ConfigureKubectl
+            name: ConfigureKubectlBasics
             inputs:
               runCommand:
                 - '#!/bin/bash'
-                - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
-                - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
-                - source /home/{{ VSCodeUser }}/.bashrc
-                
+                - set -e
+                - echo "Setting up kubectl alias and autocomplete..."
+                - |
+                  # Create .bashrc if it doesn't exist
+                  touch /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Remove any existing kubectl alias to avoid duplicates
+                  sed -i '/alias k=kubectl/d' /home/{{ VSCodeUser }}/.bashrc
+                  sed -i '/complete -o default -F __start_kubectl k/d' /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Add kubectl alias and autocomplete
+                  echo 'alias k=kubectl' >> /home/{{ VSCodeUser }}/.bashrc
+                  echo 'source <(kubectl completion bash)' >> /home/{{ VSCodeUser }}/.bashrc
+                  echo 'complete -o default -F __start_kubectl k' >> /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Create a .bash_profile to ensure .bashrc is sourced
+                  if [ ! -f /home/{{ VSCodeUser }}/.bash_profile ]; then
+                    echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/{{ VSCodeUser }}/.bash_profile
+                  fi
+                  
+                  # Create a .profile as well for broader compatibility
+                  if [ ! -f /home/{{ VSCodeUser }}/.profile ]; then
+                    echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/{{ VSCodeUser }}/.profile
+                  fi
+                  
+                  # Set proper ownership
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.bashrc
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.bash_profile
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.profile
+                  
+                  # Source the bashrc for the current session
+                  source /home/{{ VSCodeUser }}/.bashrc || true
+                - echo "kubectl alias and autocomplete setup completed"
+                - echo "To use the alias, please open a new terminal or run 'source ~/.bashrc'"
+
           - action: aws:runShellScript
             name: InstallHelm
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1162,34 +1229,54 @@ Resources:
                   curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
                 - echo "Helm installed successfully"
                 - helm version
-                
+
           - action: aws:runShellScript
             name: InstallGitHubCLI
             inputs:
               runCommand:
                 - '#!/bin/bash'
                 - set -e
-                - echo "Installing GitHub CLI..."
+                - echo "Installing GitHub CLI using direct binary download..."
                 - |
-                  # Determine OS type
-                  if grep -q "ID=amzn" /etc/os-release; then
-                    echo "Detected Amazon Linux, installing GitHub CLI via dnf..."
-                    sudo dnf install -y 'dnf-command(config-manager)'
-                    sudo dnf config-manager --add-repo https://cli.github.com/packages/rpm/gh-cli.repo
-                    sudo dnf install -y gh
+                  # Direct binary installation for GitHub CLI
+                  GH_VERSION="2.72.0"
+                  ARCH=$(uname -m)
+                  
+                  echo "Architecture detected: $ARCH"
+                  
+                  # Download the appropriate binary based on architecture
+                  if [ "$ARCH" = "x86_64" ]; then
+                    echo "Downloading GitHub CLI for x86_64..."
+                    curl -sSL -o /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz"
+                  elif [ "$ARCH" = "aarch64" ]; then
+                    echo "Downloading GitHub CLI for arm64..."
+                    curl -sSL -o /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_arm64.tar.gz"
                   else
-                    echo "Detected Ubuntu, installing GitHub CLI via apt..."
-                    sudo mkdir -p /usr/share/keyrings
-                    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-                    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-                    sudo apt-get update
-                    sudo apt-get install -y gh
+                    echo "Unsupported architecture: $ARCH"
+                    exit 1
                   fi
-                - echo "GitHub CLI installed successfully"
-                - gh --version || echo "GitHub CLI installation failed"
+                  
+                  # Extract and install
+                  echo "Extracting GitHub CLI..."
+                  mkdir -p /tmp/gh
+                  tar -xzf /tmp/gh.tar.gz -C /tmp/gh --strip-components=1
+                  
+                  echo "Installing GitHub CLI..."
+                  sudo cp -r /tmp/gh/bin/gh /usr/local/bin/
+                  sudo cp -r /tmp/gh/share/man/man1/* /usr/local/share/man/man1/ 2>/dev/null || mkdir -p /usr/local/share/man/man1/
+                  
+                  # Clean up
+                  rm -rf /tmp/gh /tmp/gh.tar.gz
+                - echo "GitHub CLI installation completed"
+                - gh --version || echo "GitHub CLI installation verification failed"
+                
                 
           - action: aws:runShellScript
             name: InstallKargo
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
             inputs:
               runCommand:
                 - '#!/bin/bash'
@@ -1216,8 +1303,30 @@ Resources:
                   echo "Verifying Kargo CLI installation..."
                 - kargo version || echo "Kargo CLI installation verification failed"
                 - echo "Kargo CLI v1.3.4 installation completed"
-                - source /home/{{ VSCodeUser }}/.bashrc        
 
+          - action: aws:runShellScript
+            name: InstallArgoCD
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing ArgoCD CLI..."
+                - VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo-cd/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+                - curl -sSL -o argocd https://github.com/argoproj/argo-cd/releases/download/$VERSION/argocd-linux-arm64
+                - if [ $? -eq 0 ] && [ -f argocd ]; then
+                -   chmod +x ./argocd
+                -   sudo mv ./argocd /usr/local/bin/argocd
+                -   echo "ArgoCD CLI installed successfully."
+                -   argocd version --client
+                - else
+                -   echo "Failed to download ArgoCD CLI."
+                -   exit 1
+                - fi                
+                  
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
     Properties:
