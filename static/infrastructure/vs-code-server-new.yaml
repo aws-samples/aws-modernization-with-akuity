@@ -1472,6 +1472,13 @@ Resources:
                 - eks:ListAddons
                 - eks:UpdateAddon
                 - eks:DescribeAddonVersions
+                - eks:CreateAccessEntry
+                - eks:DeleteAccessEntry
+                - eks:ListAccessEntries
+                - eks:DescribeAccessEntry
+                - eks:AssociateAccessPolicy
+                - eks:DisassociateAccessPolicy
+                - eks:ListAssociatedAccessPolicies
               Resource: "*"
 
             - Effect: Allow
