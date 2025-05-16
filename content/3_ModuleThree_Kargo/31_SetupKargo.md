@@ -10,7 +10,7 @@ Let's set up a Kargo instance to manage promotions between environments.
 
 ## Create a Kargo Instance
 
-::steps{name="kargo-instance"}
+:::steps
 
 1. In the Akuity Platform, click the **Kargo** tab (located next to the Argo CD tab)
 
@@ -22,11 +22,11 @@ Let's set up a Kargo instance to manage promotions between environments.
    
    ![Create instance](/images/KargoCreateInstance.png)
 
-::
+:::
 
 ## Register a Kargo Agent
 
-::steps{name="kargo-agent"}
+:::steps
 
 1. Click the **Register an Agent** button on the right side of the screen
 
@@ -40,11 +40,11 @@ Let's set up a Kargo instance to manage promotions between environments.
 
 5. Click **Connect** to register the agent
 
-::
+:::
 
 ## Configure Admin Access
 
-::steps{name="kargo-admin"}
+:::steps
 
 1. Click **Settings** in the top navigation bar
 
@@ -60,11 +60,11 @@ Let's set up a Kargo instance to manage promotions between environments.
 
    ::alert[Keep this password handy! You'll need it to access the Kargo UI and CLI.]{header="Important"}
 
-::
+:::
 
 ## Log in to Kargo CLI
 
-::steps{name="kargo-login"}
+:::steps
 
 1. In your terminal, run the following command:
 
@@ -81,8 +81,8 @@ Let's set up a Kargo instance to manage promotions between environments.
 
 2. Verify successful login (you should see a confirmation message)
 
-::
+:::
 
 🎉 Congratulations! You're now logged in to Kargo and ready to set up your promotion workflow.
 
-::button[Continue to Setting the Stage]{href="32_SettheStage.html" variant="primary"}
+:button[Continue to Setting the Stage]{href="32_SettheStage.html" variant="primary"}

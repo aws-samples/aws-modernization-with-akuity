@@ -18,11 +18,11 @@ Before we begin, let's understand the key concepts:
 - **Freight**: A set of references to one or more versioned artifacts
 - **Stage**: An environment in your application's lifecycle (e.g., dev, staging, production)
 - **Promotion**: The process of moving Freight from one Stage to another
-::
+:::
 
 ## Creating a Kargo Project
 
-::steps{name="create-project"}
+:::steps
 
 1. Run the following command in your terminal:
 
@@ -34,13 +34,13 @@ Before we begin, let's understand the key concepts:
    
    ![Created Project](/images/kargosavedproject.png)
 
-::
+:::
 
 ## Setting Up GitHub Credentials
 
 To allow Kargo to access your GitHub repository and make commits:
 
-::steps{name="github-creds"}
+:::steps
 
 1. Run the following command in your terminal, replacing the placeholders with your information:
 
@@ -61,11 +61,11 @@ To allow Kargo to access your GitHub repository and make commits:
    
    ![Kargo secrets location](/images/KargoSecrets.png)
 
-::
+:::
 
 ## Applying Your Project Configuration
 
-::steps{name="apply-project"}
+:::steps
 
 1. Examine the `project.yaml` file in the `kargo` folder of your repository:
 
@@ -85,13 +85,13 @@ To allow Kargo to access your GitHub repository and make commits:
    kargo apply -f ./kargo/project.yaml
    ```
 
-::
+:::
 
 ## Creating a Warehouse
 
 A Warehouse is a source of Freight (versioned artifacts) that Kargo will track and promote.
 
-::steps{name="create-warehouse"}
+:::steps
 
 1. Examine the `warehouse.yaml` file in the `kargo` folder:
 
@@ -122,7 +122,7 @@ A Warehouse is a source of Freight (versioned artifacts) that Kargo will track a
    
    ![Finished Warehouse](/images/finishedwarehouse.png)
 
-::
+:::
 
 ## Understanding Kargo Stages
 
@@ -133,7 +133,7 @@ Stages represent environments in your application's lifecycle, such as:
 - Production ("prd")
 
 Each stage can have its own promotion steps, approval requirements, and validation processes.
-::
+:::
 
 The `stages.yaml` file in your repository defines the promotion steps that Kargo will execute when promoting between stages:
 
@@ -145,7 +145,7 @@ The `stages.yaml` file in your repository defines the promotion steps that Kargo
 
 ## Applying Your Stages
 
-::steps{name="apply-stages"}
+:::steps
 
 1. Apply the stages configuration:
 
@@ -157,7 +157,7 @@ The `stages.yaml` file in your repository defines the promotion steps that Kargo
    
    ![Stages](/images/KargoIndex.png)
 
-::
+:::
 
 🎉 Congratulations! You now have a working Kargo pipeline with:
 - A project to organize your resources
@@ -165,4 +165,4 @@ The `stages.yaml` file in your repository defines the promotion steps that Kargo
 - Stages representing your environments
 - Promotion steps to move changes between environments
 
-::button[Continue to Making Promotions]{href="33_MakingPromotions.html" variant="primary"}
+:button[Continue to Making Promotions]{href="33_MakingPromotions.html" variant="primary"}

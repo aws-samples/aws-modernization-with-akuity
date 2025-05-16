@@ -27,7 +27,9 @@ Filter by:
 - Labels
 - And more
 
-::alert[The Explorer Dashboard is a great starting point for investigating issues or getting a high-level overview of your cluster's resources.]{header="Tip"}
+:::alert{header="Tip"}
+The Explorer Dashboard is a great starting point for investigating issues or getting a high-level overview of your cluster's resources.
+:::
 
 ## Deprecated APIs Dashboard
 
@@ -49,13 +51,13 @@ For each deprecated API, KubeVision provides:
 
 This specialized dashboard identifies resources that have been stuck in the deletion state for more than 1 hour. These resources can cause issues with cluster management and should be addressed.
 
-::expand{header="Common Causes for Stuck Deletions"}
+::expand[
 Resources can get stuck in deletion due to:
 - Finalizers that haven't completed
 - Dependencies that haven't been resolved
 - Custom resource controllers that aren't functioning properly
 - Networking issues preventing proper cleanup
-::
+]{header="Common Causes for Stuck Deletions"}
 
 ## Container Dashboard
 
@@ -91,7 +93,9 @@ For each image, you can see:
 
 ![CVE Information](/images/KubeVisionCVEs.png)
 
-::alert[CVE scanning is available for public images. Enable CVE scanning in KubeVision settings to identify potential security vulnerabilities.]{header="Security Note"}
+:::alert{header="Security Note"}
+CVE scanning is available for public images. Enable CVE scanning in KubeVision settings to identify potential security vulnerabilities.
+:::
 
 You can also find CVE information in the **Security** tab of your Argo CD instance.
 
@@ -150,8 +154,7 @@ KubeVision includes an AI-powered assistant that can analyze your Kubernetes res
 
 ### Enabling the AI Assistant
 
-::steps{name="enable-ai"}
-
+:::steps
 1. Navigate to your Argo CD instance
 
 2. Click the cogwheel in the top right for **Settings**
@@ -167,8 +170,7 @@ KubeVision includes an AI-powered assistant that can analyze your Kubernetes res
 6. A new **Assistant** tab will appear, allowing you to ask questions about the resource
    
    ![AI Assistant Details](/images/AkuityAIAssist2.png)
-
-::
+:::
 
 The AI Assistant can help you:
 - Analyze deployment logs
@@ -176,5 +178,3 @@ The AI Assistant can help you:
 - Suggest optimizations
 - Explain resource configurations
 - Provide troubleshooting guidance
-
-::button[Continue to Review]{href="51_Review.html" variant="primary"}

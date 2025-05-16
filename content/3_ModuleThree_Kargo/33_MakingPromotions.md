@@ -10,7 +10,7 @@ Now that we have our Kargo pipeline set up, let's make our first promotion to mo
 
 ## Your First Promotion
 
-::steps{name="first-promotion"}
+:::steps
 
 1. In the Kargo UI, locate the blue **bullseye** icon on the left side of the first stage (**dev**)
    
@@ -24,7 +24,7 @@ Now that we have our Kargo pipeline set up, let's make our first promotion to mo
    - A full heart indicates a successful promotion
    - A broken heart indicates an issue (click on the stage and select the promotion name for error details)
 
-::
+:::
 
 ::alert[Promotions in Kargo are tracked and auditable. You can see who promoted what and when, providing valuable traceability for your deployment process.]{header="Promotion Tracking"}
 
@@ -32,7 +32,7 @@ Now that we have our Kargo pipeline set up, let's make our first promotion to mo
 
 Just as we did with Argo CD, we can modify the number of replicas using Kargo's promotion workflow:
 
-::steps{name="update-replicas"}
+:::steps
 
 1. Navigate to `base/values.yaml` in your GitHub repository
 
@@ -48,7 +48,7 @@ Just as we did with Argo CD, we can modify the number of replicas using Kargo's 
 
 5. Refresh the Kargo UI
 
-::
+:::
 
 You should now see a new freight item in the freight line at the top of the Kargo UI, representing your updated configuration.
 
@@ -70,4 +70,4 @@ This ensures a consistent, automated process for moving changes through your env
 - Made your first promotion
 - Updated a configuration value that will be promoted through your environments
 
-::button[Continue to Module 4: Monitor with KubeVision]{href="/4_ModuleFour_KubeVision/_index.html" variant="primary"}
+:button[Continue to Module 4: Monitor with KubeVision]{href="/4_ModuleFour_KubeVision/_index.html" variant="primary"}

@@ -10,8 +10,7 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
 
 ## Create an Argo CD Instance
 
-::steps{name="argocd-instance"}
-
+:::steps
 1. Log in to the [Akuity Platform](https://akuity.cloud) and navigate to **Argo CD**
 
 2. Click **+ Create** in the upper right corner of the dashboard
@@ -23,15 +22,13 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
    ![Argo CD Create an Instance](/images/ArgoCDCreateanInstance2.png)
 
 5. Click **+ Create** to initialize your instance
-
-::
+:::
 
 Your Argo CD instance will begin initializing. This process takes a few minutes. You'll know it's complete when the cogwheel next to your instance name stops turning and the status shows a 💚 healthy indicator.
 
 ## Configure Your Argo CD Admin Account
 
-::steps{name="admin-setup"}
-
+:::steps
 1. In the dashboard for your Argo CD instance, click **Settings**
 
 2. On the sidebar, under **Security & Access**, click **System Accounts**
@@ -42,7 +39,9 @@ Your Argo CD instance will begin initializing. This process takes a few minutes.
    
    ![Set Password](/images/ArgoCDSetPassword.png)
 
-   ::alert[Keep this password handy! You'll need it to access the Argo CD UI.]{header="Important"}
+   :::alert{header="Important"}
+   Keep this password handy! You'll need it to access the Argo CD UI.
+   :::
 
 5. Wait for Argo CD to reinitialize (the cogwheel will spin and then stop)
 
@@ -53,13 +52,11 @@ Your Argo CD instance will begin initializing. This process takes a few minutes.
 7. At the Argo CD login screen, enter `admin` as the username and use the password you set in step 4
 
    ![Argo CD Login](/images/ArgoCDLogin.png)
-
-::
+:::
 
 ## Connect Your EKS Cluster
 
-::steps{name="connect-cluster"}
-
+:::steps
 1. In your Argo CD instance dashboard, click **Clusters**
 
 2. Click **Connect a Cluster**
@@ -112,11 +109,8 @@ Your Argo CD instance will begin initializing. This process takes a few minutes.
     argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
     argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
     ```
-
-::
+:::
 
 When you see a 💚 green heart before the cluster name in your Argo CD instance, it indicates that your cluster is healthy and properly connected.
 
 🎉 Congratulations! Your cluster is now set up on the Akuity Platform. The cluster data is uploaded to the platform, so we don't need to repeat this process for Kargo and KubeVision.
-
-::button[Continue to Deploy Helm Charts]{href="23_DeployHelmCharts.html" variant="primary"}

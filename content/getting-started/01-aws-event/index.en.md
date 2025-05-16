@@ -31,7 +31,9 @@ You will be taken to the workshop instructions. You can access the console of yo
 
 ![Console access](/static/images/aws-event/console_access.png)
 
-::alert[We will not be using CLI credentials in today's workshop. This workshop uses [AWS Cloud9](https://aws.amazon.com/cloud9/) as its Integrated Development Environment (IDE).]{header=Note}
+:::alert{header=Note}
+We will not be using CLI credentials in today's workshop. This workshop uses VS Code Server as its Integrated Development Environment (IDE).
+:::
 
 ## Proceed to the workshop
 

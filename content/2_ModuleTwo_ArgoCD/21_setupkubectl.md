@@ -7,40 +7,25 @@ weight: 1
 
 Before we can deploy applications with Argo CD, we need to configure kubectl to communicate with your EKS cluster.
 
-## Authenticate AWS CLI
+## AWS Authentication
 
-::alert[You can skip this step if you're already authenticated with AWS.]{header="Note"}
+:::alert{header="Note"}
+Since you're using the VS Code server environment, AWS authentication is already configured with a role attached. You can skip the manual authentication steps.
+:::
 
-::steps{name="aws-auth"}
+You can verify your AWS authentication by running:
 
-1. In your terminal, run:
+```bash
+aws sts get-caller-identity
+```
 
-   ```bash
-   aws configure
-   ```
-
-2. Enter your **AWS Access Key ID** when prompted
-
-3. Enter your **AWS Secret Access Key** when prompted
-
-4. Set your default region (e.g., `us-west-1`)
-
-5. Verify your authentication by running:
-
-   ```bash
-   aws sts get-caller-identity
-   ```
-
-   You should see your AWS account information displayed.
-
-::
+You should see your AWS account information displayed, confirming that your environment is properly authenticated.
 
 ## Configure kubectl for EKS
 
-Make sure you have the `aws` and `kubectl` CLIs installed. If you're using a **Codespace**, these should already be available.
+Make sure you have the `aws` and `kubectl` CLIs installed. If you're using the Workshop Studio environment, these should already be available.
 
-::steps{name="kubectl-setup"}
-
+:::steps
 1. List your available EKS clusters:
 
    ```bash
@@ -52,7 +37,7 @@ Make sure you have the `aws` and `kubectl` CLIs installed. If you're using a **C
    ```json
    {
      "clusters": [
-       "eksworkshop-eksctl"
+       "akuity-aws-cluster"
      ]
    }
    ```
@@ -60,13 +45,19 @@ Make sure you have the `aws` and `kubectl` CLIs installed. If you're using a **C
 2. Create a kubeconfig file for your cluster:
 
    ```bash
+   aws eks update-kubeconfig --name akuity-aws-cluster
+   ```
+
+   Alternatively, you can use this command to automatically use the first cluster in your account:
+   
+   ```bash
    aws eks update-kubeconfig --name $(aws eks list-clusters | jq -r .clusters[0])
    ```
 
    This should output:
 
    ```
-   Added new context arn:aws:eks:us-east-1:338615488317:cluster/<cluster-name> to /home/vscode/.kube/config
+   Added new context arn:aws:eks:us-east-1:123456789012:cluster/akuity-aws-cluster to /home/vscode/.kube/config
    ```
 
    ![Check Clusters](/images/ArgoCDCheckingClusters.png)
@@ -83,11 +74,10 @@ Make sure you have the `aws` and `kubectl` CLIs installed. If you're using a **C
    NAME                              STATUS   ROLES    AGE   VERSION
    ip-192-168-108-33.ec2.internal    Ready    <none>   2d    v1.31.1-eks-ae9a62a
    ```
+:::
 
-::
-
-::expand{header="Understanding the kubectl Configuration Command"}
-Let's break down the command we used:
+::expand[
+Let's break down the commands we used:
 
 - `aws eks list-clusters` lists all EKS clusters in your current AWS account and region
 - `$(aws eks list-clusters | jq -r .clusters[0])` is a sub-command that:
@@ -95,8 +85,6 @@ Let's break down the command we used:
   - Uses the pipe symbol `|` to pass the output to the next command
   - Uses `jq -r .clusters[0]` to extract the first cluster name from the JSON output
 - `aws eks update-kubeconfig` updates your kubeconfig file with the credentials needed to access the specified cluster
-::
+]{header="Understanding the kubectl Configuration Command"}
 
 Now that kubectl is configured to access your EKS cluster, you're ready to set up your Argo CD instance!
-
-::button[Continue to Argo CD Setup]{href="22_setupargocd.html" variant="primary"}

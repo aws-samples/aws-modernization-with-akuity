@@ -3,20 +3,22 @@ title: Using Your Own AWS Account
 weight: 20
 ---
 
-::alert[If you are participating in an AWS guided event, your instructor will have given you access to an AWS account provisioned exclusively for this workshop through Workshop Studio. [Click here](/03-getting-started/01-aws-event) for instructions for joining an AWS guided event.]{header=Note}
+:::alert{header=Note}
+If you are participating in an AWS guided event, your instructor will have given you access to an AWS account provisioned exclusively for this workshop through Workshop Studio. [Click here](/03-getting-started/01-aws-event) for instructions for joining an AWS guided event.
+:::
 
 ## Workshop resources
 
 The following resources will be deployed to run the workshop:
 
-- AWS Cloud9 environment named **Workshop**.
+- VS Code Server environment named **Workshop**.
 - AWS CodeCommit repository named **Workshop**, populated with template code.
 
-To configure the Cloud9 environment, a number of additional resources are provisioned.
+To configure the VS Code Server environment, a number of additional resources are provisioned.
 
-- AWS Systems Manager Automation Document used to configure the Cloud9 environment.
+- AWS Systems Manager Automation Document used to configure the VS Code Server environment.
 - Amazon S3 bucket to hold the Automation Document's output logs.
-- AWS Lambda function to create a CloudFormation template to associate the Automation Document with the Cloud9 environment.
+- AWS Lambda function to create a CloudFormation template to associate the Automation Document with the VS Code Server environment.
 - IAM roles for the Lambda function.
 
 :::alert{header=Note}
@@ -42,7 +44,7 @@ curl ':assetUrl{path="/code/workshop.zip" source=s3}' -o workshop.zip
 
 # Download CloudFormation templates
 
-curl ':assetUrl{path="/cfn/cloud9.yaml" source=repo}' -o cloud9.yaml
+curl ':assetUrl{path="/cfn/vscode-server.yaml" source=repo}' -o vscode-server.yaml
 curl ':assetUrl{path="/cfn/codecommit.yaml" source=repo}' -o codecommit.yaml
 
 # Download bootstrap script
@@ -57,7 +59,7 @@ sh own_account.sh
 :::
 
 :::alert{header=Note}
-The Cloud9 deployment and setup process takes approximately 5 minutes to complete.
+The VS Code Server deployment and setup process takes approximately 5-10 minutes to complete.
 :::
 
 :::alert{header="Important" type="warning"}

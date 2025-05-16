@@ -1175,16 +1175,47 @@ Resources:
             description: "VSCode user name"
         mainSteps:
           - action: aws:runShellScript
-            name: ConfigureKubectl
+            name: ConfigureKubectlBasics
             inputs:
               runCommand:
                 - '#!/bin/bash'
-                - echo "alias k=kubectl" >> /home/{{ VSCodeUser }}/.bashrc
-                - echo "complete -o default -F __start_kubectl k" >> /home/{{ VSCodeUser }}/.bashrc
-                - source /home/{{ VSCodeUser }}/.bashrc
-  
+                - set -e
+                - echo "Setting up kubectl alias and autocomplete..."
+                - |
+                  # Create .bashrc if it doesn't exist
+                  touch /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Remove any existing kubectl alias to avoid duplicates
+                  sed -i '/alias k=kubectl/d' /home/{{ VSCodeUser }}/.bashrc
+                  sed -i '/complete -o default -F __start_kubectl k/d' /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Add kubectl alias and autocomplete
+                  echo 'alias k=kubectl' >> /home/{{ VSCodeUser }}/.bashrc
+                  echo 'source <(kubectl completion bash)' >> /home/{{ VSCodeUser }}/.bashrc
+                  echo 'complete -o default -F __start_kubectl k' >> /home/{{ VSCodeUser }}/.bashrc
+                  
+                  # Create a .bash_profile to ensure .bashrc is sourced
+                  if [ ! -f /home/{{ VSCodeUser }}/.bash_profile ]; then
+                    echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/{{ VSCodeUser }}/.bash_profile
+                  fi
+                  
+                  # Create a .profile as well for broader compatibility
+                  if [ ! -f /home/{{ VSCodeUser }}/.profile ]; then
+                    echo 'if [ -f ~/.bashrc ]; then . ~/.bashrc; fi' > /home/{{ VSCodeUser }}/.profile
+                  fi
+                  
+                  # Set proper ownership
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.bashrc
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.bash_profile
+                  chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.profile
+                  
+                  # Source the bashrc for the current session
+                  source /home/{{ VSCodeUser }}/.bashrc || true
+                - echo "kubectl alias and autocomplete setup completed"
+                - echo "To use the alias, please open a new terminal or run 'source ~/.bashrc'"
+
           - action: aws:runShellScript
-            name: ConfigureEKSAccess
+            name: InstallHelm
             precondition:
               StringEquals:
                 - '{{ LinuxFlavor }}'
@@ -1193,15 +1224,86 @@ Resources:
               runCommand:
                 - '#!/bin/bash'
                 - set -e
-                - EKS_CLUSTER_NAME="{{ EKSClusterName }}"
-                - REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                - echo "Setting up kubeconfig for EKS cluster: $EKS_CLUSTER_NAME in region $REGION"
-                - mkdir -p /home/{{ VSCodeUser }}/.kube
-                - aws eks update-kubeconfig --name "$EKS_CLUSTER_NAME" --region "$REGION" --kubeconfig /home/{{ VSCodeUser }}/.kube/config
-                - chown -R {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/.kube
-                - chmod 600 /home/{{ VSCodeUser }}/.kube/config
-                - echo "EKS kubeconfig setup completed."
-  
+                - echo "Installing Helm..."
+                - |
+                  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+                - echo "Helm installed successfully"
+                - helm version
+
+          - action: aws:runShellScript
+            name: InstallGitHubCLI
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing GitHub CLI using direct binary download..."
+                - |
+                  # Direct binary installation for GitHub CLI
+                  GH_VERSION="2.72.0"
+                  ARCH=$(uname -m)
+                  
+                  echo "Architecture detected: $ARCH"
+                  
+                  # Download the appropriate binary based on architecture
+                  if [ "$ARCH" = "x86_64" ]; then
+                    echo "Downloading GitHub CLI for x86_64..."
+                    curl -sSL -o /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_amd64.tar.gz"
+                  elif [ "$ARCH" = "aarch64" ]; then
+                    echo "Downloading GitHub CLI for arm64..."
+                    curl -sSL -o /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_arm64.tar.gz"
+                  else
+                    echo "Unsupported architecture: $ARCH"
+                    exit 1
+                  fi
+                  
+                  # Extract and install
+                  echo "Extracting GitHub CLI..."
+                  mkdir -p /tmp/gh
+                  tar -xzf /tmp/gh.tar.gz -C /tmp/gh --strip-components=1
+                  
+                  echo "Installing GitHub CLI..."
+                  sudo cp -r /tmp/gh/bin/gh /usr/local/bin/
+                  sudo cp -r /tmp/gh/share/man/man1/* /usr/local/share/man/man1/ 2>/dev/null || mkdir -p /usr/local/share/man/man1/
+                  
+                  # Clean up
+                  rm -rf /tmp/gh /tmp/gh.tar.gz
+                - echo "GitHub CLI installation completed"
+                - gh --version || echo "GitHub CLI installation verification failed"
+                
+                
+          - action: aws:runShellScript
+            name: InstallKargo
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Kargo CLI v1.3.4..."
+                - |
+                  ARCH=$(uname -m)
+                  case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64) ARCH="arm64" ;;
+                    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+                  esac
+                  
+                  echo "Architecture detected: $ARCH"
+                  
+                  # Download the binary directly with the correct naming format
+                  echo "Downloading Kargo CLI v1.3.4 for ${ARCH}..."
+                  sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.3.4/kargo-linux-${ARCH}"
+                  
+                  # Make it executable
+                  sudo chmod +x /usr/local/bin/kargo
+                  
+                  # Verify installation
+                  echo "Verifying Kargo CLI installation..."
+                - kargo version || echo "Kargo CLI installation verification failed"
+                - echo "Kargo CLI v1.3.4 installation completed"
+
           - action: aws:runShellScript
             name: InstallArgoCD
             precondition:
@@ -1223,50 +1325,8 @@ Resources:
                 - else
                 -   echo "Failed to download ArgoCD CLI."
                 -   exit 1
-                - fi
-  
-          - action: aws:runShellScript
-            name: SetupArgoCDAccess
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
-            inputs:
-              runCommand:
-                - |
-                  #!/bin/bash
-                  set -e
-                  EKS_CLUSTER_NAME="{{ EKSClusterName }}"
-                  REGION=$(curl -s http://169.254.169.254/latest/meta-data/placement/region)
-                  SSM_PREFIX="/eks/$EKS_CLUSTER_NAME"
-  
-                  echo "Retrieving ArgoCD details from SSM..."
-                  ARGOCD_SERVER=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-server" --query "Parameter.Value" --output text || echo "Not available yet")
-                  ARGOCD_USERNAME="admin"
-                  ARGOCD_PASSWORD=$(aws ssm get-parameter --name "$SSM_PREFIX/argocd-password" --with-decryption --query "Parameter.Value" --output text || echo "Not available yet")
-  
-                  echo "Creating ArgoCD info script..."
-                  cat << EOF > /home/{{ VSCodeUser }}/argocd-info.sh
-                  #!/bin/bash
-                  echo "==================================================="
-                  echo "  ? ArgoCD Login Details"
-                  echo "==================================================="
-                  echo "? URL: https://$ARGOCD_SERVER"
-                  echo "? Username: $ARGOCD_USERNAME"
-                  echo -e "? Password:  \033[1;32m$ARGOCD_PASSWORD\033[0m"
-                  echo "==================================================="
-                  echo "? To login via CLI, run:"
-                  echo "   argocd login $ARGOCD_SERVER --username admin --password \"\$ARGOCD_PASSWORD\" --insecure"
-                  echo "==================================================="
-                  EOF
-  
-                  chmod +x /home/{{ VSCodeUser }}/argocd-info.sh
-                  chown {{ VSCodeUser }}:{{ VSCodeUser }} /home/{{ VSCodeUser }}/argocd-info.sh
-                  echo "ArgoCD setup completed."
+                - fi                
                   
-
- 
-
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
     Properties:

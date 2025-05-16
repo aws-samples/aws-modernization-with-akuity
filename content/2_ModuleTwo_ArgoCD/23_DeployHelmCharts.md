@@ -10,8 +10,7 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 
 ## Create an Application in Argo CD
 
-::steps{name="create-app"}
-
+:::steps
 1. Navigate to the Argo CD UI using your instance URL
 
 2. Click **+ NEW APP** in the top left corner
@@ -53,22 +52,21 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 7. Review the settings and click **CREATE** to create the application
 
    ![Complete App Card](/images/ArgoCDCompleteApplication.png)
+:::
 
-::
-
-::alert[The application status will initially show as **Missing** and **OutOfSync**. This is expected because we haven't synchronized it yet.]{header="Note"}
+:::alert{header="Note"}
+The application status will initially show as **Missing** and **OutOfSync**. This is expected because we haven't synchronized it yet.
+:::
 
 ## Synchronize Your Application
 
-::steps{name="sync-app"}
-
+:::steps
 1. Click on your application card titled `argocd/guestbook-dev`
 
 2. Click the **SYNC** button and then **SYNCHRONIZE** to deploy the resources defined in your application
    
    ![Sync](/images/ArgoCDSync.png)
-
-::
+:::
 
 The resource tree will expand as Argo CD creates the resources:
 - The Deployment creates a ReplicaSet that creates a Pod
@@ -80,8 +78,7 @@ The application will remain in "Progressing" state until the pod is running. Onc
 
 Let's see how to deploy a new version of our application:
 
-::steps{name="update-app"}
-
+:::steps
 1. Navigate to `guestbook/values-dev.yaml` in your GitHub repository
 
 2. Edit the `image.tag` value to update the version:
@@ -98,8 +95,7 @@ Let's see how to deploy a new version of our application:
 5. Click **REFRESH** to trigger Argo CD to check for changes in your repository
 
 6. Click **SYNC** then **SYNCHRONIZE** to deploy the changes
-
-::
+:::
 
 Argo CD will detect that the application is out-of-sync due to the change in the repository. It will template the Helm chart and patch the `guestbook-dev` deployment with the new image tag, triggering a rolling update.
 
@@ -109,15 +105,13 @@ Argo CD will detect that the application is out-of-sync due to the change in the
 
 Let's configure the application to automatically apply changes without manual intervention:
 
-::steps{name="auto-sync"}
-
+:::steps
 1. Click **APP DETAILS** in the top menu
 
 2. Under the **SYNC POLICY** section, click **ENABLE AUTO-SYNC** and confirm by clicking **OK**
 
 3. Below that, next to **SELF HEAL**, click **ENABLE**
-
-::
+:::
 
 With auto-sync enabled, any changes to the `main` branch in your repository will be automatically applied to the cluster. Self-healing ensures that any manual changes to the cluster resources will be reverted to match the desired state in Git.
 
@@ -125,8 +119,7 @@ With auto-sync enabled, any changes to the `main` branch in your repository will
 
 Let's test the auto-sync feature by updating the number of replicas:
 
-::steps{name="test-auto-sync"}
-
+:::steps
 1. Navigate to your repository and open `guestbook/values.yaml`
 
 2. Update the `replicaCount` value from `1` to `2`
@@ -138,8 +131,7 @@ Let's test the auto-sync feature by updating the number of replicas:
 5. Click **REFRESH** to trigger Argo CD to check for changes
    
    ![ReplicaSet Created](/images/ArgoCDReplicaSet.png)
-
-::
+:::
 
 You can view the details of the sync operation by clicking **SYNC STATUS** in the top menu. This will show:
 - Which revision was synchronized
@@ -152,5 +144,3 @@ You can view the details of the sync operation by clicking **SYNC STATUS** in th
 - Updated the application manually
 - Configured auto-sync and self-healing
 - Verified automatic synchronization
-
-::button[Continue to Module 3: Promote with Kargo]{href="/3_ModuleThree_Kargo/_index.html" variant="primary"}

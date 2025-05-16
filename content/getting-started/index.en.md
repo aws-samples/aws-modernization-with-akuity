@@ -26,18 +26,17 @@ All of these components work together on AWS, with the Akuity Platform integrati
 
 Follow the installation instructions in this section to prepare your AWS environment:
 
-::tabs{name="setup-options"}
-
-::tab{name="AWS Event" active=true}
+::::tabs
+:::tab{label="AWS Event"}
 If you are attending an AWS guided event, set up your environment [here](/02-getting-started/01-aws-event).
 
 Your AWS instructor will provide you with:
 - AWS account access
 - Amazon EKS cluster details
 - Additional workshop-specific instructions
-::
+:::
 
-::tab{name="Self-Paced"}
+:::tab{label="Self-Paced"}
 If you are running this workshop on your own, set up your environment [here](/02-getting-started/02-own-account).
 
 You'll need to:
@@ -45,8 +44,11 @@ You'll need to:
 - Set up an Amazon EKS cluster
 - Install required AWS CLI tools
 - Configure AWS credentials
-::
+:::
+::::
 
-::alert[If you are running this workshop on your own AWS account, remember to delete all AWS resources by following the [Clean Up Resources](/90-cleanup) section to avoid unnecessary charges.]{header="Important"}
+:::alert{header="Important" type="warning"}
+If you are running this workshop on your own AWS account, remember to delete all AWS resources by following the [Clean Up Resources](/90-cleanup) section to avoid unnecessary charges.
+:::
 
-::button[Start the Workshop]{href="/1_ModuleOne/_index.html" variant="primary"}
+:button[Start the Workshop]{href="/1_ModuleOne/_index.html" variant="primary"}
