@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Cloudformation template for Akuity and AWS Modernization Workshop with EKS Auto Mode
+Description: Cloudformation template for Akuity and AWS Modernization Workshop
 Parameters:
   KubernetesVersion:
     Description: Kubernetes version
@@ -14,7 +14,7 @@ Parameters:
   WorkerNodeInstanceType:
     Description: Worker Node cluster instances
     Type: String
-    Default: "t3.xlarge"  # Upgraded for faster bootstrapping
+    Default: "t3.large"
 
   VSCodeInstanceName:
     Description: Name of the VSCode server instance
@@ -22,6 +22,7 @@ Parameters:
     Default: "VSCodeServer"
 
 Resources:
+################## PERMISSIONS AND ROLES #################
   akuityLambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -88,8 +89,24 @@ Resources:
           Principal:
             AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
           Action:
-            - kms:*
+            - kms:Create*
+            - kms:Describe*
+            - kms:Enable*
+            - kms:List*
+            - kms:Put*
+            - kms:Update*
+            - kms:Revoke*
+            - kms:Disable*
+            - kms:Get*
+            - kms:Delete*
+            - kms:ScheduleKeyDeletion
+            - kms:CancelKeyDeletion
+            - kms:GenerateDataKey
+            - kms:Encrypt
+            - kms:Decrypt
           Resource: '*'
+
+################## INSTANCE PROFILE #####################
 
   WorkshopInstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -98,6 +115,8 @@ Resources:
       InstanceProfileName: !Sub "akuity-and-aws-workshop-admin-${AWS::StackName}"
       Roles:
         - "akuity-and-aws-workshop-admin"
+
+################## EKS Bootstrap #####################
 
   BuildProject:
     DependsOn: [WorkshopInstanceProfile]
@@ -114,7 +133,7 @@ Resources:
           StreamName: build-log
       Environment:
         Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_MEDIUM
+        ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0
         EnvironmentVariables:
           - Name: WAIT_HANDLE_URL
@@ -156,38 +175,25 @@ Resources:
                     name: ${EKSClusterName}
                     region: ${AWSRegion}
                     version: "${KubernetesVersion}"
-                  auto: true
-                  vpc:
-                    autoCreate: true
+                  
+                  # Proper Auto Mode configuration as per AWS docs
+                  autoModeConfig:
+                    enabled: true
+                  
+                  availabilityZones:
+                    - ${AWSRegion}a
+                    - ${AWSRegion}b
+                    - ${AWSRegion}c
                   
                   cloudWatch:
                     clusterLogging:
-                      enableTypes: ["api", "audit"]
+                      enableTypes: ["*"]
                   
                   iam:
                     withOIDC: true
                   
                   secretsEncryption:
                     keyARN: ${KMS_ARN}
-                  
-                  managedNodeGroups:
-                    - name: nodegroup
-                      instanceType: ${WorkerNodeInstanceType}
-                      desiredCapacity: 1
-                      minSize: 1
-                      maxSize: 2
-                      volumeSize: 20
-                      volumeType: gp3
-                      volumeEncrypted: true
-                      tags:
-                        'eks:cluster-name': ${EKSClusterName}
-                        'stack-name': ${STACK_NAME}
-                      iam:
-                        withAddonPolicies:
-                          imageBuilder: true
-                          autoScaler: true
-                          albIngress: true
-                          cloudWatch: true
                   EOF
                 - cat cluster-config.yaml
                 - pip3 install --upgrade --user awscli
@@ -199,9 +205,9 @@ Resources:
                 - export PATH=$PWD/:$PATH
             build:
               commands:
-                - echo ">>> creating EKS cluster in region $AWSRegion with auto mode"
+                - echo ">>> creating EKS cluster in region $AWSRegion with Auto Mode"
                 - |
-                  if eksctl create cluster -f cluster-config.yaml --auto; then
+                  if eksctl create cluster -f cluster-config.yaml; then
                     export BUILD_SUCCESS=true
                     echo "EKS cluster creation successful"
                   else
@@ -224,13 +230,13 @@ Resources:
                     aws ssm put-parameter --name "$SSM_PREFIX/cluster-name" --value "${EKSClusterName}" --type "String" --overwrite
                     aws ssm put-parameter --name "$SSM_PREFIX/region" --value "${AWSRegion}" --type "String" --overwrite
                     
-                    # VSCode server integration
+                    # VSCode server integration (optional based on instance existence)
                     INSTANCE_ID=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=${VSCodeInstanceName}" --query "Reservations[].Instances[].InstanceId" --output text 2>/dev/null || echo "")
                     
                     if [ ! -z "$INSTANCE_ID" ]; then
                       echo ">>> Target Instance ID for SSM Command: $INSTANCE_ID"
                       
-                      # Check instance status
+                      # Ensure Instance is Running Before Sending SSM Command
                       counter=0
                       max_attempts=30
                       INSTANCE_RUNNING=false
@@ -241,12 +247,13 @@ Resources:
                           INSTANCE_RUNNING=true
                           break
                         fi
-                        echo "Waiting for instance... Attempt $counter of $max_attempts"
+                        echo "Waiting for instance to be ready... Attempt $counter of $max_attempts"
                         sleep 10
                         counter=$((counter + 1))
                       done
                       
                       if [ "$INSTANCE_RUNNING" = "true" ]; then
+                        # Send SSM command if document exists
                         if aws ssm describe-document --name "VSCodeK8sSetup" > /dev/null 2>&1; then
                           echo ">>> Triggering SSM Document execution..."
                           aws ssm send-command \
@@ -257,20 +264,47 @@ Resources:
                           echo "SSM Document 'VSCodeK8sSetup' not found - skipping integration"
                         fi
                       else
-                        echo "WARNING: Instance not running after $max_attempts attempts."
+                        echo "WARNING: Instance is not running after $max_attempts attempts."
                       fi
                     else
                       echo "No VSCodeServer instance found - skipping VSCode integration"
                     fi
                   fi
                 
-                # Signal CloudFormation
+                # Signal CloudFormation with success/failure status
                 - |
+                  echo "Signaling CloudFormation"
+                  echo "WAIT_HANDLE_URL: $WAIT_HANDLE_URL"
+                  
                   if [ -n "$WAIT_HANDLE_URL" ]; then
                     if [ "$BUILD_SUCCESS" = "true" ]; then
-                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster Created","UniqueId":"EKSCluster","Data":"Deployment Complete"}' "$WAIT_HANDLE_URL"
+                      # Try to send SUCCESS signal, with retry logic
+                      MAX_RETRIES=3
+                      RETRY_COUNT=0
+                      SIGNAL_SENT=false
+                      
+                      while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$SIGNAL_SENT" != "true" ]; do
+                        if curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"SUCCESS","Reason":"EKS Cluster Created","UniqueId":"EKSCluster","Data":"Deployment Complete"}' "$WAIT_HANDLE_URL"; then
+                          echo "Successfully sent SUCCESS signal to CloudFormation"
+                          SIGNAL_SENT=true
+                        else
+                          RETRY_COUNT=$((RETRY_COUNT+1))
+                          echo "Failed to send SUCCESS signal to CloudFormation (attempt $RETRY_COUNT/$MAX_RETRIES)"
+                          if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                            echo "Retrying in 5 seconds..."
+                            sleep 5
+                          fi
+                        fi
+                      done
+                      
+                      if [ "$SIGNAL_SENT" != "true" ]; then
+                        echo "All attempts to send SUCCESS signal failed. Sending FAILURE signal instead."
+                        curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"Failed to send SUCCESS signal","UniqueId":"EKSCluster","Data":"Signal Transmission Failed"}' "$WAIT_HANDLE_URL" || echo "Also failed to send FAILURE signal."
+                        exit 1
+                      fi
                     else
-                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"Post-build verification of failure"}' "$WAIT_HANDLE_URL"
+                      echo "Build was not successful. Sending FAILURE signal."
+                      curl -X PUT -H 'Content-Type:' --data-binary '{"Status":"FAILURE","Reason":"EKS Cluster Creation Failed","UniqueId":"EKSCluster","Data":"Post-build verification of failure"}' "$WAIT_HANDLE_URL" || echo "Failed to send FAILURE signal"
                     fi
                   else
                     echo "ERROR: WAIT_HANDLE_URL is not set."
@@ -338,6 +372,7 @@ Resources:
                   send_cfn_response(event, context, response['Status'], response)
               elif event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
                   try:
+                      # Log the environment variables we're passing to make debugging easier
                       wait_handle_url = event['ResourceProperties']['WaitHandleUrl']
                       logger.info(f"WaitHandleUrl being passed to CodeBuild: {wait_handle_url}")
                       
@@ -394,6 +429,7 @@ Resources:
       ServiceToken: !GetAtt TriggerBuildLambda.Arn
       CodebuildProjectName: !Ref BuildProject
       WaitHandleUrl: !Ref EKSClusterWaitHandle
+
 
   EKSClusterWaitCondition:
     Type: AWS::CloudFormation::WaitCondition
