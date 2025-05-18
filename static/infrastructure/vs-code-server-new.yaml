@@ -1325,7 +1325,44 @@ Resources:
                 - else
                 -   echo "Failed to download ArgoCD CLI."
                 -   exit 1
-                - fi                
+                - fi
+                
+          - action: aws:runShellScript
+            name: InstallAkuityCLI
+            precondition:
+              StringEquals:
+                - '{{ LinuxFlavor }}'
+                - al2023
+            inputs:
+              runCommand:
+                - '#!/bin/bash'
+                - set -e
+                - echo "Installing Akuity CLI..."
+                - |
+                  ARCH=$(uname -m)
+                  case $ARCH in
+                    x86_64) ARCH="amd64" ;;
+                    aarch64) ARCH="arm64" ;;
+                    *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
+                  esac
+                  
+                  echo "Architecture detected: $ARCH"
+                  
+                  # Get the latest stable version
+                  STABLE_VERSION=$(curl -sL https://dl.akuity.io/akuity-cli/stable.txt)
+                  echo "Latest stable version: $STABLE_VERSION"
+                  
+                  # Download the binary
+                  echo "Downloading Akuity CLI ${STABLE_VERSION} for ${ARCH}..."
+                  sudo curl -sSL -o /usr/local/bin/akuity "https://dl.akuity.io/akuity-cli/${STABLE_VERSION}/linux/${ARCH}/akuity"
+                  
+                  # Make it executable
+                  sudo chmod +x /usr/local/bin/akuity
+                  
+                  # Verify installation
+                  echo "Verifying Akuity CLI installation..."
+                - akuity version || echo "Akuity CLI installation verification failed"
+                - echo "Akuity CLI installation completed"
                   
   VSCodeInstanceRole:
     Type: AWS::IAM::Role
