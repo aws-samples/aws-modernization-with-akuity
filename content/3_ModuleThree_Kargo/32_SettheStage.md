@@ -42,7 +42,7 @@ To allow Kargo to access your GitHub repository and make commits:
    kargo create credentials github-credentials \
    --project kargo-guestbook --git \
    --username <your-github-username> --password <your-github-PAT> \
-   --repo-url https://github.com/<your-username>/akuity-eks-workshop
+   --repo-url https://github.com/<your-username>/eks-workshop-template
    ```
 
 2. Verify the credentials were created:
@@ -72,6 +72,7 @@ To allow Kargo to access your GitHub repository and make commits:
 2. Apply this manifest to your Kargo project:
 
    ```bash
+   cd /workshop/eks-workshop-template
    kargo apply -f ./kargo/project.yaml
    ```
 

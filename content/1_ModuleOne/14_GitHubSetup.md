@@ -47,7 +47,11 @@ For this workshop, we'll fork the Akuity EKS workshop template repository. **Cho
 Fork and clone the repository using the GitHub CLI:
 
 ```bash
-gh repo fork akuity/eks-workshop-template --clone=true
+# Fork the repository and clone it with the name akuity-eks-workshop
+gh repo fork akuity/eks-workshop-template --clone=true --remote=true
+cd eks-workshop-template
+git remote rename origin upstream
+git remote rename fork origin
 ```
 
 ### Option 2: Using GitHub Web Interface
@@ -57,12 +61,12 @@ If you prefer to use the GitHub web interface instead:
 1. Visit [https://github.com/akuity/eks-workshop-template](https://github.com/akuity/eks-workshop-template)
 2. Click the "Fork" button in the top-right corner
 3. Ensure your personal account is selected as the owner
-4. Name the repository `akuity-eks-workshop`
+4. Keep the repository name as `eks-workshop-template`
 5. Click "Create fork"
 6. Clone the repository to your local machine:
    ```bash
-   git clone https://github.com/YOUR-USERNAME/akuity-eks-workshop.git
-   cd akuity-eks-workshop
+   git clone https://github.com/YOUR-USERNAME/eks-workshop-template.git
+   cd eks-workshop-template
    ```
 
 ## Create a GitHub Personal Access Token (PAT)
@@ -92,10 +96,10 @@ Kargo will need a GitHub Personal Access Token to make commits to your repositor
 
 Let's examine the repository structure to understand what we'll be working with:
 
-1. Navigate to your cloned repository:
+1. Make sure you're in the repository directory:
 
    ```bash
-   cd akuity-eks-workshop
+   cd eks-workshop-template
    ```
 
 2. List the key directories:
@@ -108,10 +112,12 @@ Let's examine the repository structure to understand what we'll be working with:
    - `guestbook/` - Contains the Helm chart for our sample application
    - `base/` - Contains base configuration values
    - `kargo/` - Contains Kargo configuration files
+   - `apps/` - Contains application YAML files
+   - `akuity-platform/` - Contains ArgoCD configuration files
 
 ## Repository Structure Explained
 
-::alert[
+:::alert[
 - **guestbook/** - The main application Helm chart
   - `Chart.yaml` - Helm chart metadata
   - `values.yaml` - Default values for the chart

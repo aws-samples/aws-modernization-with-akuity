@@ -10,30 +10,30 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 
 ## Create an Application in Argo CD
 
-1. Navigate to the Argo CD UI using your Argo CD instance URL
+1. Navigate to the Argo CD UI using your instance URL
 
-2. In the VS Code Explorer panel (left sidebar), navigate to `/workshop/apps/` and click on `guestbook-dev.yaml` to open it
+2. In the VS Code Explorer panel (left sidebar), navigate to `/workshop/eks-workshop-template/apps/` and click on `guestbook-dev.yaml` to open it
 
 3. Review the file and notice the placeholders that need to be replaced:
    - `<github-username>` - Your GitHub username
-   - `<repo-name>` - The repository name (akuity-eks-workshop)
+   - `<repo-name>` - The repository name (eks-workshop-template)
    - `<cluster-name>` - The cluster name (eks-cluster)
 
 4. Now, let's update the application YAML template with your specific values:
 
    ```bash
    # Replace placeholders with actual values using sed
-   sed -i "s/<github-username>/$(git config --get user.name)/g" /workshop/apps/guestbook-dev.yaml
-   sed -i "s/<repo-name>/akuity-eks-workshop/g" /workshop/apps/guestbook-dev.yaml
-   sed -i "s/<cluster-name>/eks-cluster/g" /workshop/apps/guestbook-dev.yaml
+   sed -i "s/<github-username>/$(git config --get user.name)/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
+   sed -i "s/<repo-name>/eks-workshop-template/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
+   sed -i "s/<cluster-name>/eks-cluster/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
    
    # Display the updated YAML file
-   cat /workshop/apps/guestbook-dev.yaml
+   cat /workshop/eks-workshop-template/apps/guestbook-dev.yaml
    ```
 
 5. Notice how the file in VS Code automatically updates with your actual values:
    - Your GitHub username replaces `<github-username>`
-   - `akuity-eks-workshop` replaces `<repo-name>`
+   - `eks-workshop-template` replaces `<repo-name>`
    - `eks-cluster` replaces `<cluster-name>`
 
 6. Click **+ NEW APP** in the top left corner of the Argo CD UI
@@ -72,7 +72,7 @@ Let's see how to deploy a new version of our application:
 
 1. In the VS Code Explorer panel (left sidebar), navigate to your repository files
 
-2. Open the file `akuity-eks-workshop/guestbook/values-dev.yaml` by clicking on it
+2. Open the file `eks-workshop-template/guestbook/values-dev.yaml` by clicking on it
 
 3. In the editor, update the image tag from `0.1.0` to `0.2.0`:
 
@@ -91,7 +91,7 @@ Let's see how to deploy a new version of our application:
 5. Commit and push these changes:
 
    ```bash
-   cd /workshop/akuity-eks-workshop
+   cd /workshop/eks-workshop-template
    git add guestbook/values-dev.yaml
    git commit -m "Update guestbook image tag to 0.2.0"
    git push origin main
@@ -125,7 +125,7 @@ Let's test the auto-sync feature by updating the number of replicas:
 
 1. In the VS Code Explorer panel (left sidebar), navigate to your repository files
 
-2. Open the file `akuity-eks-workshop/guestbook/values-dev.yaml` by clicking on it
+2. Open the file `eks-workshop-template/guestbook/values-dev.yaml` by clicking on it
 
 3. In the editor, locate the `replicaCount` parameter at the top of the file and change its value from `1` to `2`:
 
@@ -142,7 +142,7 @@ Let's test the auto-sync feature by updating the number of replicas:
 5. Commit and push your changes:
 
    ```bash
-   cd /workshop/akuity-eks-workshop
+   cd /workshop/eks-workshop-template
    git add guestbook/values-dev.yaml
    git commit -m "Increase guestbook replicas to 2"
    git push origin main
