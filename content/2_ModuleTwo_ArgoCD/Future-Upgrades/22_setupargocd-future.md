@@ -58,15 +58,23 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
 
 4. Optionally add a description with your EKS cluster's name
 
-5. Click **Connect Cluster** to proceed
+5. Click **Advanced Settings**
 
-6. You'll be prompted to install the agent using either the AWS Console or AWS CLI
+6. On the Add-Ons tab, locate the **AWS EKS** option
+
+7. Click **+Add** on the AWS EKS option
    
-   ![Install Akuity Agent](/images/AkuityAgent.png)
+   ![Connect a Cluster](/images/ArgoCDConnectaCluster.png)
+
+8. Click **Connect Cluster** to proceed
+
+9. You'll be prompted to install the agent using either the AWS Console or AWS CLI
+   
+   ![AWS Add-On](/images/EKSAddOnPrompts.png)
    
    Follow the instructions for your preferred method
 
-7. Verify you're targeting the correct cluster:
+10. Verify you're targeting the correct cluster:
 
     ```bash
     kubectl config current-context
@@ -74,10 +82,10 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
 
     The output should look similar to:
     ```
-    arn:aws:eks:us-east-1:123456789:cluster/akuity-aws-cluster
+    arn:aws:eks:us-east-1:338615488317:cluster/cluster-name
     ```
 
-8. Check that the Akuity agent pods are running:
+11. Check that the Akuity agent pods are running:
 
     ```bash
     kubectl get pods -n akuity

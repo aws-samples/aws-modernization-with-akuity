@@ -33,7 +33,7 @@ Make sure you have the `aws` and `kubectl` CLIs installed. If you're using the W
 
    You should see output similar to:
 
-   ```json
+   ```
    {
      "clusters": [
        "akuity-aws-cluster"

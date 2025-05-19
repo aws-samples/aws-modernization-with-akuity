@@ -10,42 +10,25 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 
 ## Create an Application in Argo CD
 
-
 1. Navigate to the Argo CD UI using your instance URL
 
-2. Click **+ NEW APP** in the top left corner
+2. First, let's update the application YAML template with your specific values:
 
-3. Select **EDIT AS YAML** to use the YAML editor
-
-4. Paste the following YAML from the template in `apps/guestbook-dev.yaml`:
-
-   ```yaml
-   apiVersion: argoproj.io/v1alpha1
-   kind: Application
-   metadata:
-     name: guestbook-dev
-     namespace: argocd
-   spec:
-     project: default
-     source:
-       repoURL: 'https://github.com/<github-username>/<repo-name>'
-       path: guestbook
-       targetRevision: HEAD
-       helm:
-         valueFiles:
-           - values-dev.yaml
-     destination:
-       namespace: guestbook-dev
-       name: <cluster-name>
-     syncPolicy:
-       syncOptions:
-         - CreateNamespace=true
+   ```bash
+   # Replace placeholders with actual values using sed
+   sed -i "s/<github-username>/$(git config --get user.name)/g" /workshop/apps/guestbook-dev.yaml
+   sed -i "s/<repo-name>/akuity-eks-workshop/g" /workshop/apps/guestbook-dev.yaml
+   sed -i "s/<cluster-name>/eks-cluster/g" /workshop/apps/guestbook-dev.yaml
+   
+   # Display the updated YAML file
+   cat /workshop/apps/guestbook-dev.yaml
    ```
 
-5. Replace the placeholders:
-   - `<github-username>` with your GitHub username
-   - `<repo-name>` with your repository name (should be `akuity-eks-workshop`)
-   - `<cluster-name>` with your cluster name (should be `eks-cluster`)
+3. Click **+ NEW APP** in the top left corner of the Argo CD UI
+
+4. Select **EDIT AS YAML** to use the YAML editor
+
+5. Copy the contents of your updated YAML file and paste it into the editor
 
 6. Click **SAVE** to convert the YAML into the form fields
 
@@ -58,7 +41,6 @@ The application status will initially show as **Missing** and **OutOfSync**. Thi
 :::
 
 ## Synchronize Your Application
-
 
 1. Click on your application card titled `argocd/guestbook-dev`
 
@@ -76,23 +58,38 @@ The application will remain in "Progressing" state until the pod is running. Onc
 
 Let's see how to deploy a new version of our application:
 
+1. In the VS Code Explorer panel (left sidebar), navigate to your repository files
 
-1. Navigate to `guestbook/values-dev.yaml` in your GitHub repository
+2. Open the file `akuity-eks-workshop/guestbook/values-dev.yaml` by clicking on it
 
-2. Edit the `image.tag` value to update the version:
+3. In the editor, update the image tag from `0.1.0` to `0.2.0`:
 
    ```yaml
+   # Before:
+   image:
+     tag: 0.1.0
+   
+   # After:
    image:
      tag: 0.2.0
    ```
 
-3. Commit these changes with a descriptive message
+4. Save the file (Ctrl+S or Cmd+S)
 
-4. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
+5. Commit and push these changes:
 
-5. Click **REFRESH** to trigger Argo CD to check for changes in your repository
+   ```bash
+   cd /workshop/akuity-eks-workshop
+   git add guestbook/values-dev.yaml
+   git commit -m "Update guestbook image tag to 0.2.0"
+   git push origin main
+   ```
 
-6. Click **SYNC** then **SYNCHRONIZE** to deploy the changes
+6. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
+
+7. Click **REFRESH** to trigger Argo CD to check for changes in your repository
+
+8. Click **SYNC** then **SYNCHRONIZE** to deploy the changes
 
 Argo CD will detect that the application is out-of-sync due to the change in the repository. It will template the Helm chart and patch the `guestbook-dev` deployment with the new image tag, triggering a rolling update.
 
@@ -101,7 +98,6 @@ Argo CD will detect that the application is out-of-sync due to the change in the
 ## Enable Auto-Sync and Self-Healing
 
 Let's configure the application to automatically apply changes without manual intervention:
-
 
 1. Click **APP DETAILS** in the top menu
 
@@ -115,16 +111,34 @@ With auto-sync enabled, any changes to the `main` branch in your repository will
 
 Let's test the auto-sync feature by updating the number of replicas:
 
+1. In the VS Code Explorer panel (left sidebar), navigate to your repository files
 
-1. Navigate to your repository and open `guestbook/values.yaml`
+2. Open the file `akuity-eks-workshop/guestbook/values-dev.yaml` by clicking on it
 
-2. Update the `replicaCount` value from `1` to `2`
+3. In the editor, locate the `replicaCount` parameter at the top of the file and change its value from `1` to `2`:
 
-3. Commit your changes
+   ```yaml
+   # Before:
+   replicaCount: 1
+   
+   # After:
+   replicaCount: 2
+   ```
 
-4. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
+4. Save the file (Ctrl+S or Cmd+S)
 
-5. Click **REFRESH** to trigger Argo CD to check for changes
+5. Commit and push your changes:
+
+   ```bash
+   cd /workshop/akuity-eks-workshop
+   git add guestbook/values-dev.yaml
+   git commit -m "Increase guestbook replicas to 2"
+   git push origin main
+   ```
+
+6. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
+
+7. Click **REFRESH** to trigger Argo CD to check for changes
    
    ![ReplicaSet Created](/images/ArgoCDReplicaSet.png)
 

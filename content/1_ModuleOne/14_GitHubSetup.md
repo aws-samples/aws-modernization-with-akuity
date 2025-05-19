@@ -32,13 +32,11 @@ Let's start by authenticating with GitHub:
    - Copy the one-time code shown in your terminal
    - Press Enter to open the browser
    - Paste the code in GitHub and authorize access
-   - Return to your terminal and wait for authentication to complete
+   - Return to your terminal and wait for authentication to complete (This can take up to 30 seconds or more)
 
 ![GitHub CLI Authentication](/images/gh-auth.png)
 
-:::alert{header="Note"}
-If you don't have the GitHub CLI installed, you can install it with `brew install gh` on macOS or follow the [installation instructions](https://github.com/cli/cli#installation) for your operating system.
-:::
+::alert[If you don't have the GitHub CLI installed, you can install it with `brew install gh` on macOS or follow the [installation instructions](https://github.com/cli/cli#installation) for your operating system.]{header="Note"}
 
 ## Fork the Workshop Repository
 
@@ -83,9 +81,7 @@ Kargo will need a GitHub Personal Access Token to make commits to your repositor
 
 5. **Important**: Copy the generated token and store it securely. You'll need it when setting up Kargo.
 
-:::alert{header="Security Warning" type="warning"}
-Keep your Personal Access Token secure! It provides access to your GitHub account with the permissions you specified.
-:::
+::alert[Keep your Personal Access Token secure! It provides access to your GitHub account with the permissions you specified.]{header="Security Warning" type="warning"}
 
 ## Verify Repository Structure
 
@@ -110,7 +106,7 @@ Let's examine the repository structure to understand what we'll be working with:
 
 ## Repository Structure Explained
 
-::::expand{header="Understanding the Repository Structure"}
+::alert[
 - **guestbook/** - The main application Helm chart
   - `Chart.yaml` - Helm chart metadata
   - `values.yaml` - Default values for the chart
@@ -126,6 +122,6 @@ Let's examine the repository structure to understand what we'll be working with:
   - `project.yaml` - Defines the Kargo project
   - `warehouse.yaml` - Configures the source of artifacts (your Git repo)
   - `stages.yaml` - Defines the promotion stages and steps
-::::
+]{header="Understanding the Repository Structure"}
 
 Now that your GitHub repository is set up, you're ready to create your Akuity account and connect it to your Amazon EKS cluster!
