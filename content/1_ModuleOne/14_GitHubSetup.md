@@ -47,11 +47,9 @@ For this workshop, we'll fork the Akuity EKS workshop template repository. **Cho
 Fork and clone the repository using the GitHub CLI:
 
 ```bash
-# Fork the repository and clone it with the name akuity-eks-workshop
+# Fork the repository and clone it
 gh repo fork akuity/eks-workshop-template --clone=true --remote=true
 cd eks-workshop-template
-git remote rename origin upstream
-git remote rename fork origin
 ```
 
 ### Option 2: Using GitHub Web Interface
@@ -117,7 +115,6 @@ Let's examine the repository structure to understand what we'll be working with:
 
 ## Repository Structure Explained
 
-:::alert[
 - **guestbook/** - The main application Helm chart
   - `Chart.yaml` - Helm chart metadata
   - `values.yaml` - Default values for the chart
@@ -133,6 +130,5 @@ Let's examine the repository structure to understand what we'll be working with:
   - `project.yaml` - Defines the Kargo project
   - `warehouse.yaml` - Configures the source of artifacts (your Git repo)
   - `stages.yaml` - Defines the promotion stages and steps
-]{header="Understanding the Repository Structure"}
 
 Now that your GitHub repository is set up, you're ready to create your Akuity account and connect it to your Amazon EKS cluster!
