@@ -54,7 +54,6 @@ If you are running this workshop on your own AWS account, remember to delete all
 - Temporary AWS account credentials
 - Pre-configured EKS cluster details
 - Additional workshop-specific instructions
-:::
 
 :::tab{label="Self-Paced"}
 If you're running the workshop on your own, you'll need to set up the required AWS resources.
@@ -66,7 +65,6 @@ You'll need to:
 - Create an EKS cluster
 - Install and configure the necessary tools
 - Follow additional setup instructions
-:::
 ::::
 
 :::alert{header="Note"}
