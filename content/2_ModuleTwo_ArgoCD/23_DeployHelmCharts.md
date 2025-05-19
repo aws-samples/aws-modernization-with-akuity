@@ -10,9 +10,16 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 
 ## Create an Application in Argo CD
 
-1. Navigate to the Argo CD UI using your instance URL
+1. Navigate to the Argo CD UI using your Argo CD instance URL
 
-2. First, let's update the application YAML template with your specific values:
+2. In the VS Code Explorer panel (left sidebar), navigate to `/workshop/apps/` and click on `guestbook-dev.yaml` to open it
+
+3. Review the file and notice the placeholders that need to be replaced:
+   - `<github-username>` - Your GitHub username
+   - `<repo-name>` - The repository name (akuity-eks-workshop)
+   - `<cluster-name>` - The cluster name (eks-cluster)
+
+4. Now, let's update the application YAML template with your specific values:
 
    ```bash
    # Replace placeholders with actual values using sed
@@ -24,17 +31,22 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
    cat /workshop/apps/guestbook-dev.yaml
    ```
 
-3. Click **+ NEW APP** in the top left corner of the Argo CD UI
+5. Notice how the file in VS Code automatically updates with your actual values:
+   - Your GitHub username replaces `<github-username>`
+   - `akuity-eks-workshop` replaces `<repo-name>`
+   - `eks-cluster` replaces `<cluster-name>`
 
-4. Select **EDIT AS YAML** to use the YAML editor
+6. Click **+ NEW APP** in the top left corner of the Argo CD UI
 
-5. Copy the contents of your updated YAML file and paste it into the editor
+7. Select **EDIT AS YAML** to use the YAML editor
 
-6. Click **SAVE** to convert the YAML into the form fields
+8. Copy the contents of your updated YAML file and paste it into the editor
 
-7. Review the settings and click **CREATE** to create the application
+9. Click **SAVE** to convert the YAML into the form fields
 
-   ![Complete App Card](/images/ArgoCDCompleteApplication.png)
+10. Review the settings and click **CREATE** to create the application
+
+    ![Complete App Card](/images/ArgoCDCompleteApplication.png)
 
 :::alert{header="Note"}
 The application status will initially show as **Missing** and **OutOfSync**. This is expected because we haven't synchronized it yet.
