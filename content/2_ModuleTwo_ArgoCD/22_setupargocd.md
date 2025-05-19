@@ -50,7 +50,7 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
 
 ## Connect Your EKS Cluster
 
-1. In your Argo CD instance dashboard, click **Clusters**
+1. Navigate back to your [Akuity Argo CD Instance](https://akuity.cloud) click **Clusters**
 
 2. Click **Connect a Cluster**
 
