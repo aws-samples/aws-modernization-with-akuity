@@ -97,7 +97,7 @@ Let's examine the repository structure to understand what we'll be working with:
 1. Make sure you're in the repository directory:
 
    ```bash
-   cd eks-workshop-template
+   cd /workshop/eks-workshop-template
    ```
 
 2. List the key directories:
