@@ -1,7 +1,7 @@
 ---
 title: "Introduction"
 chapter: true
-weight: 1
+weight: 2
 ---
 
 ![AWS and Akuity](/images/akuity-logo.png)
