@@ -36,7 +36,7 @@ Let's start by authenticating with GitHub:
 
 ![GitHub CLI Authentication](/images/gh-auth.png)
 
-::alert[If you don't have the GitHub CLI installed, you can install it with `brew install gh` on macOS or follow the [installation instructions](https://github.com/cli/cli#installation) for your operating system.]{header="Note"}
+::alert[If you don't have the GitHub CLI installed, you can install it with the [installation instructions](https://github.com/cli/cli#installation) for your operating system.]{header="Note"}
 
 ## Fork the Workshop Repository
 
