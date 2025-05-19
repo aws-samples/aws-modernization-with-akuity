@@ -27,7 +27,7 @@ infrastructure:
         - VSCODEURL
         - Password
         
-    - templateLocation: static/infrastructure/testing.yaml
+    - templateLocation: static/infrastructure/testing-new.yaml
       label: EKS Cluster for Akuity EKS Workshop
     
 
