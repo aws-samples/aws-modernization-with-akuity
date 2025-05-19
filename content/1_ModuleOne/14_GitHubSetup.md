@@ -40,25 +40,30 @@ Let's start by authenticating with GitHub:
 
 ## Fork the Workshop Repository
 
-For this workshop, we'll fork the Akuity EKS workshop template repository:
+For this workshop, we'll fork the Akuity EKS workshop template repository. **Choose ONE of the following methods**:
 
-1. Fork and clone the repository using the GitHub CLI:
+### Option 1: Using GitHub CLI (Recommended)
 
+Fork and clone the repository using the GitHub CLI:
+
+```bash
+gh repo fork akuity/eks-workshop-template --clone=true
+```
+
+### Option 2: Using GitHub Web Interface
+
+If you prefer to use the GitHub web interface instead:
+
+1. Visit [https://github.com/akuity/eks-workshop-template](https://github.com/akuity/eks-workshop-template)
+2. Click the "Fork" button in the top-right corner
+3. Ensure your personal account is selected as the owner
+4. Name the repository `akuity-eks-workshop`
+5. Click "Create fork"
+6. Clone the repository to your local machine:
    ```bash
-   gh repo fork akuity/eks-workshop-template --clone=true
+   git clone https://github.com/YOUR-USERNAME/akuity-eks-workshop.git
+   cd akuity-eks-workshop
    ```
-
-2. If you prefer to use the GitHub web interface instead:
-   - Visit [https://github.com/akuity/eks-workshop-template](https://github.com/akuity/eks-workshop-template)
-   - Click the "Fork" button in the top-right corner
-   - Ensure your personal account is selected as the owner
-   - Name the repository `akuity-eks-workshop`
-   - Click "Create fork"
-   - Clone the repository to your local machine:
-     ```bash
-     git clone https://github.com/YOUR-USERNAME/akuity-eks-workshop.git
-     cd akuity-eks-workshop
-     ```
 
 ## Create a GitHub Personal Access Token (PAT)
 
