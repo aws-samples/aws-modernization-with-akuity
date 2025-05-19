@@ -24,7 +24,9 @@ Many AWS customers face common challenges when working with Kubernetes on Amazon
 
 The **Akuity Platform on AWS** offers a unique agent-based architecture that integrates seamlessly with Amazon EKS, allowing clusters to connect to the Argo control plane while keeping secrets safe inside the cluster.
 
-::expand[AWS and Akuity have partnered to make the Akuity Platform available directly through the AWS Marketplace as an EKS add-on, simplifying deployment and integration.]{header="AWS Integration"}
+::::expand{header="AWS Integration"}
+AWS and Akuity have partnered to make the Akuity Platform available directly through the AWS Marketplace as an EKS add-on, simplifying deployment and integration.
+::::
 
 ### Key Benefits for AWS Customers
 

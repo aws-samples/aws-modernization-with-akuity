@@ -1,116 +1,161 @@
 ---
-title: "Set Up Your Argo CD Instance"
+title: "Setting the Stage"
 chapter: true
 weight: 2
 ---
 
-# 🚀 Creating Your Argo CD Instance
+# 🎭 Setting Up Your Kargo Workflow
 
-Now that we have kubectl access to our EKS cluster, let's set up an Argo CD instance on the Akuity platform.
+In this section, we'll configure the core components of Kargo: projects, warehouses, and stages.
 
-## Create an Argo CD Instance
+## Understanding Kargo Concepts
 
-:::steps
-1. Log in to the [Akuity Platform](https://akuity.cloud) and navigate to **Argo CD**
+Before we begin, let's understand the key concepts:
 
-2. Click **+ Create** in the upper right corner of the dashboard
+::::expand{header="Kargo Terminology"}
+- **Project**: A collection of related Kargo resources that describes one or more delivery pipelines
+- **Warehouse**: A source of Freight (versioned artifacts)
+- **Freight**: A set of references to one or more versioned artifacts
+- **Stage**: An environment in your application's lifecycle (e.g., dev, staging, production)
+- **Promotion**: The process of moving Freight from one Stage to another
+::::
 
-3. Enter a name for your instance (e.g., `workshop-argocd`)
+## Creating a Kargo Project
 
-4. Optionally add a description to help identify this instance
 
-   ![Argo CD Create an Instance](/images/ArgoCDCreateanInstance2.png)
 
-5. Click **+ Create** to initialize your instance
-:::
+1. Run the following command in your terminal:
 
-Your Argo CD instance will begin initializing. This process takes a few minutes. You'll know it's complete when the cogwheel next to your instance name stops turning and the status shows a 💚 healthy indicator.
+   ```bash
+   kargo create project kargo-guestbook
+   ```
 
-## Configure Your Argo CD Admin Account
-
-:::steps
-1. In the dashboard for your Argo CD instance, click **Settings**
-
-2. On the sidebar, under **Security & Access**, click **System Accounts**
-
-3. Enable the **Admin Account** by clicking the toggle and confirming when prompted
-
-4. Set your admin password by clicking **Set Password**
+2. Check the Kargo UI - you should see a new project appear
    
-   ![Set Password](/images/ArgoCDSetPassword.png)
+   ![Created Project](/images/kargosavedproject.png)
 
-   :::alert{header="Important"}
-   Keep this password handy! You'll need it to access the Argo CD UI.
-   :::
 
-5. Wait for Argo CD to reinitialize (the cogwheel will spin and then stop)
+## Setting Up GitHub Credentials
 
-6. Access your Argo CD instance by clicking the instance URL in the **Summary** tab
+To allow Kargo to access your GitHub repository and make commits:
+
+
+
+1. Run the following command in your terminal, replacing the placeholders with your information:
+
+   ```bash
+   kargo create credentials github-credentials \
+   --project kargo-guestbook --git \
+   --username <your-github-username> --password <your-github-PAT> \
+   --repo-url https://github.com/<your-username>/akuity-eks-workshop
+   ```
+
+2. Verify the credentials were created:
+
+   ```
+   secret/github-credentials created
+   ```
+
+   You can view your secrets in the top right corner of your Kargo Project's UI (marked with an asterisk *)
    
-   Your URL will look similar to: `123456letters.cd.akuity.cloud`
+   ![Kargo secrets location](/images/KargoSecrets.png)
 
-7. At the Argo CD login screen, enter `admin` as the username and use the password you set in step 4
 
-   ![Argo CD Login](/images/ArgoCDLogin.png)
-:::
+## Applying Your Project Configuration
 
-## Connect Your EKS Cluster
 
-:::steps
-1. In your Argo CD instance dashboard, click **Clusters**
 
-2. Click **Connect a Cluster**
+1. Examine the `project.yaml` file in the `kargo` folder of your repository:
 
-3. Set your cluster name to `eks-cluster`
+   ```yaml
+   apiVersion: kargo.akuity.io/v1alpha1
+   kind: Project
+   metadata:
+     name: kargo-guestbook
+     annotations:
+       # This annotation ensures Projects (Namespaces) are created first when deployed via Argo CD
+       argocd.argoproj.io/sync-wave: "-1"
+   ```
 
-4. Optionally add a description with your EKS cluster's name
+2. Apply this manifest to your Kargo project:
 
-5. Click **Advanced Settings**
+   ```bash
+   kargo apply -f ./kargo/project.yaml
+   ```
 
-6. On the Add-Ons tab, locate the **AWS EKS** option
 
-7. Click **+Add** on the AWS EKS option
+## Creating a Warehouse
+
+A Warehouse is a source of Freight (versioned artifacts) that Kargo will track and promote.
+
+
+
+1. Examine the `warehouse.yaml` file in the `kargo` folder:
+
+   ```yaml
+   apiVersion: kargo.akuity.io/v1alpha1
+   kind: Warehouse
+   metadata:
+     name: base
+     namespace: kargo-guestbook
+   spec:
+     subscriptions:
+     - git:
+         branch: main
+         commitSelectionStrategy: NewestFromBranch
+         discoveryLimit: 20
+         repoURL: https://github.com/<repo-name>
+         includePaths:
+         - base/values.yaml
+   ```
+
+2. Apply this manifest to your Kargo project:
+
+   ```bash
+   kargo apply -f ./kargo/warehouse.yaml
+   ```
+
+3. Check the Kargo UI - you should now see a warehouse called "base"
    
-   ![Connect a Cluster](/images/ArgoCDConnectaCluster.png)
+   ![Finished Warehouse](/images/finishedwarehouse.png)
 
-8. Click **Connect Cluster** to proceed
 
-9. You'll be prompted to install the agent using either the AWS Console or AWS CLI
+## Understanding Kargo Stages
+
+::::expand{header="What are Stages?"}
+Stages represent environments in your application's lifecycle, such as:
+- Development ("dev")
+- Staging ("stg")
+- Production ("prd")
+
+Each stage can have its own promotion steps, approval requirements, and validation processes.
+::::
+
+The `stages.yaml` file in your repository defines the promotion steps that Kargo will execute when promoting between stages:
+
+1. **git-clone**: Clone the GitHub repository
+2. **copy**: Copy values from `base/values.yaml` to `guestbook/values-dev.yaml`
+3. **git-commit**: Commit the changes to the repository
+4. **git-push**: Push the changes to GitHub
+5. **argocd-update**: Update the changes in Argo CD
+
+## Applying Your Stages
+
+
+
+1. Apply the stages configuration:
+
+   ```bash
+   kargo apply -f ./kargo/stages.yaml
+   ```
+
+2. Check the Kargo UI - you should now see your stages configured
    
-   ![AWS Add-On](/images/EKSAddOnPrompts.png)
-   
-   Follow the instructions for your preferred method
+   ![Stages](/images/KargoIndex.png)
 
-10. Verify you're targeting the correct cluster:
 
-    ```bash
-    kubectl config current-context
-    ```
-
-    The output should look similar to:
-    ```
-    arn:aws:eks:us-east-1:338615488317:cluster/cluster-name
-    ```
-
-11. Check that the Akuity agent pods are running:
-
-    ```bash
-    kubectl get pods -n akuity
-    ```
-
-    You should see output similar to:
-    ```
-    NAME                                                       READY   STATUS    RESTARTS   AGE
-    akuity-agent-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
-    akuity-agent-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
-    argocd-application-controller-<replicaset-id>-<pod-id>     2/2     Running   0          65s
-    argocd-notifications-controller-<replicaset-id>-<pod-id>   1/1     Running   0          65s
-    argocd-redis-<replicaset-id>-<pod-id>                      1/1     Running   0          65s
-    argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
-    argocd-repo-server-<replicaset-id>-<pod-id>                1/1     Running   0          64s
-    ```
-:::
-
-When you see a 💚 green heart before the cluster name in your Argo CD instance, it indicates that your cluster is healthy and properly connected.
-
-🎉 Congratulations! Your cluster is now set up on the Akuity Platform. The cluster data is uploaded to the platform, so we don't need to repeat this process for Kargo and KubeVision.
+🎉 Congratulations! You now have a working Kargo pipeline with:
+- A project to organize your resources
+- A warehouse to track your artifacts
+- Stages representing your environments
+- Promotion steps to move changes between environments

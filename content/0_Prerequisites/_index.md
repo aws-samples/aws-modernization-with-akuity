@@ -1,24 +1,56 @@
 ---
-title: "Getting Started"
-chapter: true
-weight: 12
+title: Getting Started
+weight: 20
 ---
 
-# 🏁 Getting Started
+# 🚀 Getting Started with the AWS Workshop
 
-Welcome to the AWS Modernization Workshop with Akuity! Before we dive into the technical content, let's make sure your environment is properly set up.
+## Workshop Architecture
 
-## Choose Your Workshop Environment
+The following architecture diagram illustrates the AWS and Akuity components we'll be working with in this workshop:
 
-Select the appropriate option based on how you're participating in this workshop:
+![Architecture Diagram](/static/images/introduction/architecture.png)
+
+## What You'll Build on AWS
+
+In this workshop, you'll create a complete GitOps workflow on AWS using:
+
+1. **Amazon EKS** - AWS's managed Kubernetes service
+2. **Argo CD** - Declarative, GitOps continuous delivery for Kubernetes
+3. **Kargo** - Streamlined promotion workflows across AWS environments
+4. **KubeVision** - Advanced monitoring and troubleshooting capabilities for EKS
+
+All of these components work together on AWS, with the Akuity Platform integrating seamlessly with Amazon EKS through the AWS Marketplace.
+
+## Preparing for the Workshop
+
+Follow the installation instructions in this section to prepare your AWS environment:
 
 ::::tabs
-:::tab{label="AWS Hosted Event"}
-If you're attending an AWS hosted event (such as re:Invent, an AWS Summit, or an AWS-organized online workshop), your environment will be provided for you.
+:::tab{label="AWS Event"}
+If you're attending an AWS hosted event (such as re\:Invent, an AWS Summit, or an AWS-organized online workshop), your environment will be provided for you [here](../0_Prerequisites/aws_event).
 
-[Set up for an AWS hosted event](./aws_event)
+Your AWS instructor will provide you with:
+- AWS account access
+- Amazon EKS cluster details
+- Additional workshop-specific instructions
+:::
 
-Your instructor will provide:
+:::tab{label="Self-Paced"}
+If you are running this workshop on your own, set up your environment [here](../0_Prerequisites/self_paced).
+
+You'll need to:
+- Create an AWS account if you don't have one
+- Set up an Amazon EKS cluster
+- Install required AWS CLI tools
+- Configure AWS credentials
+:::
+::::
+
+:::alert{header="Important" type="warning"}
+If you are running this workshop on your own AWS account, remember to delete all AWS resources by following the [Clean Up Resources](../100_Conclusion/101_Clean_Up.md) section to avoid unnecessary charges.
+:::
+
 - Temporary AWS account credentials
 - Pre-configured EKS cluster details
 - Additional workshop-specific instructions

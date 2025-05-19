@@ -10,7 +10,6 @@ Now that you've set up your GitHub repository, let's create and configure your A
 
 ## Creating Your Akuity Account
 
-:::steps
 1. Visit [akuity.cloud](https://akuity.cloud) to create an account
    ![Akuity Sign On](/images/AkuityCreateAccount.png)
 
@@ -26,11 +25,10 @@ Now that you've set up your GitHub repository, let's create and configure your A
    ![Create an Organization](/images/AkuityCreateOrganization.png)
 
 6. Enter a name for your organization (e.g., `aws-workshop`) and click **Create**
-:::
 
 ## Understanding Akuity Organizations
 
-::expand[
+::::expand{header="What is an Akuity Organization?"}
 An Akuity Organization is a top-level container for your Akuity resources. It allows you to:
 
 - Group related projects and clusters
@@ -39,7 +37,7 @@ An Akuity Organization is a top-level container for your Akuity resources. It al
 - Track usage and billing
 
 Organizations are particularly useful in enterprise environments where you might have multiple teams or projects using the Akuity Platform.
-]{header="What is an Akuity Organization?"}
+::::
 
 ## What's Next?
 

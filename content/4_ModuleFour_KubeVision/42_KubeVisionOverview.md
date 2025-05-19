@@ -51,13 +51,13 @@ For each deprecated API, KubeVision provides:
 
 This specialized dashboard identifies resources that have been stuck in the deletion state for more than 1 hour. These resources can cause issues with cluster management and should be addressed.
 
-::expand[
+::::expand{header="Common Causes for Stuck Deletions"}
 Resources can get stuck in deletion due to:
 - Finalizers that haven't completed
 - Dependencies that haven't been resolved
 - Custom resource controllers that aren't functioning properly
 - Networking issues preventing proper cleanup
-]{header="Common Causes for Stuck Deletions"}
+::::
 
 ## Container Dashboard
 
@@ -154,7 +154,6 @@ KubeVision includes an AI-powered assistant that can analyze your Kubernetes res
 
 ### Enabling the AI Assistant
 
-:::steps
 1. Navigate to your Argo CD instance
 
 2. Click the cogwheel in the top right for **Settings**
@@ -170,7 +169,6 @@ KubeVision includes an AI-powered assistant that can analyze your Kubernetes res
 6. A new **Assistant** tab will appear, allowing you to ask questions about the resource
    
    ![AI Assistant Details](/images/AkuityAIAssist2.png)
-:::
 
 The AI Assistant can help you:
 - Analyze deployment logs

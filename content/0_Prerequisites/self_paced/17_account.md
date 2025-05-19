@@ -12,10 +12,9 @@ Your account must have the ability to have Administrative Access
 
 To set up the required resources for this workshop, you will need to deploy two CloudFormation templates:  
 
-1. [vscode-server.yaml](https://github.com/aws-samples/aws-modernization-with-neon/blob/main/static/infrastructure/vscode-server.yaml)
+1. :button[Download vscode-server.yaml]{href="/static/infrastructure/vs-code-server-new.yaml" action=download}
 
-2. [eks-cluster.yaml](https://github.com/aws-samples/aws-modernization-with-neon/blob/main/static/infrastructure/eks-cluster.yaml.yaml)
-
+2. :button[Download eks-cluster.yaml]{href="/static/infrastructure/testing.yaml" action=download}
 
 ---
 

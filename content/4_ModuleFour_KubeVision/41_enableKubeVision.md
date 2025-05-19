@@ -10,7 +10,7 @@ KubeVision is Akuity's Kubernetes-native visibility tool that provides comprehen
 
 ## Enable KubeVision for Your Cluster
 
-:::steps
+
 
 1. Navigate to your Argo CD instance in the Akuity Platform
 
@@ -28,10 +28,7 @@ KubeVision is Akuity's Kubernetes-native visibility tool that provides comprehen
    
    ![KubeVision Enabled](/images/KuebeVisionEnabled.png)
 
-:::
 
 ::alert[KubeVision collects data from your cluster to provide insights. This process may take a few minutes to fully populate all dashboards.]{header="Note"}
 
 Once enabled, KubeVision will begin collecting data from your cluster. This information will be used to populate the various dashboards we'll explore in the next section.
-
-:button[Continue to Dashboards Overview]{href="42_KubeVisionOverview.html" variant="primary"}

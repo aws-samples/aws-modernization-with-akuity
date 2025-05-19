@@ -25,7 +25,6 @@ You should see your AWS account information displayed, confirming that your envi
 
 Make sure you have the `aws` and `kubectl` CLIs installed. If you're using the Workshop Studio environment, these should already be available.
 
-:::steps
 1. List your available EKS clusters:
 
    ```bash
@@ -74,9 +73,8 @@ Make sure you have the `aws` and `kubectl` CLIs installed. If you're using the W
    NAME                              STATUS   ROLES    AGE   VERSION
    ip-192-168-108-33.ec2.internal    Ready    <none>   2d    v1.31.1-eks-ae9a62a
    ```
-:::
 
-::expand[
+::::expand{header="Understanding the kubectl Configuration Command"}
 Let's break down the commands we used:
 
 - `aws eks list-clusters` lists all EKS clusters in your current AWS account and region
@@ -85,6 +83,6 @@ Let's break down the commands we used:
   - Uses the pipe symbol `|` to pass the output to the next command
   - Uses `jq -r .clusters[0]` to extract the first cluster name from the JSON output
 - `aws eks update-kubeconfig` updates your kubeconfig file with the credentials needed to access the specified cluster
-]{header="Understanding the kubectl Configuration Command"}
+::::
 
 Now that kubectl is configured to access your EKS cluster, you're ready to set up your Argo CD instance!

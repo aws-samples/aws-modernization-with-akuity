@@ -12,7 +12,7 @@ You've successfully completed the AWS Modernization Workshop with Akuity. Let's 
 
 ### Key Achievements
 
-:::steps
+
 
 1. **Secure Amazon EKS Deployment** ✅
    - Set up an Argo CD instance on the Akuity Platform
@@ -34,7 +34,6 @@ You've successfully completed the AWS Modernization Workshop with Akuity. Let's 
    - Explored various dashboards for EKS resource management
    - Learned how to track and troubleshoot issues in your AWS environment
 
-:::
 
 ## Next Steps
 
@@ -70,5 +69,3 @@ Now that you're familiar with the Akuity Platform on AWS, consider these next st
 - [AWS Marketplace - Akuity Platform](https://aws.amazon.com/marketplace/search/results?searchTerms=akuity)
 
 Thank you for participating in this AWS workshop! We hope you found it valuable and are excited to implement these tools and practices in your own AWS environments.
-
-:button[Return to Home]{href="/" variant="primary"}
