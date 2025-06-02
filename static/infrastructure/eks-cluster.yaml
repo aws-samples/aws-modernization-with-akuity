@@ -68,7 +68,13 @@ Resources:
             - ec2:DescribeVolumesModifications
             - ec2:RebootInstances
             - iam:ListInstanceProfiles
+            Resource: "*"
+          - Effect: Allow
+            Action:
             - iam:PassRole
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin"
+          - Effect: Allow
+            Action:
             - ssm:DescribeInstanceInformation
             - ssm:SendCommand
             - ssm:GetCommandInvocation
@@ -80,6 +86,7 @@ Resources:
     Properties:
       Description: "key for EKS secrets encryption"
       Enabled: true
+      EnableKeyRotation: true
       KeyPolicy:
         Version: '2012-10-17'
         Id: key-default-1
@@ -131,6 +138,7 @@ Resources:
           Status: ENABLED
           GroupName: !Sub "/aws/codebuild/CodeBuild-${AWS::StackName}"
           StreamName: build-log
+      EncryptionKey: !GetAtt KMSSecretsKey.Arn
       Environment:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
@@ -334,7 +342,11 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                    - codebuild:*
+                    - codebuild:StartBuild
+                    - codebuild:BatchGetBuilds
+                    - codebuild:ListBuildsForProject
+                    - codebuild:BatchGetProjects
+                    - codebuild:StopBuild
                 Resource: !GetAtt BuildProject.Arn
 
   TriggerBuildLambda:
@@ -345,6 +357,13 @@ Resources:
       Role: !GetAtt TriggerBuildLambdaIamRole.Arn
       Runtime: python3.12
       Timeout: 60
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref SecurityGroup
+        SubnetIds:
+          - !ImportValue PublicSubnet1
+          - !ImportValue PublicSubnet2
+      ReservedConcurrentExecutions: 5
       Code:
         ZipFile: |
           import boto3

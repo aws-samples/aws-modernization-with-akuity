@@ -1452,7 +1452,6 @@ Resources:
                 - iam:CreateRole
                 - iam:DeleteRole
                 - iam:GetRole
-                - iam:PassRole
                 - iam:ListRoles
                 - iam:AttachRolePolicy
                 - iam:DetachRolePolicy
@@ -1477,6 +1476,15 @@ Resources:
                 - iam:DeleteOpenIDConnectProvider
                 - iam:UpdateOpenIDConnectProviderThumbprint
               Resource: "*"
+            
+            # PassRole permission with specific resources
+            - Effect: Allow
+              Action:
+                - iam:PassRole
+              Resource: 
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/akuity-and-aws-workshop-admin"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/eksctl-*"
+                - !Sub "arn:aws:iam::${AWS::AccountId}:role/eks-*"
             
             # EKS specific permissions
             - Effect: Allow
