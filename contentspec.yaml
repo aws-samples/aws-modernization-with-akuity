@@ -21,13 +21,13 @@ additionalLinks:
 # START Infrastructure
 infrastructure:
   cloudformationTemplates:
-    - templateLocation: static/infrastructure/vs-code-server-new.yaml
+    - templateLocation: static/infrastructure/vs-code-server.yaml
       label: Akuity Workshop Vscode Server
       participantVisibleStackOutputs:
         - VSCODEURL
         - Password
         
-    - templateLocation: static/infrastructure/testing-new.yaml
+    - templateLocation: static/infrastructure/eks-cluster.yaml
       label: EKS Cluster for Akuity EKS Workshop
     
 
