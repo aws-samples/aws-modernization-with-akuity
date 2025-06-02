@@ -48,15 +48,21 @@ Resources:
           - Effect: Allow
             Action:
             - logs:CreateLogGroup
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+          - Effect: Allow
+            Action:
             - logs:CreateLogStream
             - logs:PutLogEvents
-            Resource: arn:aws:logs:*:*:*
+            Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*"
           - Effect: Allow
             Action:
             - cloudformation:DescribeStacks
             - cloudformation:DescribeStackEvents
             - cloudformation:DescribeStackResource
             - cloudformation:DescribeStackResources
+            Resource: !Sub "arn:aws:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/*"
+          - Effect: Allow
+            Action:
             - ec2:DescribeInstances
             - ec2:DescribeInstanceTypeOfferings
             - ec2:AssociateIamInstanceProfile
@@ -67,8 +73,11 @@ Resources:
             - ec2:ModifyVolume
             - ec2:DescribeVolumesModifications
             - ec2:RebootInstances
-            - iam:ListInstanceProfiles
             Resource: "*"
+          - Effect: Allow
+            Action:
+            - iam:ListInstanceProfiles
+            Resource: !Sub "arn:aws:iam::${AWS::AccountId}:instance-profile/*"
           - Effect: Allow
             Action:
             - iam:PassRole
@@ -357,12 +366,6 @@ Resources:
       Role: !GetAtt TriggerBuildLambdaIamRole.Arn
       Runtime: python3.12
       Timeout: 60
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref SecurityGroup
-        SubnetIds:
-          - !ImportValue PublicSubnet1
-          - !ImportValue PublicSubnet2
       ReservedConcurrentExecutions: 5
       Code:
         ZipFile: |
