@@ -41,8 +41,8 @@ To allow Kargo to access your GitHub repository and make commits:
    ```bash
    kargo create credentials github-credentials \
    --project kargo-guestbook --git \
-   --username <your-github-username> --password <your-github-PAT> \
-   --repo-url https://github.com/<your-username>/eks-workshop-template
+   --username $(gh api user | jq -r '.login')  --password ${KARGO_GH_TOKEN} \
+   --repo-url $(gh repo view eks-workshop-template --json url  | jq -r .url)
    ```
 
 2. Verify the credentials were created:
@@ -94,9 +94,15 @@ A Warehouse is a source of Freight (versioned artifacts) that Kargo will track a
          branch: main
          commitSelectionStrategy: NewestFromBranch
          discoveryLimit: 20
-         repoURL: https://github.com/<repo-name>
+         repoURL: https://github.com/<repo>
          includePaths:
          - base/values.yaml
+   ```
+   
+   Update the `repoURL` with your repository name, replacing `<repo>` with your actual repository name (e.g., `your-username/eks-workshop-template`).
+   
+   ```bash
+   sed -i "s?<repo>?${WORKSHOP_REPO}?g" /workshop/eks-workshop-template/kargo/warehouse.yaml
    ```
 
 2. Apply this manifest to your Kargo project:
@@ -130,13 +136,19 @@ The `stages.yaml` file in your repository defines the promotion steps that Kargo
 
 ## Applying Your Stages
 
-1. Apply the stages configuration:
+1. Update the `stages.yaml` file in the `kargo` folder with your repository name:
+
+   ```bash
+   sed -i "s?<repo>?${WORKSHOP_REPO}?g" /workshop/eks-workshop-template/kargo/stages.yaml
+   ```
+
+2. Apply the stages configuration:
 
    ```bash
    kargo apply -f ./kargo/stages.yaml
    ```
 
-2. Check the Kargo UI - you should now see your stages configured
+3. Check the Kargo UI - you should now see your stages configured
    
    ![Stages](/images/KargoIndex.png)
 

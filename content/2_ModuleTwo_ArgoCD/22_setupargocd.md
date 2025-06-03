@@ -48,6 +48,14 @@ Now that we have kubectl access to our EKS cluster, let's set up an Argo CD inst
 
    ![Argo CD Login](/images/ArgoCDLogin.png)
 
+8. On your terminal, login to your Argo CD instance using the CLI:
+
+    ```bash
+    argocd login --grpc-web --username admin <your-argocd-instance-url>
+    ```
+
+    Replace `<your-argocd-instance-url>` with your instance URL, which similar to: `123456letters.cd.akuity.cloud`.
+
 ## Connect Your EKS Cluster
 
 1. Navigate back to your [Akuity Argo CD Instance](https://akuity.cloud) click **Clusters**

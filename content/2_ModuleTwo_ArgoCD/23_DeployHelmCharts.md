@@ -23,18 +23,15 @@ Now that we have our Argo CD instance set up, let's deploy a sample application 
 
    ```bash
    # Replace placeholders with actual values using sed
-   sed -i "s/<github-username>/$(git config --get user.name)/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
-   sed -i "s/<repo-name>/eks-workshop-template/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
-   sed -i "s/<cluster-name>/eks-cluster/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
+   export WORKSHOP_REPO=$(gh repo view eks-workshop-template --json url | jq -r .url  | awk -F'/' '{print $4"/"$5}')
+   sed -i "s?<repo>?${WORKSHOP_REPO}?g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
+   sed -i "s/demo/default/g" /workshop/eks-workshop-template/apps/guestbook-dev.yaml
    
    # Display the updated YAML file
    cat /workshop/eks-workshop-template/apps/guestbook-dev.yaml
    ```
 
-5. Notice how the file in VS Code automatically updates with your actual values:
-   - Your GitHub username replaces `<github-username>`
-   - `eks-workshop-template` replaces `<repo-name>`
-   - `eks-cluster` replaces `<cluster-name>`
+5. Notice how the file in VS Code automatically updates with your actual values.
 
 6. Click **+ NEW APP** in the top left corner of the Argo CD UI
 
@@ -151,13 +148,34 @@ Let's test the auto-sync feature by updating the number of replicas:
 6. Return to the Argo CD UI and open your `argocd/guestbook-dev` application
 
 7. Click **REFRESH** to trigger Argo CD to check for changes
-   
-   ![ReplicaSet Created](/images/ArgoCDReplicaSet.png)
 
 You can view the details of the sync operation by clicking **SYNC STATUS** in the top menu. This will show:
 - Which revision was synchronized
 - What triggered the sync (e.g., "INITIATED BY: automated sync policy")
 - What resources were changed
+
+## Deploy Staging And Production
+
+Before we proceed, let's ensure that the `guestbook-stg` and `guestbook-prd` applications are deployed in Argo CD for the next module.
+   
+1. Replace the placeholders in the `guestbook-stg.yaml` and `guestbook-prd.yaml` files with your actual values:
+
+   ```bash
+   # Replace placeholders with actual values using sed
+   sed -i "s?<repo>?${WORKSHOP_REPO}?g" /workshop/eks-workshop-template/apps/guestbook-stg.yaml
+   sed -i "s/demo/default/g" /workshop/eks-workshop-template/apps/guestbook-stg.yaml
+   sed -i "s?<repo>?${WORKSHOP_REPO}?g" /workshop/eks-workshop-template/apps/guestbook-prd.yaml
+   sed -i "s/demo/default/g" /workshop/eks-workshop-template/apps/guestbook-prd.yaml
+   ```
+
+2. Apply the Argo CD Application YAMLs for staging and production:
+
+   ```bash
+   argocd app create -f /workshop/eks-workshop-template/apps/guestbook-stg.yaml
+   argocd app create -f /workshop/eks-workshop-template/apps/guestbook-prd.yaml
+   ```
+   
+   Feel free to check the Argo CD UI to confirm that the applications are created successfully. You can also synchronize them manually if you wish.
 
 🎉 Congratulations! You've successfully:
 - Created an Argo CD application
