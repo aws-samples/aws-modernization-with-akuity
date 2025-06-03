@@ -48,7 +48,7 @@ You'll need to:
 ::::
 
 :::alert{header="Important" type="warning"}
-If you are running this workshop on your own AWS account, remember to delete all AWS resources by following the [Clean Up Resources](/100_Conclusion) section to avoid unnecessary charges.
+If you are running this workshop on your own AWS account, remember to delete all AWS resources by following the [Clean Up Resources](/101_Clean_Up) section to avoid unnecessary charges.
 :::
 
 - Temporary AWS account credentials
