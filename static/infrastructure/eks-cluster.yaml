@@ -160,7 +160,7 @@ Resources:
           - Name: EKSClusterName
             Value: !Ref EKSClusterName
           - Name: AWSRegion
-            Value: !Ref AWS::Region
+            Value: !Sub "${AWS::Region}"
           - Name: STACK_NAME
             Value: !Ref AWS::StackName
           - Name: KubernetesVersion
