@@ -172,7 +172,7 @@ Resources:
           
       Source:
         Type: NO_SOURCE
-        BuildSpec: !Sub |
+        BuildSpec: |
           version: 0.2
           phases:
             install:
@@ -189,18 +189,18 @@ Resources:
                   apiVersion: eksctl.io/v1alpha5
                   kind: ClusterConfig
                   metadata:
-                    name: ${EKSClusterName}
-                    region: ${AWSRegion}
-                    version: "${KubernetesVersion}"
+                    name: \${EKSClusterName}
+                    region: \${AWSRegion}
+                    version: "\${KubernetesVersion}"
                   
                   # Proper Auto Mode configuration as per AWS docs
                   autoModeConfig:
                     enabled: true
                   
                   availabilityZones:
-                    - ${AWSRegion}a
-                    - ${AWSRegion}b
-                    - ${AWSRegion}c
+                    - \${AWSRegion}a
+                    - \${AWSRegion}b
+                    - \${AWSRegion}c
                   
                   cloudWatch:
                     clusterLogging:
@@ -210,7 +210,7 @@ Resources:
                     withOIDC: true
                   
                   secretsEncryption:
-                    keyARN: ${KMS_ARN}
+                    keyARN: \${KMS_ARN}
                   EOF
                 - cat cluster-config.yaml
                 - pip3 install --upgrade --user awscli
