@@ -9,7 +9,7 @@ weight: 1
 
 The following architecture diagram illustrates the AWS and Akuity components we'll be working with in this workshop:
 
-![Architecture Diagram](/static/images/introduction/architecture.png)
+![Architecture Diagram](/static/images/architecture.png)
 
 ## What You'll Build on AWS
 
