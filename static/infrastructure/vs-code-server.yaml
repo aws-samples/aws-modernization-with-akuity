@@ -1282,7 +1282,7 @@ Resources:
               runCommand:
                 - '#!/bin/bash'
                 - set -e
-                - echo "Installing Kargo CLI v1.3.4..."
+                - echo "Installing Kargo CLI v1.5.1..."
                 - |
                   ARCH=$(uname -m)
                   case $ARCH in
@@ -1294,8 +1294,8 @@ Resources:
                   echo "Architecture detected: $ARCH"
                   
                   # Download the binary directly with the correct naming format
-                  echo "Downloading Kargo CLI v1.3.4 for ${ARCH}..."
-                  sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.3.4/kargo-linux-${ARCH}"
+                  echo "Downloading Kargo CLI v1.5.1 for ${ARCH}..."
+                  sudo curl -L -o /usr/local/bin/kargo "https://github.com/akuity/kargo/releases/download/v1.5.1/kargo-linux-${ARCH}"
                   
                   # Make it executable
                   sudo chmod +x /usr/local/bin/kargo
@@ -1303,7 +1303,7 @@ Resources:
                   # Verify installation
                   echo "Verifying Kargo CLI installation..."
                 - kargo version || echo "Kargo CLI installation verification failed"
-                - echo "Kargo CLI v1.3.4 installation completed"
+                - echo "Kargo CLI v1.5.1 installation completed"
 
           - action: aws:runShellScript
             name: InstallArgoCD
