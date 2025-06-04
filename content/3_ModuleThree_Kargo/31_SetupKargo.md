@@ -12,7 +12,7 @@ Let's set up a Kargo instance to manage promotions between environments.
 
 
 
-1. In the Akuity Platform, click the **Kargo** tab (located next to the Argo CD tab)
+1. In the Akuity Platform, click the **Kargo** tab (located under "Promote")
 
 2. Click **+ Create** in the top right corner
 
@@ -68,8 +68,7 @@ Let's set up a Kargo instance to manage promotions between environments.
    ```bash
    kargo login https://<your-instance-URL> \
    --admin \
-   --password <password> \
-   --insecure-skip-tls-verify
+   --password <password> 
    ```
 
    Replace:

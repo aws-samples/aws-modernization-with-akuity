@@ -48,7 +48,7 @@ Fork and clone the repository using the GitHub CLI:
 
 ```bash
 # Fork the repository and clone it
-gh repo fork akuity/eks-workshop-template --clone=true --remote=true
+gh repo create eks-workshop-template --template akuity/eks-workshop-template --clone --public
 cd eks-workshop-template
 ```
 
@@ -57,10 +57,10 @@ cd eks-workshop-template
 If you prefer to use the GitHub web interface instead:
 
 1. Visit [https://github.com/akuity/eks-workshop-template](https://github.com/akuity/eks-workshop-template)
-2. Click the "Fork" button in the top-right corner
+2. Click the "Use this template" button in the top-right corner and select "Create a new repository"
 3. Ensure your personal account is selected as the owner
-4. Keep the repository name as `eks-workshop-template`
-5. Click "Create fork"
+4. Set the repository name as `eks-workshop-template`
+5. Click "Create repository"
 6. Clone the repository to your local machine:
    ```bash
    git clone https://github.com/YOUR-USERNAME/eks-workshop-template.git
@@ -78,7 +78,7 @@ Kargo will need a GitHub Personal Access Token to make commits to your repositor
 3. Set the following:
    - Token name: `akuity-workshop`
    - Expiration: 7 days (or your preferred duration)
-   - Repository access: Select "Only select repositories" and choose your forked repository
+   - Repository access: Select "Only select repositories" and choose your created repository
    - Permissions:
      - Repository permissions:
        - Contents: Read and write
@@ -86,7 +86,11 @@ Kargo will need a GitHub Personal Access Token to make commits to your repositor
 
 4. Click "Generate token"
 
-5. **Important**: Copy the generated token and store it securely. You'll need it when setting up Kargo.
+5. **Important**: Copy the generated token and store it securely. You'll need it when setting up Kargo. We recommend using an environment variable to store the token securely:
+
+   ```bash
+   export KARGO_GH_TOKEN=<YOUR TOKEN>
+   ```
 
 ::alert[Keep your Personal Access Token secure! It provides access to your GitHub account with the permissions you specified.]{header="Security Warning" type="warning"}
 
