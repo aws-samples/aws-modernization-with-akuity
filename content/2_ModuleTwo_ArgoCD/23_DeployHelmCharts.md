@@ -71,16 +71,16 @@ Let's see how to deploy a new version of our application:
 
 2. Open the file `eks-workshop-template/guestbook/values-dev.yaml` by clicking on it
 
-3. In the editor, update the image tag from `0.1.0` to `0.2.0`:
+3. In the editor, add the value `0.1.0` to `image.tag`:
 
    ```yaml
    # Before:
    image:
-     tag: 0.1.0
+     tag: 
    
    # After:
    image:
-     tag: 0.2.0
+     tag: 0.1.0
    ```
 
 4. Save the file (Ctrl+S or Cmd+S)
@@ -90,7 +90,7 @@ Let's see how to deploy a new version of our application:
    ```bash
    cd /workshop/eks-workshop-template
    git add guestbook/values-dev.yaml
-   git commit -m "Update guestbook image tag to 0.2.0"
+   git commit -m "Update guestbook image tag to 0.1.0"
    git push origin main
    ```
 
