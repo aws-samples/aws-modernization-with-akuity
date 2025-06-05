@@ -4,68 +4,102 @@ chapter: true
 weight: 100
 ---
 
-# 🎓 Workshop Review
+# Congratulations!
 
-## Congratulations! 🎉
+You've successfully completed the AWS Modernization Workshop with Akuity! Throughout this journey, you've learned how to:
 
-You've successfully completed the AWS Modernization Workshop with Akuity. Let's review what you've accomplished:
+- Deploy and manage Argo CD instances at scale with Akuity Platform
+- Implement GitOps best practices for Kubernetes deployments on Amazon EKS
+- Secure your CI/CD pipelines with enterprise-grade controls
+- Automate application delivery across multiple environments
+- Monitor and manage the health of your applications with KubeVision
 
-### Key Achievements
+## Ready to Transform Your Kubernetes Operations with Akuity?
 
+Now that you've experienced the power of Akuity Platform firsthand, it's time to take the next step in your GitOps journey.
 
+### Get Started with Akuity Platform Today
 
-1. **Secure Amazon EKS Deployment** ✅
-   - Set up an Argo CD instance on the Akuity Platform
-   - Connected your Amazon EKS cluster using the AWS EKS add-on
-   - Deployed applications to EKS using GitOps principles
+:button[View Akuity on AWS Marketplace]{variant="primary" href="https://aws.amazon.com/marketplace/search/results?searchTerms=akuity" target="_blank"}
 
-2. **AWS Application Management** ✅
-   - Created and configured Argo CD applications for your EKS cluster
-   - Deployed Helm charts to your Amazon EKS environment
-   - Implemented auto-sync and self-healing capabilities for your AWS workloads
+By subscribing to Akuity Platform through the AWS Marketplace, you'll get:
 
-3. **AWS Environment Promotion Workflows** ✅
-   - Set up a Kargo project, warehouse, and stages representing AWS environments
-   - Configured promotion steps for moving changes between AWS environments
-   - Successfully promoted changes through your AWS pipeline
+- **Enterprise-Grade Argo CD**: Deploy and manage Argo CD instances with enhanced security, scalability, and reliability
+- **Simplified Billing**: Pay for Akuity Platform through your existing AWS bill
+- **Dedicated Support**: Access to Akuity's expert support team, including the creators of Argo CD
+- **Automatic Updates**: Stay current with the latest features and security patches
+- **Flexible Pricing Options**: Choose the plan that fits your organization's needs
 
-4. **Amazon EKS Monitoring** ✅
-   - Enabled KubeVision for enhanced visibility into your EKS cluster
-   - Explored various dashboards for EKS resource management
-   - Learned how to track and troubleshoot issues in your AWS environment
+## Explore Your Options
 
+:button[View Purchase Options]{href="https://aws.amazon.com/marketplace/search/results?searchTerms=akuity" target="_blank"}
+:button[Request Private Offer]{href="https://aws.amazon.com/marketplace/customer-connect/private-offer/prodview-tmeqjlpxqqvzo?campaignId=701RU00000G6E2HYAV" target="_blank"}
+:button[Request Demo]{href="https://aws.amazon.com/marketplace/customer-connect/demo/prodview-tmeqjlpxqqvzo?campaignId=701RU00000G6AwMYAV" target="_blank"}
 
-## Next Steps
+## Continue Your Kubernetes and GitOps Journey
 
-Now that you're familiar with the Akuity Platform on AWS, consider these next steps:
+In this workshop, you've just scratched the surface of what's possible with Akuity Platform and GitOps. Here are some resources to help you continue exploring:
 
-1. **Explore Advanced AWS Integration**
-   - Configure more complex promotion workflows across AWS accounts and regions
-   - Set up approval gates for production deployments on AWS
-   - Implement progressive delivery with Argo Rollouts on EKS
+#### Amazon EKS Resources
+- 📚 [Amazon EKS Documentation](https://docs.aws.amazon.com/eks/)
+- 🎓 [EKS Workshop](https://www.eksworkshop.com/)
+- 💻 [Amazon EKS Best Practices Guide](https://aws.github.io/aws-eks-best-practices/)
 
-2. **Integrate with Your AWS CI Pipeline**
-   - Connect AWS CodePipeline or other CI systems to trigger deployments
-   - Implement automated testing as part of your AWS promotion workflow
-   - Use AWS CodeBuild with Kargo for comprehensive CI/CD
+#### Argo CD and GitOps Resources
+- 🚀 [Argo CD Documentation](https://argo-cd.readthedocs.io/)
+- 🧠 [GitOps with Argo CD Best Practices](https://akuity.io/blog/gitops-best-practices/)
+- 🔍 [Argo CD Use Cases](https://akuity.io/use-cases/)
 
-3. **Optimize Your AWS Resources**
-   - Use KubeVision to identify AWS cost optimization opportunities
-   - Implement resource quotas and limits based on actual usage
-   - Right-size your EKS nodes based on workload requirements
+:button[Explore Amazon EKS Workshop]{href="https://www.eksworkshop.com/" target="_blank"}
 
-4. **Enhance AWS Security**
-   - Configure RBAC for your Argo CD and Kargo instances with AWS IAM
-   - Implement image scanning and policy enforcement for your EKS workloads
-   - Leverage AWS security services with the Akuity Platform
+## Powerful Features to Explore in Akuity Platform
 
-## Additional Resources
+Here are some powerful features you can leverage with Akuity Platform:
 
-- [AWS EKS Documentation](https://docs.aws.amazon.com/eks/)
-- [Akuity Documentation](https://docs.akuity.io)
-- [Argo CD Best Practices](https://argo-cd.readthedocs.io/en/stable/user-guide/best_practices/)
-- [Kargo Documentation](https://docs.kargo.io)
-- [AWS EKS Best Practices](https://aws.github.io/aws-eks-best-practices/)
-- [AWS Marketplace - Akuity Platform](https://aws.amazon.com/marketplace/search/results?searchTerms=akuity)
+#### 1. Enterprise-Grade Argo CD
+- Multi-cluster management from a single control plane
+- Enhanced security with RBAC and SSO integration
+- High availability and disaster recovery
+- Audit logging and compliance controls
 
-Thank you for participating in this AWS workshop! We hope you found it valuable and are excited to implement these tools and practices in your own AWS environments.
+#### 2. Advanced GitOps Capabilities
+- Progressive delivery with Argo Rollouts
+- Automated policy enforcement
+- Drift detection and remediation
+- Multi-tenancy support
+
+#### 3. DevOps Acceleration
+- Streamlined developer onboarding
+- Self-service application deployment
+- Integrated CI/CD pipelines
+- Comprehensive observability
+
+## Resources to Help You Succeed
+
+#### Essential Akuity Links
+- 📚 [Akuity Documentation](https://docs.akuity.io)
+- 🎓 [Akuity Academy](https://academy.akuity.io)
+- 💻 [Akuity Blog](https://akuity.io/blog)
+
+#### Akuity Developer Tools
+- 🔧 [Akuity CLI](https://docs.akuity.io/akuity-cli)
+- 🎨 [Akuity API Reference](https://docs.akuity.io/api)
+- 📝 [Akuity Platform Roadmap](https://akuity.io/roadmap)
+
+## Ready to Scale Your Success with Akuity?
+
+Akuity Platform customers have seen remarkable results:
+- **70% faster** application deployment time
+- **90% reduction** in deployment failures
+- **4x increase** in deployment frequency
+- **Significant savings** in operational costs and developer time
+
+Don't miss out on the opportunity to transform your Kubernetes operations with Akuity Platform.
+
+:button[Request an Akuity Demo Today]{variant="primary" href="https://aws.amazon.com/marketplace/customer-connect/demo/prodview-tmeqjlpxqqvzo?campaignId=701RU00000G6AwMYAV" target="_blank"}
+
+{{% notice note %}}
+Have questions? Contact the Akuity sales team at [sales@akuity.io](mailto:sales@akuity.io) to discuss enterprise pricing, custom solutions, or implementation support.
+{{% /notice %}}
+
+Keep building amazing things with Akuity Platform and Amazon EKS! 🚀
