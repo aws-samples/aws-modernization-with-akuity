@@ -44,7 +44,7 @@ Before deploying the templates, ensure the following:
 4. Enter a **Stack Name** (e.g., `vscode-server`).  
 5. Review and modify the parameters as needed. Leave default values unless instructed otherwise.  
 
-   ![Stack Parameters](/images/cloudformation-stack-parameters.png)  
+   ![Stack Parameters](/images/vscode-server-parameters.png)
 
 6. Click **Next**, then review the stack details.  
 7. Acknowledge the **IAM role creation** if prompted by checking the appropriate box.  
