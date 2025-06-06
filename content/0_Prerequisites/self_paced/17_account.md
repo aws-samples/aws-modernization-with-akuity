@@ -63,7 +63,7 @@ Before deploying the templates, ensure the following:
 2. Enter a **Stack Name**(e.g., `akuity-aws-cluster`) and do not modify any **Parameters**.  
 3. Proceed with the deployment.
 
-   ![VS Code Parameters](/images/vscode-server-parameters.png)  
+   ![VS Code Parameters](/images/cloudformation-stack-parameters.png)  
 
 After the stack status changes to `CREATE_COMPLETE`, the VS Code server resources will be ready.  
 
