@@ -32,28 +32,16 @@ Before deploying the templates, ensure the following:
 
 ### Step 1: Deploy the `vscode-server.yaml`  
 
-1. Repeat the same steps as above, but upload the `vscode-server.yaml` file.  
-2. Enter a **Stack Name**(e.g., `vscode-server-stack`) and do not modify any **Parameters**.  
-3. Proceed with the deployment.
-
-   ![VS Code Parameters](/images/vscode-server-parameters.png)  
-
-After the stack status changes to `CREATE_COMPLETE`, the VS Code server resources will be ready.  
-
----
-
-### Step 2: Deploy the `eks-cluster.yaml`  
-
 1. Navigate to the **CloudFormation** service in the [AWS Management Console](https://aws.amazon.com/console/).  
 2. Click **Create stack** and select **Upload a template file**.
 
    ![Create Stack Button](/images/cloudformation-create-stack.png)  
 
-3. Click **Choose file**, select the `eks-cluster.yaml`, and click **Next**.  
+3. Click **Choose file**, select the `vscode-server.yaml`, and click **Next**.  
 
    ![Upload Template](/images/cloudformation-upload-template.png)  
 
-4. Enter a **Stack Name** (e.g., `eks-cluster`).  
+4. Enter a **Stack Name** (e.g., `vscode-server`).  
 5. Review and modify the parameters as needed. Leave default values unless instructed otherwise.  
 
    ![Stack Parameters](/images/cloudformation-stack-parameters.png)  
@@ -65,9 +53,19 @@ After the stack status changes to `CREATE_COMPLETE`, the VS Code server resource
 
 8. Click **Submit** to start the deployment.  
 
-   ![Create Stack Process](/images/cloudformation-create-process.png)  
+   ![Create Stack Process](/images/cloudformation-create-process.png)
 
-Once the stack status changes to `CREATE_COMPLETE`, the resources for the Akuity x AWS Workshop are ready.  
+---
+
+### Step 2: Deploy the `eks-cluster.yaml`
+
+1. Repeat the same steps as above, but upload the `eks-cluster.yaml` file.  
+2. Enter a **Stack Name**(e.g., `akuity-aws-cluster`) and do not modify any **Parameters**.  
+3. Proceed with the deployment.
+
+   ![VS Code Parameters](/images/vscode-server-parameters.png)  
+
+After the stack status changes to `CREATE_COMPLETE`, the VS Code server resources will be ready.  
 
 ---
 
@@ -78,6 +76,8 @@ Once the stack status changes to `CREATE_COMPLETE`, the resources for the Akuity
    ![CloudFormation Outputs Tab](/images/cloudformation-outputs.png) 
 
 - The `vscode-server.yaml` stack will provide the `VSCODEURL` and `Password` for accessing the VS Code server.
+
+Once the stack status changes to `CREATE_COMPLETE`, the resources for the Akuity x AWS Workshop are ready.  
 
 ---
 
