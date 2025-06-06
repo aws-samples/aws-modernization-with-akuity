@@ -12,9 +12,9 @@ Your account must have the ability to have Administrative Access
 
 To set up the required resources for this workshop, you will need to deploy two CloudFormation templates:  
 
-1. :button[Download vscode-server.yaml]{href="/static/infrastructure/vs-code-server-new.yaml" action=download}
+1. :button[Download vscode-server.yaml]{href="/static/infrastructure/vs-code-server.yaml" action=download}
 
-2. :button[Download eks-cluster.yaml]{href="/static/infrastructure/testing.yaml" action=download}
+2. :button[Download eks-cluster.yaml]{href="/static/infrastructure/eks-cluster.yaml" action=download}
 
 ---
 
