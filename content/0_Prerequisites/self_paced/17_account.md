@@ -65,8 +65,6 @@ Before deploying the templates, ensure the following:
 
    ![VS Code Parameters](/images/cloudformation-stack-parameters.png)  
 
-After the stack status changes to `CREATE_COMPLETE`, the VS Code server resources will be ready.  
-
 ---
 
 ## Verifying the Deployments  
