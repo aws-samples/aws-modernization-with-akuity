@@ -96,7 +96,7 @@ Akuity Platform customers have seen remarkable results:
 
 Don't miss out on the opportunity to transform your Kubernetes operations with Akuity Platform.
 
-:button[Request an Akuity Demo Today]{variant="primary" href="https://akuity.io/get-in-touch"}
+:button[Request an Akuity Demo Today]{variant="primary" href="https://aws.amazon.com/marketplace/customer-connect/demo/prodview-tmeqjlpxqqvzo?campaignId=701RU00000G6AwMYAV" target="_blank"}
 
 {{% notice note %}}
 Have questions? Contact the Akuity sales team at [sales@akuity.io](mailto:sales@akuity.io) to discuss enterprise pricing, custom solutions, or implementation support.
