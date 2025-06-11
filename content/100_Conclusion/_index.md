@@ -47,8 +47,8 @@ In this workshop, you've just scratched the surface of what's possible with Akui
 
 #### Argo CD and GitOps Resources
 - 🚀 [Argo CD Documentation](https://argo-cd.readthedocs.io/)
-- 🧠 [GitOps with Argo CD Best Practices](https://akuity.io/blog/gitops-best-practices/)
-- 🔍 [Argo CD Use Cases](https://akuity.io/use-cases/)
+- 🧠 [GitOps with Argo CD Best Practices](https://akuity.io/blog/gitops-best-practices-whitepaper)
+- 🔍 [Argo CD Use Cases](https://github.com/akuity/awesome-argo)
 
 :button[Explore Amazon EKS Workshop]{href="https://www.eksworkshop.com/" target="_blank"}
 
@@ -96,7 +96,7 @@ Akuity Platform customers have seen remarkable results:
 
 Don't miss out on the opportunity to transform your Kubernetes operations with Akuity Platform.
 
-:button[Request an Akuity Demo Today]{variant="primary" href="https://aws.amazon.com/marketplace/customer-connect/demo/prodview-tmeqjlpxqqvzo?campaignId=701RU00000G6AwMYAV" target="_blank"}
+:button[Request an Akuity Demo Today]{variant="primary" href="https://akuity.io/get-in-touch"}
 
 {{% notice note %}}
 Have questions? Contact the Akuity sales team at [sales@akuity.io](mailto:sales@akuity.io) to discuss enterprise pricing, custom solutions, or implementation support.
