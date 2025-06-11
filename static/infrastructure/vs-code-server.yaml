@@ -936,10 +936,6 @@ Resources:
 
           - action: aws:runShellScript
             name: InstallKubectl
-            precondition:
-              StringEquals:
-                - '{{ LinuxFlavor }}'
-                - al2023
             inputs:
               runCommand:
                 - |
@@ -952,18 +948,34 @@ Resources:
                     aarch64) ARCH="arm64" ;;
                     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
                   esac
+                  
+                  # Download kubectl binary
+                  echo "Downloading kubectl for ${ARCH}..."
                   curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl"
+                  
+                  # Verify the binary (optional)
+                  echo "Verifying kubectl binary..."
                   chmod +x ./kubectl
-                  sudo mv ./kubectl /usr/local/bin/kubectl
-                  echo "Kubectl installed. Version:"
+                  
+                  # Install kubectl
+                  echo "Installing kubectl to /usr/local/bin..."
+                  sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+                  
+                  # Verify installation
+                  echo "Verifying kubectl installation..."
                   kubectl version --client
                   
+                  # Configure kubectl for the user
                   echo "Configuring kubectl for ${VSCodeUser}..."
                   sudo -u ${VSCodeUser} bash << EOF
+                  mkdir -p ~/.kube
                   echo 'source <(kubectl completion bash)' >> ~/.bashrc
                   echo 'alias k=kubectl' >> ~/.bashrc
                   echo 'complete -o default -F __start_kubectl k' >> ~/.bashrc
                   EOF
+                  
+                  # Set proper permissions
+                  chown -R ${VSCodeUser}:${VSCodeUser} /home/${VSCodeUser}/.kube
                   
                   echo "Kubectl setup completed for ${VSCodeUser}."
           
