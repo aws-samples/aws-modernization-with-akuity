@@ -84,7 +84,7 @@ Here are some powerful features you can leverage with Akuity Platform:
 #### Akuity Developer Tools
 - 🔧 [Akuity CLI](https://docs.akuity.io/akuity-cli)
 - 🎨 [Akuity API Reference](https://docs.akuity.io/api)
-- 📝 [Akuity Platform Roadmap](https://akuity.io/roadmap)
+
 
 ## Ready to Scale Your Success with Akuity?
 
